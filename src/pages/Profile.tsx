@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { showError } from "@/utils/toast";
+import { showError, showSuccess } from "@/utils/toast"; // Import showSuccess
 
 interface ProfileData {
   first_name: string | null;
@@ -18,8 +18,11 @@ interface ProfileData {
 const Profile = () => {
   const { supabase, session } = useSession();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [email, setEmail] = useState<string>(""); // To display email
   const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -38,23 +41,37 @@ const Profile = () => {
       if (error) {
         console.error("Error fetching profile:", error);
         showError("Failed to load profile data.");
-        setProfile({
-          first_name: null,
-          last_name: null,
-          email: session.user.email,
-        });
       } else if (data) {
-        setProfile({
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: session.user.email,
-        });
+        setFirstName(data.first_name || "");
+        setLastName(data.last_name || "");
       }
+      setEmail(session.user.email || ""); // Set email from session
       setLoading(false);
     };
 
     fetchProfile();
   }, [session, supabase, navigate]);
+
+  const handleUpdateProfile = async () => {
+    if (!session?.user) {
+      showError("You must be logged in to update your profile.");
+      return;
+    }
+
+    setIsUpdating(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ first_name: firstName, last_name: lastName, updated_at: new Date().toISOString() })
+      .eq("id", session.user.id);
+
+    if (error) {
+      console.error("Error updating profile:", error);
+      showError("Failed to update profile.");
+    } else {
+      showSuccess("Profile updated successfully!");
+    }
+    setIsUpdating(false);
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -79,21 +96,32 @@ const Profile = () => {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">User Profile</CardTitle>
-          <CardDescription>View your profile information and manage your session.</CardDescription>
+          <CardDescription>View and manage your profile information.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-2">
             <Label htmlFor="firstName">First Name</Label>
-            <Input id="firstName" value={profile?.first_name || "N/A"} readOnly />
+            <Input
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="lastName">Last Name</Label>
-            <Input id="lastName" value={profile?.last_name || "N/A"} readOnly />
+            <Input
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" value={profile?.email || "N/A"} readOnly />
+            <Input id="email" value={email} readOnly />
           </div>
+          <Button onClick={handleUpdateProfile} className="w-full" disabled={isUpdating}>
+            {isUpdating ? "Updating..." : "Update Profile"}
+          </Button>
           <Button onClick={handleLogout} className="w-full" variant="destructive">
             Logout
           </Button>

@@ -12,7 +12,7 @@ const LoadingSpinner: React.FC = () => {
             "h-4 w-4 bg-primary animate-spin",
             "rounded-sm" // Make it a square with slightly rounded corners
           )} />
-          <span className="text-sm">AI is thinking...</span>
+          <span className="text-sm">Judgi is thinking...</span>
         </div>
       </div>
     </div>

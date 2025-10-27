@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ChatLayout from "@/components/ChatLayout";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
@@ -8,13 +8,20 @@ import InitialPrompt from "@/components/InitialPrompt";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { getLongCatCompletion } from "@/services/longcatApi";
 import { showLoading, dismissToast, showError } from "@/utils/toast";
-import { useSession } from "@/contexts/SessionContext"; // Import useSession
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
-import { v4 as uuidv4 } from 'uuid'; // For generating conversation IDs
+import { useSession } from "@/contexts/SessionContext";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
+import Sidebar from "@/components/Sidebar"; // Import Sidebar
+import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
 
 interface Message {
   text: string;
   role: "user" | "assistant";
+}
+
+interface ConversationSummary {
+  id: string;
+  title: string;
 }
 
 const Index = () => {
@@ -22,67 +29,110 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasChatStarted, setHasChatStarted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null); // New state for conversation ID
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true); // State for desktop sidebar
 
-  // Effect to load messages or start a new conversation when session is ready
+  const isMobile = useIsMobile();
+
+  const fetchConversations = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('chats')
+      .select('conversation_id, content, created_at')
+      .eq('user_id', userId)
+      .order('conversation_id', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error("Error fetching conversations:", error);
+      showError("Failed to load conversations.");
+      return [];
+    }
+
+    const conversationMap = new Map<string, ConversationSummary>();
+    data.forEach(chat => {
+      if (!conversationMap.has(chat.conversation_id)) {
+        conversationMap.set(chat.conversation_id, {
+          id: chat.conversation_id,
+          title: chat.content.substring(0, 50) + (chat.content.length > 50 ? "..." : ""), // Use first message as title
+        });
+      }
+    });
+    return Array.from(conversationMap.values());
+  }, []);
+
+  const loadConversationMessages = useCallback(async (convId: string) => {
+    setIsLoading(true);
+    try {
+      const { data: chatMessages, error: messagesError } = await supabase
+        .from('chats')
+        .select('role, content')
+        .eq('conversation_id', convId)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) throw messagesError;
+      if (chatMessages && chatMessages.length > 0) {
+        setMessages(chatMessages.map(msg => ({ text: msg.content, role: msg.role as "user" | "assistant" })));
+        setHasChatStarted(true);
+      } else {
+        setMessages([]);
+        setHasChatStarted(false);
+      }
+    } catch (error) {
+      console.error("Error loading conversation messages:", error);
+      showError("Failed to load chat messages.");
+      setMessages([]);
+      setHasChatStarted(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Effect to load messages and conversations when session is ready
   useEffect(() => {
     if (!isSessionLoading && session) {
-      const fetchOrCreateConversation = async () => {
+      const initializeChat = async () => {
         setIsLoading(true);
         try {
-          // Try to fetch the most recent conversation for the user
-          const { data: latestChat, error: fetchError } = await supabase
-            .from('chats')
-            .select('conversation_id')
-            .eq('user_id', session.user.id)
-            .order('created_at', { ascending: false })
-            .limit(1);
+          const fetchedConversations = await fetchConversations(session.user.id);
+          setConversations(fetchedConversations);
 
-          let currentConversationId = latestChat?.[0]?.conversation_id;
-
-          if (!currentConversationId) {
-            // If no existing conversation, create a new one
-            currentConversationId = uuidv4();
-            setHasChatStarted(false); // Reset if starting a new conversation
+          let currentConvId: string | null = null;
+          if (fetchedConversations.length > 0) {
+            // Load the most recent conversation by default
+            currentConvId = fetchedConversations[0].id;
+            await loadConversationMessages(currentConvId);
           } else {
-            // If existing conversation, load its messages
-            const { data: chatMessages, error: messagesError } = await supabase
-              .from('chats')
-              .select('role, content')
-              .eq('conversation_id', currentConversationId)
-              .order('created_at', { ascending: true });
-
-            if (messagesError) throw messagesError;
-            if (chatMessages && chatMessages.length > 0) {
-              setMessages(chatMessages.map(msg => ({ text: msg.content, role: msg.role as "user" | "assistant" })));
-              setHasChatStarted(true);
-            }
+            // If no existing conversations, start a new one
+            currentConvId = uuidv4();
+            setMessages([]);
+            setHasChatStarted(false);
           }
-          setConversationId(currentConversationId);
+          setConversationId(currentConvId);
         } catch (error) {
-          console.error("Error fetching or creating conversation:", error);
-          showError("Failed to load chat history.");
+          console.error("Error initializing chat:", error);
+          showError("Failed to initialize chat.");
         } finally {
           setIsLoading(false);
         }
       };
-      fetchOrCreateConversation();
+      initializeChat();
     } else if (!isSessionLoading && !session) {
-      // If not logged in, ensure no conversation is active
       setConversationId(null);
       setMessages([]);
       setHasChatStarted(false);
+      setConversations([]);
     }
-  }, [session, isSessionLoading]);
+  }, [session, isSessionLoading, fetchConversations, loadConversationMessages]);
 
-  const saveMessage = async (message: Message, currentConversationId: string) => {
+  const saveMessage = async (message: Message, currentConvId: string) => {
     if (!session) {
       console.error("Cannot save message: User not authenticated.");
       return;
     }
     const { error } = await supabase.from('chats').insert({
       user_id: session.user.id,
-      conversation_id: currentConversationId,
+      conversation_id: currentConvId,
       role: message.role,
       content: message.text,
     });
@@ -104,13 +154,17 @@ const Index = () => {
 
     if (!hasChatStarted) {
       setHasChatStarted(true);
+      // After first message, refresh conversations to show the new one
+      if (session) {
+        const updatedConversations = await fetchConversations(session.user.id);
+        setConversations(updatedConversations);
+      }
     }
 
     setIsLoading(true);
     const loadingToastId = showLoading("Getting AI response...");
 
     try {
-      // Include all current messages (including the new user message) for context
       const apiMessages = [...messages, newUserMessage].map(msg => ({
         role: msg.role,
         content: msg.text,
@@ -119,17 +173,36 @@ const Index = () => {
       const aiResponseText = await getLongCatCompletion(apiMessages);
       const aiResponse: Message = { text: aiResponseText, role: "assistant" };
       setMessages((prevMessages) => [...prevMessages, aiResponse]);
-      await saveMessage(aiResponse, conversationId); // Save AI response
+      await saveMessage(aiResponse, conversationId);
     } catch (error) {
       console.error("Failed to fetch AI response:", error);
       showError("Failed to get AI response. Please try again.");
       const errorMessage: Message = { text: "Sorry, I couldn't get a response from the AI. Please try again.", role: "assistant" };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
-      await saveMessage(errorMessage, conversationId); // Save error message
+      await saveMessage(errorMessage, conversationId);
     } finally {
       dismissToast(String(loadingToastId));
       setIsLoading(false);
     }
+  };
+
+  const handleSelectConversation = async (id: string) => {
+    if (id === conversationId) return; // Already on this conversation
+    setConversationId(id);
+    await loadConversationMessages(id);
+  };
+
+  const handleNewConversation = async () => {
+    if (!session) {
+      showError("Please log in to start a new chat.");
+      return;
+    }
+    const newConvId = uuidv4();
+    setConversationId(newConvId);
+    setMessages([]);
+    setHasChatStarted(false);
+    // Add the new conversation to the list immediately
+    setConversations(prev => [{ id: newConvId, title: "New Chat" }, ...prev]);
   };
 
   if (isSessionLoading || isLoading) {
@@ -141,25 +214,37 @@ const Index = () => {
   }
 
   if (!session) {
-    // If not logged in, the SessionContextProvider will redirect to /login
     return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {hasChatStarted && conversationId ? (
-        <ChatLayout inputArea={<ChatInput onSendMessage={handleSendMessage} />}>
-          {messages.map((msg, index) => (
-            <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />
-          ))}
-          {isLoading && (
-            <ChatMessage message="AI is thinking..." isUser={false} />
-          )}
-        </ChatLayout>
-      ) : (
-        <InitialPrompt onSendMessage={handleSendMessage} />
-      )}
-      <MadeWithDyad />
+    <div className="flex min-h-screen">
+      <Sidebar
+        conversations={conversations}
+        onSelectConversation={handleSelectConversation}
+        onNewConversation={handleNewConversation}
+        currentConversationId={conversationId}
+        isDesktopOpen={isDesktopSidebarOpen}
+        onToggleDesktopSidebar={() => setIsDesktopSidebarOpen(prev => !prev)}
+      />
+      <div className={`flex-grow flex flex-col ${isDesktopSidebarOpen && !isMobile ? "md:ml-0" : "md:ml-0"}`}>
+        {hasChatStarted && conversationId ? (
+          <ChatLayout
+            inputArea={<ChatInput onSendMessage={handleSendMessage} />}
+            onToggleSidebar={() => setIsDesktopSidebarOpen(prev => !prev)} // Pass toggle for desktop
+          >
+            {messages.map((msg, index) => (
+              <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />
+            ))}
+            {isLoading && (
+              <ChatMessage message="AI is thinking..." isUser={false} />
+            )}
+          </ChatLayout>
+        ) : (
+          <InitialPrompt onSendMessage={handleSendMessage} />
+        )}
+        <MadeWithDyad />
+      </div>
     </div>
   );
 };

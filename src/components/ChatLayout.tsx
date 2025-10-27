@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import ChatModes from "./ChatModes"; // Import ChatModes
+// import ChatModes from "./ChatModes"; // Removed ChatModes
 
 interface ChatLayoutProps {
   children: React.ReactNode;
@@ -33,7 +33,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children, inputArea, onToggleSi
             <CardTitle className="text-xl">{currentChatTitle || "New Chat"}</CardTitle>
           </div>
         </CardHeader>
-        <ChatModes /> {/* Render ChatModes here */}
+        {/* ChatModes removed from here */}
         <CardContent className="flex-grow overflow-y-auto p-4 space-y-4 h-0"> {/* Added h-0 here */}
           {children}
         </CardContent>

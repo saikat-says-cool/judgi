@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
 @layer base {
   :root {
@@ -76,7 +76,7 @@
     --accent-foreground: 180 20% 90%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 180 20% 90%;
+    --destructive-foreground: 210 40% 98%;
 
     --border: 180 10% 20%; /* Slightly lighter border */
     --input: 180 10% 10%; /* Same as card */
@@ -102,7 +102,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Plus Jakarta Sans', sans-serif; /* Apply Plus Jakarta Sans */
+    font-family: 'Outfit', sans-serif; /* Apply Outfit font */
     position: relative; /* Needed for pseudo-element positioning */
     overflow: hidden; /* To prevent scrollbars if the glow extends beyond viewport */
   }

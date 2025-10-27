@@ -3,7 +3,7 @@
 import React from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, PlusCircle, MoreHorizontal, Edit, Trash } from "lucide-react";
+import { Menu, PlusCircle, MoreHorizontal, Edit, Trash, User } from "lucide-react"; // Import User icon
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 interface Conversation {
   id: string;
@@ -71,6 +72,7 @@ const SidebarContent: React.FC<{
   const [isRenameDialogOpen, setIsRenameDialogOpen] = React.useState(false);
   const [renameInput, setRenameInput] = React.useState("");
   const [currentRenameConvId, setCurrentRenameConvId] = React.useState<string | null>(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleRenameClick = (conv: Conversation) => {
     setCurrentRenameConvId(conv.id);
@@ -85,6 +87,11 @@ const SidebarContent: React.FC<{
       setRenameInput("");
       setCurrentRenameConvId(null);
     }
+  };
+
+  const handleProfileClick = () => {
+    navigate("/profile");
+    onClose?.(); // Close sidebar on navigation
   };
 
   return (
@@ -157,6 +164,18 @@ const SidebarContent: React.FC<{
             ))}
           </nav>
         )}
+      </div>
+
+      {/* Profile Button at the bottom */}
+      <div className="mt-auto px-2 pt-4 border-t border-border">
+        <Button
+          variant="ghost"
+          className="w-full justify-start flex items-center gap-2"
+          onClick={handleProfileClick}
+        >
+          <User className="h-5 w-5" />
+          Profile
+        </Button>
       </div>
 
       {/* Rename Dialog */}

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login"; // Import the Login page
+import Profile from "./pages/Profile"; // Import the Profile page
 import { SessionContextProvider } from "./contexts/SessionContext"; // Import the SessionContextProvider
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} /> {/* Add the login route */}
+            <Route path="/profile" element={<Profile />} /> {/* Add the profile route */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

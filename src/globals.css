@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -102,9 +100,8 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
+    font-family: 'Times New Roman', serif; /* Apply Times New Roman font */
     position: relative; /* Needed for pseudo-element positioning */
-    /* Removed overflow: hidden to allow scrolling */
   }
 
   body::before {

@@ -13,7 +13,7 @@ const InitialPrompt: React.FC<InitialPromptProps> = ({ onSendMessage }) => {
       <h1 className="text-3xl font-semibold mb-2 text-foreground">How can I help today?</h1>
       <p className="text-muted-foreground mb-8">Type a command or ask a question</p>
       <div className="w-full max-w-2xl">
-        <ChatInput onSendMessage={onSendMessage} placeholder="Ask zap a question..." />
+        <ChatInput onSendMessage={onSendMessage} placeholder="Ask judgi a question..." />
       </div>
     </div>
   );

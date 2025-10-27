@@ -52,7 +52,7 @@
   }
 
   .dark {
-    --background: 180 10% 5%; /* Very dark desaturated teal/green */
+    --background: 220 10% 3%; /* Even darker, almost black */
     --foreground: 180 20% 90%; /* Light, slightly warm off-white */
 
     --card: 180 10% 10%; /* Slightly lighter dark for cards/input */
@@ -100,5 +100,36 @@
 
   body {
     @apply bg-background text-foreground;
+    position: relative; /* Needed for pseudo-element positioning */
+    overflow: hidden; /* To prevent scrollbars if the glow extends beyond viewport */
+  }
+
+  body::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80vw; /* Adjust size as needed */
+    height: 80vh; /* Adjust size as needed */
+    background: radial-gradient(circle at center, hsl(180 60% 40% / 0.15) 0%, transparent 70%); /* Subtle teal glow */
+    filter: blur(100px); /* Soft blur */
+    transform: translate(-50%, -50%); /* Center the glow */
+    z-index: -1; /* Keep it behind content */
+    animation: pulse-glow 10s infinite alternate ease-in-out; /* Subtle animation */
+  }
+
+  @keyframes pulse-glow {
+    0% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.7;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.05);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.7;
+    }
   }
 }

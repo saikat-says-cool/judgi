@@ -46,7 +46,7 @@ const Index = () => {
       const errorMessage: Message = { text: "Sorry, I couldn't get a response from the AI. Please try again.", role: "assistant" };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
-      dismissToast(loadingToastId);
+      dismissToast(String(loadingToastId)); // Convert to string to satisfy TypeScript
       setIsLoading(false);
     }
   };

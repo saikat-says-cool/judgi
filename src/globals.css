@@ -96,6 +96,10 @@
 }
 
 @layer base {
+  html, body {
+    height: 100%; /* Ensure html and body take full viewport height */
+  }
+
   * {
     @apply border-border;
   }
@@ -104,7 +108,7 @@
     @apply bg-background text-foreground;
     font-family: 'Outfit', sans-serif; /* Apply Outfit font */
     position: relative; /* Needed for pseudo-element positioning */
-    overflow: hidden; /* To prevent scrollbars if the glow extends beyond viewport */
+    /* Removed overflow: hidden; to allow content to scroll */
   }
 
   body::before {

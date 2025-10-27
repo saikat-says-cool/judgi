@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showError, showSuccess } from "@/utils/toast";
 
 interface ProfileData {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
-  country: string | null; // Add country to profile data
+  country: string | null;
 }
 
 const countries = [
@@ -27,6 +27,17 @@ const countries = [
   { value: "France", label: "France" },
   { value: "Brazil", label: "Brazil" },
   { value: "South Africa", label: "South Africa" },
+  { value: "Japan", label: "Japan" },
+  { value: "China", label: "China" },
+  { value: "Mexico", label: "Mexico" },
+  { value: "Italy", label: "Italy" },
+  { value: "Spain", label: "Spain" },
+  { value: "Netherlands", label: "Netherlands" },
+  { value: "Sweden", label: "Sweden" },
+  { value: "Switzerland", label: "Switzerland" },
+  { value: "New Zealand", label: "New Zealand" },
+  { value: "Singapore", label: "Singapore" },
+  { value: "United Arab Emirates", label: "United Arab Emirates" },
 ];
 
 const Profile = () => {
@@ -35,7 +46,7 @@ const Profile = () => {
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
-  const [country, setCountry] = useState<string>(""); // New state for country
+  const [country, setCountry] = useState<string>("India"); // Default to India
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -49,7 +60,7 @@ const Profile = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name, country") // Select country
+        .select("first_name, last_name, country")
         .eq("id", session.user.id)
         .single();
 
@@ -59,7 +70,7 @@ const Profile = () => {
       } else if (data) {
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
-        setCountry(data.country || ""); // Set country from fetched data
+        setCountry(data.country || "India"); // Set country from fetched data, default to India
       }
       setEmail(session.user.email || "");
       setLoading(false);
@@ -80,7 +91,7 @@ const Profile = () => {
       .update({ 
         first_name: firstName, 
         last_name: lastName, 
-        country: country, // Update country
+        country: country,
         updated_at: new Date().toISOString() 
       })
       .eq("id", session.user.id);

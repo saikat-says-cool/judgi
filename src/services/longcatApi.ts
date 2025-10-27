@@ -79,14 +79,24 @@ export const getLongCatCompletion = async (
 
     const model = deepthinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
+    // Construct the system prompt with country context
+    let systemPrompt = "You are JudgiAI, an expert legal assistant. Provide accurate and concise legal information. Always cite sources when possible. ";
+    if (userCountry) {
+      systemPrompt += `Unless explicitly stated otherwise in the user's query, assume all legal discussions and research should be focused on the laws and precedents of ${userCountry}.`;
+    }
+
     const messagesWithContext = [...messages];
     if (context) {
-      const systemMessageIndex = messagesWithContext.findIndex(msg => msg.role === "system");
-      if (systemMessageIndex !== -1) {
-        messagesWithContext[systemMessageIndex].content = `${context}\n${messagesWithContext[systemMessageIndex].content}`;
+      // Prepend context to the system message if it exists, otherwise create one
+      const existingSystemMessageIndex = messagesWithContext.findIndex(msg => msg.role === "system");
+      if (existingSystemMessageIndex !== -1) {
+        messagesWithContext[existingSystemMessageIndex].content = `${systemPrompt}\n${context}\n${messagesWithContext[existingSystemMessageIndex].content}`;
       } else {
-        messagesWithContext.unshift({ role: "system", content: context });
+        messagesWithContext.unshift({ role: "system", content: `${systemPrompt}\n${context}` });
       }
+    } else {
+      // If no search context, just add the system prompt
+      messagesWithContext.unshift({ role: "system", content: systemPrompt });
     }
 
     const response = await longcatClient.chat.completions.create({

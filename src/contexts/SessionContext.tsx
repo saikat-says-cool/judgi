@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Session, createClient } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { showError } from '@/utils/toast'; // Assuming you have a toast utility
+import { showError } from '@/utils/toast';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -41,15 +41,10 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
     );
 
-    // Fetch initial session
+    // Fetch initial session without immediate navigation
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setIsLoading(false);
-      if (!session) {
-        navigate('/'); // Redirect to landing page if no session
-      } else {
-        navigate('/chat'); // Redirect to chat if session exists
-      }
     });
 
     return () => {

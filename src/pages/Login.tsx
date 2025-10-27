@@ -1,12 +1,28 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useSession } from '@/contexts/SessionContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const { supabase } = useSession();
+  const { supabase, session, isLoading } = useSession();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && session) {
+      navigate('/chat'); // Redirect to chat if already logged in
+    }
+  }, [session, isLoading, navigate]);
+
+  if (isLoading || session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p> {/* Or a proper loading spinner */}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
@@ -28,7 +44,7 @@ const Login = () => {
               },
             }}
             theme="light"
-            redirectTo="/chat" // Redirect to /chat after login
+            // redirectTo="/chat" // Removed this, as SessionContext handles it
           />
         </div>
       </div>

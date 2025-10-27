@@ -7,8 +7,9 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
-import LandingPage from "./pages/LandingPage"; // Import the new LandingPage
+import LandingPage from "./pages/LandingPage";
 import { SessionContextProvider } from "./contexts/SessionContext";
+import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
 
 const queryClient = new QueryClient();
 
@@ -20,10 +21,15 @@ const App = () => (
       <BrowserRouter>
         <SessionContextProvider>
           <Routes>
-            <Route path="/" element={<LandingPage />} /> {/* Landing page is now the root */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/chat" element={<Index />} /> {/* Main chat interface is now /chat */}
-            <Route path="/profile" element={<Profile />} />
+            
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/chat" element={<Index />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

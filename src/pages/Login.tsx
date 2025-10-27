@@ -4,7 +4,6 @@ import React from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useSession } from '@/contexts/SessionContext';
-import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const Login = () => {
   const { supabase } = useSession();
@@ -16,7 +15,7 @@ const Login = () => {
         <div className="p-6 rounded-lg shadow-lg bg-card">
           <Auth
             supabaseClient={supabase}
-            providers={[]} // You can add 'google', 'github', etc. here if desired
+            providers={[]}
             appearance={{
               theme: ThemeSupa,
               variables: {
@@ -28,12 +27,11 @@ const Login = () => {
                 },
               },
             }}
-            theme="light" // Or "dark" based on your app's theme
-            redirectTo={window.location.origin} // Redirects to the current origin after auth
+            theme="light"
+            redirectTo={window.location.origin}
           />
         </div>
       </div>
-      <MadeWithDyad />
     </div>
   );
 };

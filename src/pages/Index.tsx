@@ -5,9 +5,8 @@ import ChatLayout from "@/components/ChatLayout";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
 import InitialPrompt from "@/components/InitialPrompt";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { getLongCatCompletion } from "@/services/longcatApi";
-import { showLoading, dismissToast, showError } from "@/utils/toast";
+import { showError } from "@/utils/toast"; // Keep showError for other errors
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -28,7 +27,7 @@ const Index = () => {
   const { session, isLoading: isSessionLoading } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasChatStarted, setHasChatStarted] = useState(false);
-  const [isAiResponding, setIsAiResponding] = useState(false); // Renamed from isLoading to be more specific
+  const [isAiResponding, setIsAiResponding] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
@@ -62,7 +61,7 @@ const Index = () => {
   }, []);
 
   const loadConversationMessages = useCallback(async (convId: string) => {
-    setIsAiResponding(true); // Use isAiResponding for loading messages too
+    setIsAiResponding(true);
     try {
       const { data: chatMessages, error: messagesError } = await supabase
         .from('chats')
@@ -88,22 +87,19 @@ const Index = () => {
     }
   }, []);
 
-  // Effect to load messages and conversations when session is ready
   useEffect(() => {
     if (!isSessionLoading && session) {
       const initializeChat = async () => {
-        setIsAiResponding(true); // Use isAiResponding for initial chat loading
+        setIsAiResponding(true);
         try {
           const fetchedConversations = await fetchConversations(session.user.id);
           setConversations(fetchedConversations);
 
           let currentConvId: string | null = null;
           if (fetchedConversations.length > 0) {
-            // Load the most recent conversation by default
             currentConvId = fetchedConversations[0].id;
             await loadConversationMessages(currentConvId);
           } else {
-            // If no existing conversations, start a new one
             currentConvId = uuidv4();
             setMessages([]);
             setHasChatStarted(false);
@@ -154,15 +150,13 @@ const Index = () => {
 
     if (!hasChatStarted) {
       setHasChatStarted(true);
-      // After first message, refresh conversations to show the new one
       if (session) {
         const updatedConversations = await fetchConversations(session.user.id);
         setConversations(updatedConversations);
       }
     }
 
-    setIsAiResponding(true); // Use isAiResponding when AI is processing
-    const loadingToastId = showLoading("Getting AI response...");
+    setIsAiResponding(true);
 
     try {
       const apiMessages = [...messages, newUserMessage].map(msg => ({
@@ -181,7 +175,6 @@ const Index = () => {
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
       await saveMessage(errorMessage, conversationId);
     } finally {
-      dismissToast(String(loadingToastId));
       setIsAiResponding(false);
     }
   };
@@ -204,7 +197,6 @@ const Index = () => {
     setConversations(prev => [{ id: newConvId, title: "New Chat" }, ...prev]);
   };
 
-  // Only show full page loading for initial session loading
   if (isSessionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -214,7 +206,7 @@ const Index = () => {
   }
 
   if (!session) {
-    return null; // SessionContextProvider will handle redirect to login
+    return null;
   }
 
   return (
@@ -236,14 +228,13 @@ const Index = () => {
             {messages.map((msg, index) => (
               <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />
             ))}
-            {isAiResponding && ( // Use isAiResponding here
+            {isAiResponding && (
               <ChatMessage message="AI is thinking..." isUser={false} />
             )}
           </ChatLayout>
         ) : (
           <InitialPrompt onSendMessage={handleSendMessage} />
         )}
-        <MadeWithDyad />
       </div>
     </div>
   );

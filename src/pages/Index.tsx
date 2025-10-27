@@ -11,8 +11,8 @@ import { showLoading, dismissToast, showError } from "@/utils/toast";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
-import Sidebar from "@/components/Sidebar"; // Import Sidebar
-import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
+import Sidebar from "@/components/Sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Message {
   text: string;
@@ -28,10 +28,10 @@ const Index = () => {
   const { session, isLoading: isSessionLoading } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasChatStarted, setHasChatStarted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAiResponding, setIsAiResponding] = useState(false); // Renamed from isLoading to be more specific
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true); // State for desktop sidebar
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
 
   const isMobile = useIsMobile();
 
@@ -62,7 +62,7 @@ const Index = () => {
   }, []);
 
   const loadConversationMessages = useCallback(async (convId: string) => {
-    setIsLoading(true);
+    setIsAiResponding(true); // Use isAiResponding for loading messages too
     try {
       const { data: chatMessages, error: messagesError } = await supabase
         .from('chats')
@@ -84,7 +84,7 @@ const Index = () => {
       setMessages([]);
       setHasChatStarted(false);
     } finally {
-      setIsLoading(false);
+      setIsAiResponding(false);
     }
   }, []);
 
@@ -92,7 +92,7 @@ const Index = () => {
   useEffect(() => {
     if (!isSessionLoading && session) {
       const initializeChat = async () => {
-        setIsLoading(true);
+        setIsAiResponding(true); // Use isAiResponding for initial chat loading
         try {
           const fetchedConversations = await fetchConversations(session.user.id);
           setConversations(fetchedConversations);
@@ -113,7 +113,7 @@ const Index = () => {
           console.error("Error initializing chat:", error);
           showError("Failed to initialize chat.");
         } finally {
-          setIsLoading(false);
+          setIsAiResponding(false);
         }
       };
       initializeChat();
@@ -161,7 +161,7 @@ const Index = () => {
       }
     }
 
-    setIsLoading(true);
+    setIsAiResponding(true); // Use isAiResponding when AI is processing
     const loadingToastId = showLoading("Getting AI response...");
 
     try {
@@ -182,12 +182,12 @@ const Index = () => {
       await saveMessage(errorMessage, conversationId);
     } finally {
       dismissToast(String(loadingToastId));
-      setIsLoading(false);
+      setIsAiResponding(false);
     }
   };
 
   const handleSelectConversation = async (id: string) => {
-    if (id === conversationId) return; // Already on this conversation
+    if (id === conversationId) return;
     setConversationId(id);
     await loadConversationMessages(id);
   };
@@ -201,20 +201,20 @@ const Index = () => {
     setConversationId(newConvId);
     setMessages([]);
     setHasChatStarted(false);
-    // Add the new conversation to the list immediately
     setConversations(prev => [{ id: newConvId, title: "New Chat" }, ...prev]);
   };
 
-  if (isSessionLoading || isLoading) {
+  // Only show full page loading for initial session loading
+  if (isSessionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <p>Loading session...</p>
       </div>
     );
   }
 
   if (!session) {
-    return null;
+    return null; // SessionContextProvider will handle redirect to login
   }
 
   return (
@@ -231,12 +231,12 @@ const Index = () => {
         {hasChatStarted && conversationId ? (
           <ChatLayout
             inputArea={<ChatInput onSendMessage={handleSendMessage} />}
-            onToggleSidebar={() => setIsDesktopSidebarOpen(prev => !prev)} // Pass toggle for desktop
+            onToggleSidebar={() => setIsDesktopSidebarOpen(prev => !prev)}
           >
             {messages.map((msg, index) => (
               <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />
             ))}
-            {isLoading && (
+            {isAiResponding && ( // Use isAiResponding here
               <ChatMessage message="AI is thinking..." isUser={false} />
             )}
           </ChatLayout>

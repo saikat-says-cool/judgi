@@ -7,20 +7,35 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { showError, showSuccess } from "@/utils/toast"; // Import showSuccess
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { showError, showSuccess } from "@/utils/toast";
 
 interface ProfileData {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
+  country: string | null; // Add country to profile data
 }
+
+const countries = [
+  { value: "India", label: "India" },
+  { value: "United States", label: "United States" },
+  { value: "United Kingdom", label: "United Kingdom" },
+  { value: "Canada", label: "Canada" },
+  { value: "Australia", label: "Australia" },
+  { value: "Germany", label: "Germany" },
+  { value: "France", label: "France" },
+  { value: "Brazil", label: "Brazil" },
+  { value: "South Africa", label: "South Africa" },
+];
 
 const Profile = () => {
   const { supabase, session } = useSession();
   const navigate = useNavigate();
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
-  const [email, setEmail] = useState<string>(""); // To display email
+  const [email, setEmail] = useState<string>("");
+  const [country, setCountry] = useState<string>(""); // New state for country
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -34,7 +49,7 @@ const Profile = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name")
+        .select("first_name, last_name, country") // Select country
         .eq("id", session.user.id)
         .single();
 
@@ -44,8 +59,9 @@ const Profile = () => {
       } else if (data) {
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
+        setCountry(data.country || ""); // Set country from fetched data
       }
-      setEmail(session.user.email || ""); // Set email from session
+      setEmail(session.user.email || "");
       setLoading(false);
     };
 
@@ -61,7 +77,12 @@ const Profile = () => {
     setIsUpdating(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ first_name: firstName, last_name: lastName, updated_at: new Date().toISOString() })
+      .update({ 
+        first_name: firstName, 
+        last_name: lastName, 
+        country: country, // Update country
+        updated_at: new Date().toISOString() 
+      })
       .eq("id", session.user.id);
 
     if (error) {
@@ -118,6 +139,21 @@ const Profile = () => {
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" value={email} readOnly />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="country">Country</Label>
+            <Select value={country} onValueChange={setCountry}>
+              <SelectTrigger id="country">
+                <SelectValue placeholder="Select a country" />
+              </SelectTrigger>
+              <SelectContent>
+                {countries.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button onClick={handleUpdateProfile} className="w-full" disabled={isUpdating}>
             {isUpdating ? "Updating..." : "Update Profile"}

@@ -1,7 +1,5 @@
 "use client";
 
-// import { supabase } from "@/integrations/supabase/client"; // No longer needed for search
-
 interface LegalDocument {
   id: string;
   title: string;
@@ -25,13 +23,15 @@ const getLangsearchCredentials = () => {
   return { LANGSEARCH_API_KEY, LANGSEARCH_API_URL };
 };
 
-export const searchLegalDocuments = async (query: string, count: number = 5): Promise<LegalDocument[]> => {
+export const searchLegalDocuments = async (query: string, count: number = 5, country: string | null = null): Promise<LegalDocument[]> => {
   if (!query.trim()) {
     return [];
   }
 
   try {
     const { LANGSEARCH_API_KEY, LANGSEARCH_API_URL } = getLangsearchCredentials();
+
+    const fullQuery = country ? `${query} in ${country} law` : query; // Append country to query
 
     const response = await fetch(LANGSEARCH_API_URL, {
       method: 'POST',
@@ -40,7 +40,7 @@ export const searchLegalDocuments = async (query: string, count: number = 5): Pr
         'Authorization': `Bearer ${LANGSEARCH_API_KEY}`,
       },
       body: JSON.stringify({ 
-        query, 
+        query: fullQuery, // Use the fullQuery
         count: count, 
         summary: true 
       }),
@@ -88,10 +88,10 @@ export const searchCurrentNews = async (query: string, count: number = 2): Promi
         'Authorization': `Bearer ${LANGSEARCH_API_KEY}`,
       },
       body: JSON.stringify({ 
-        query: `current news about ${query}`, // Focus on news
-        freshness: "oneDay", // Only recent news
-        count: count, // Slight calls
-        summary: false // Shorter snippets for news
+        query: `current news about ${query}`,
+        freshness: "oneDay",
+        count: count,
+        summary: false
       }),
     });
 
@@ -106,7 +106,7 @@ export const searchCurrentNews = async (query: string, count: number = 2): Promi
     const newsDocuments: LegalDocument[] = data.data.webPages.value.map((doc: any) => ({
       id: doc.id || Math.random().toString(36).substring(2, 15),
       title: doc.name || "Untitled News",
-      content: doc.snippet || "", // Use snippet for news
+      content: doc.snippet || "",
       citation: doc.url || null,
       case_id: null,
       document_type: "news_article",

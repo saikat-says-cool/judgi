@@ -1,13 +1,14 @@
 "use client";
 
 import OpenAI from "openai";
-import { searchLegalDocuments, searchCurrentNews } from "./legalDocumentService"; // Import both search functions
+import { searchLegalDocuments, searchCurrentNews } from "./legalDocumentService";
+import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 
 // Ensure VITE_LONGCAT_API_KEY is defined in your .env.local file
 const longcatClient = new OpenAI({
   apiKey: import.meta.env.VITE_LONGCAT_API_KEY,
   baseURL: "https://api.longcat.chat/openai",
-  dangerouslyAllowBrowser: true, // <--- Added this line to allow client-side calls
+  dangerouslyAllowBrowser: true,
 });
 
 interface LongCatMessage {
@@ -18,13 +19,14 @@ interface LongCatMessage {
 interface GetLongCatCompletionOptions {
   researchMode: 'none' | 'medium' | 'max';
   deepthinkMode: boolean;
+  userId: string; // Pass userId to fetch country
 }
 
 export const getLongCatCompletion = async (
   messages: LongCatMessage[],
   options: GetLongCatCompletionOptions
 ): Promise<string> => {
-  const { researchMode, deepthinkMode } = options;
+  const { researchMode, deepthinkMode, userId } = options;
 
   if (!import.meta.env.VITE_LONGCAT_API_KEY) {
     console.error("LongCat API Key is not set. Please add VITE_LONGCAT_API_KEY to your .env.local file.");
@@ -32,14 +34,29 @@ export const getLongCatCompletion = async (
   }
 
   try {
+    // Fetch user's country from profiles table
+    let userCountry: string | null = null;
+    if (userId) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('country')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user country:", error);
+      } else if (data) {
+        userCountry = data.country;
+      }
+    }
+
     const latestUserMessage = messages.findLast(msg => msg.role === "user")?.content || "";
     let context = "";
     let documents: any[] = [];
 
     if (latestUserMessage) {
       if (researchMode === 'none') {
-        // Slight API calls for current relevant news
-        documents = await searchCurrentNews(latestUserMessage, 2); // 2 news articles
+        documents = await searchCurrentNews(latestUserMessage, 2);
         if (documents.length > 0) {
           context += "Based on the following current news articles:\n\n";
           documents.forEach((doc, index) => {
@@ -48,9 +65,8 @@ export const getLongCatCompletion = async (
           context += "Please answer the user's question, incorporating this recent information.\n\n";
         }
       } else {
-        // Medium or Max legal research
-        const count = researchMode === 'medium' ? 3 : 10; // 3 for medium, 10 for max
-        documents = await searchLegalDocuments(latestUserMessage, count);
+        const count = researchMode === 'medium' ? 3 : 10;
+        documents = await searchLegalDocuments(latestUserMessage, count, userCountry); // Pass userCountry
         if (documents.length > 0) {
           context += "Based on the following legal documents:\n\n";
           documents.forEach((doc, index) => {

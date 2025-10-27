@@ -8,12 +8,12 @@ import InitialPrompt from "@/components/InitialPrompt";
 import { getLongCatCompletion } from "@/services/longcatApi";
 import { showError } from "@/utils/toast";
 import { useSession } from "@/contexts/SessionContext";
-import { useChatModes } from "@/contexts/ChatModeContext"; // Import useChatModes
+import { useChatModes } from "@/contexts/ChatModeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import Sidebar from "@/components/Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Message {
   text: string;
@@ -27,7 +27,7 @@ interface ConversationSummary {
 
 const Index = () => {
   const { session, isLoading: isSessionLoading } = useSession();
-  const { researchMode, deepthinkMode } = useChatModes(); // Use chat modes
+  const { researchMode, deepthinkMode } = useChatModes();
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasChatStarted, setHasChatStarted] = useState(false);
   const [isAiResponding, setIsAiResponding] = useState(false);
@@ -98,12 +98,10 @@ const Index = () => {
           const fetchedConversations = await fetchConversations(session.user.id);
           setConversations(fetchedConversations);
 
-          // Always start a new chat on load/sign-in
           const newConvId = uuidv4();
           setConversationId(newConvId);
           setMessages([]);
           setHasChatStarted(false);
-          // Add the new chat to the conversations list if it's not already there
           if (!fetchedConversations.some(conv => conv.id === newConvId)) {
             setConversations(prev => [{ id: newConvId, title: "New Chat" }, ...prev]);
           }
@@ -165,8 +163,11 @@ const Index = () => {
         content: msg.text,
       }));
 
-      // Pass the current chat modes to the AI completion function
-      const aiResponseText = await getLongCatCompletion(apiMessages, { researchMode, deepthinkMode });
+      const aiResponseText = await getLongCatCompletion(apiMessages, { 
+        researchMode, 
+        deepthinkMode, 
+        userId: session.user.id // Pass userId here
+      });
       const aiResponse: Message = { text: aiResponseText, role: "assistant" };
       setMessages((prevMessages) => [...prevMessages, aiResponse]);
       await saveMessage(aiResponse, conversationId);

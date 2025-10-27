@@ -41,9 +41,17 @@ const Login = () => {
                     brandAccent: 'hsl(var(--primary-foreground))',
                   },
                 },
+                dark: { // Customizing for dark theme
+                  colors: {
+                    inputBackground: 'hsl(var(--input))', // Ensure input background is appropriate
+                    inputBorder: 'hsl(var(--border))', // Ensure input border is appropriate
+                    inputForeground: 'hsl(var(--foreground))', // Set input text color to foreground (white in dark mode)
+                    inputText: 'hsl(var(--foreground))', // Also set inputText for consistency
+                  },
+                },
               },
             }}
-            theme="light"
+            theme="dark" // Explicitly setting theme to dark
             // redirectTo="/chat" // Removed this, as SessionContext handles it
           />
         </div>

@@ -2,6 +2,8 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatMessageProps {
   message: string;
@@ -19,7 +21,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isUser }) => {
             : "bg-muted text-muted-foreground",
         )}
       >
-        <p className="text-sm">{message}</p>
+        <div className={cn("prose dark:prose-invert", !isUser && "prose-sm")}> {/* Apply prose for markdown styling */}
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {message}
+          </ReactMarkdown>
+        </div>
       </div>
     </div>
   );

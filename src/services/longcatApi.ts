@@ -1,7 +1,7 @@
 "use client";
 
 import OpenAI from "openai";
-import { searchLegalDocuments } from "./legalDocumentService"; // Import the new service
+import { searchLegalDocuments, searchCurrentNews } from "./legalDocumentService"; // Import both search functions
 
 // Ensure VITE_LONGCAT_API_KEY is defined in your .env.local file
 const longcatClient = new OpenAI({
@@ -15,32 +15,56 @@ interface LongCatMessage {
   content: string;
 }
 
-export const getLongCatCompletion = async (messages: LongCatMessage[]): Promise<string> => {
+interface GetLongCatCompletionOptions {
+  researchMode: 'none' | 'medium' | 'max';
+  deepthinkMode: boolean;
+}
+
+export const getLongCatCompletion = async (
+  messages: LongCatMessage[],
+  options: GetLongCatCompletionOptions
+): Promise<string> => {
+  const { researchMode, deepthinkMode } = options;
+
   if (!import.meta.env.VITE_LONGCAT_API_KEY) {
     console.error("LongCat API Key is not set. Please add VITE_LONGCAT_API_KEY to your .env.local file.");
     throw new Error("LongCat API Key is missing.");
   }
 
   try {
-    // Extract the latest user message for searching legal documents
     const latestUserMessage = messages.findLast(msg => msg.role === "user")?.content || "";
-
     let context = "";
+    let documents: any[] = [];
+
     if (latestUserMessage) {
-      const relevantDocuments = await searchLegalDocuments(latestUserMessage);
-      if (relevantDocuments.length > 0) {
-        context = "Based on the following legal documents:\n\n";
-        relevantDocuments.forEach((doc, index) => {
-          context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 500)}...\n\n`; // Limit content to 500 chars for brevity
-        });
-        context += "Please answer the user's question using this information.\n\n";
+      if (researchMode === 'none') {
+        // Slight API calls for current relevant news
+        documents = await searchCurrentNews(latestUserMessage, 2); // 2 news articles
+        if (documents.length > 0) {
+          context += "Based on the following current news articles:\n\n";
+          documents.forEach((doc, index) => {
+            context += `News Article ${index + 1}:\nTitle: ${doc.title}\nURL: ${doc.citation || 'N/A'}\nSnippet: ${doc.content}\n\n`;
+          });
+          context += "Please answer the user's question, incorporating this recent information.\n\n";
+        }
+      } else {
+        // Medium or Max legal research
+        const count = researchMode === 'medium' ? 3 : 10; // 3 for medium, 10 for max
+        documents = await searchLegalDocuments(latestUserMessage, count);
+        if (documents.length > 0) {
+          context += "Based on the following legal documents:\n\n";
+          documents.forEach((doc, index) => {
+            context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 500)}...\n\n`;
+          });
+          context += "Please answer the user's question using this information.\n\n";
+        }
       }
     }
 
-    // Prepend the context to the first user message or create a new system message
+    const model = deepthinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+
     const messagesWithContext = [...messages];
     if (context) {
-      // If there's already a system message, append context. Otherwise, create one.
       const systemMessageIndex = messagesWithContext.findIndex(msg => msg.role === "system");
       if (systemMessageIndex !== -1) {
         messagesWithContext[systemMessageIndex].content = `${context}\n${messagesWithContext[systemMessageIndex].content}`;
@@ -50,10 +74,10 @@ export const getLongCatCompletion = async (messages: LongCatMessage[]): Promise<
     }
 
     const response = await longcatClient.chat.completions.create({
-      model: "LongCat-Flash-Chat", // Using the recommended model
-      messages: messagesWithContext, // Use messages with added context
-      max_tokens: 1000, // Limit response length
-      temperature: 0.7, // Adjust creativity
+      model: model,
+      messages: messagesWithContext,
+      max_tokens: 1000,
+      temperature: 0.7,
     });
     return response.choices[0].message?.content || "No response from AI.";
   } catch (error) {

@@ -8,6 +8,7 @@ import InitialPrompt from "@/components/InitialPrompt";
 import { getLongCatCompletion } from "@/services/longcatApi";
 import { showError } from "@/utils/toast";
 import { useSession } from "@/contexts/SessionContext";
+import { useChatModes } from "@/contexts/ChatModeContext"; // Import useChatModes
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import Sidebar from "@/components/Sidebar";
@@ -26,6 +27,7 @@ interface ConversationSummary {
 
 const Index = () => {
   const { session, isLoading: isSessionLoading } = useSession();
+  const { researchMode, deepthinkMode } = useChatModes(); // Use chat modes
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasChatStarted, setHasChatStarted] = useState(false);
   const [isAiResponding, setIsAiResponding] = useState(false);
@@ -119,7 +121,7 @@ const Index = () => {
       setHasChatStarted(false);
       setConversations([]);
     }
-  }, [session, isSessionLoading, fetchConversations]); // Removed loadConversationMessages from dependencies as it's not called directly here
+  }, [session, isSessionLoading, fetchConversations]);
 
   const saveMessage = async (message: Message, currentConvId: string) => {
     if (!session) {
@@ -150,7 +152,6 @@ const Index = () => {
 
     if (!hasChatStarted) {
       setHasChatStarted(true);
-      // After the first message, update the title of the new chat in the sidebar
       setConversations(prev => prev.map(conv => 
         conv.id === conversationId ? { ...conv, title: text.substring(0, 50) + (text.length > 50 ? "..." : "") } : conv
       ));
@@ -164,7 +165,8 @@ const Index = () => {
         content: msg.text,
       }));
 
-      const aiResponseText = await getLongCatCompletion(apiMessages);
+      // Pass the current chat modes to the AI completion function
+      const aiResponseText = await getLongCatCompletion(apiMessages, { researchMode, deepthinkMode });
       const aiResponse: Message = { text: aiResponseText, role: "assistant" };
       setMessages((prevMessages) => [...prevMessages, aiResponse]);
       await saveMessage(aiResponse, conversationId);
@@ -202,7 +204,6 @@ const Index = () => {
       showError("Please log in to rename a chat.");
       return;
     }
-    // Update the content of the first message in the conversation to reflect the new title
     const { error } = await supabase
       .from('chats')
       .update({ content: newTitle })
@@ -250,7 +251,6 @@ const Index = () => {
     }
   };
 
-  // Determine the current chat title based on the active conversationId
   const currentChatTitle = useMemo(() => {
     if (!conversationId) return "New Chat";
     const activeConversation = conversations.find(conv => conv.id === conversationId);
@@ -284,11 +284,11 @@ const Index = () => {
       <div className={`flex-grow flex flex-col ${isDesktopSidebarOpen && !isMobile ? "md:ml-0" : "md:ml-0"}`}>
         {hasChatStarted && conversationId ? (
           <ChatLayout
-            key={conversationId} // Use key to force remount and re-trigger animation on conversation change
+            key={conversationId}
             inputArea={<ChatInput onSendMessage={handleSendMessage} />}
             onToggleSidebar={() => setIsDesktopSidebarOpen(prev => !prev)}
             currentChatTitle={currentChatTitle}
-            className="animate-in fade-in zoom-in-95 duration-500 ease-out" // Apply animation classes
+            className="animate-in fade-in zoom-in-95 duration-500 ease-out"
           >
             {messages.map((msg, index) => (
               <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />

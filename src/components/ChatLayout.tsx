@@ -6,19 +6,21 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils"; // Import cn utility
 
 interface ChatLayoutProps {
   children: React.ReactNode;
   inputArea: React.ReactNode;
   onToggleSidebar?: () => void;
-  currentChatTitle: string | null; // New prop for the chat title
+  currentChatTitle: string | null;
+  className?: string; // New prop for custom classes
 }
 
-const ChatLayout: React.FC<ChatLayoutProps> = ({ children, inputArea, onToggleSidebar, currentChatTitle }) => {
+const ChatLayout: React.FC<ChatLayoutProps> = ({ children, inputArea, onToggleSidebar, currentChatTitle, className }) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex flex-col h-screen w-full max-w-4xl mx-auto p-4">
+    <div className={cn("flex flex-col h-screen w-full max-w-4xl mx-auto p-4", className)}>
       <Card className="flex flex-col flex-grow">
         <CardHeader className="p-4 border-b flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">

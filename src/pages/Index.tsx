@@ -284,9 +284,11 @@ const Index = () => {
       <div className={`flex-grow flex flex-col ${isDesktopSidebarOpen && !isMobile ? "md:ml-0" : "md:ml-0"}`}>
         {hasChatStarted && conversationId ? (
           <ChatLayout
+            key={conversationId} // Use key to force remount and re-trigger animation on conversation change
             inputArea={<ChatInput onSendMessage={handleSendMessage} />}
             onToggleSidebar={() => setIsDesktopSidebarOpen(prev => !prev)}
-            currentChatTitle={currentChatTitle} // Pass the current chat title
+            currentChatTitle={currentChatTitle}
+            className="animate-in fade-in zoom-in-95 duration-500 ease-out" // Apply animation classes
           >
             {messages.map((msg, index) => (
               <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />

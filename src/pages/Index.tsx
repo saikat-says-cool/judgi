@@ -281,7 +281,7 @@ const Index = () => {
         isDesktopOpen={isDesktopSidebarOpen}
         onToggleDesktopSidebar={() => setIsDesktopSidebarOpen(prev => !prev)}
       />
-      <div className={`flex-grow flex flex-col h-full ${isDesktopSidebarOpen && !isMobile ? "md:ml-0" : "md:ml-0"}`}>
+      <div className={`flex-grow flex flex-col ${isDesktopSidebarOpen && !isMobile ? "md:ml-0" : "md:ml-0"}`}>
         {hasChatStarted && conversationId ? (
           <ChatLayout
             key={conversationId} // Use key to force remount and re-trigger animation on conversation change

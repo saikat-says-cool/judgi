@@ -72,7 +72,7 @@ export const getLongCatCompletion = async (
         context += "Based on the following legal documents (similar cases, legal documents, historical cases):\n\n";
         legalDocuments.forEach((doc, index) => {
           // Increased content length for more detail
-          context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 1000)}...\n\n`;
+          context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 1500)}...\n\n`;
         });
       }
 
@@ -114,7 +114,7 @@ export const getLongCatCompletion = async (
     const response = await longcatClient.chat.completions.create({
       model: model,
       messages: messagesWithContext,
-      max_tokens: 4096, // Increased max_tokens to allow for much longer responses
+      max_tokens: 4096, // Max tokens remains high for long responses
       temperature: 0.7,
     });
     return response.choices[0].message?.content || "No response from AI.";

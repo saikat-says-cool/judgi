@@ -29,12 +29,16 @@ export const searchLegalDocuments = async (query: string): Promise<LegalDocument
 
   try {
     const response = await fetch(LANGSEARCH_API_URL, {
-      method: 'POST', // Assuming a POST request for search
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${LANGSEARCH_API_KEY}`,
       },
-      body: JSON.stringify({ query, limit: 5 }), // Sending the query and a limit
+      body: JSON.stringify({ 
+        query, 
+        count: 5, // Changed from 'limit' to 'count' as per documentation
+        summary: true // Requesting full summaries for better context
+      }),
     });
 
     if (!response.ok) {
@@ -45,18 +49,17 @@ export const searchLegalDocuments = async (query: string): Promise<LegalDocument
 
     const data = await response.json();
 
-    // Assuming Langsearch returns an array of documents with similar structure
-    // You might need to adjust this mapping based on the actual Langsearch response format
-    const legalDocuments: LegalDocument[] = data.results.map((doc: any) => ({
-      id: doc.id || doc.document_id || Math.random().toString(36).substring(2, 15), // Use existing ID or generate one
-      title: doc.title || "Untitled Document",
-      content: doc.content || doc.text || "",
-      citation: doc.citation || null,
-      case_id: doc.case_id || null,
-      document_type: doc.document_type || null,
-      publication_date: doc.publication_date || null,
-      author: doc.author || null,
-      keywords: doc.keywords || null,
+    // Map Langsearch Web Search response to LegalDocument interface
+    const legalDocuments: LegalDocument[] = data.data.webPages.value.map((doc: any) => ({
+      id: doc.id || Math.random().toString(36).substring(2, 15), // Use existing ID or generate one
+      title: doc.name || "Untitled Document", // 'name' from Langsearch maps to 'title'
+      content: doc.summary || doc.snippet || "", // Prefer 'summary' if available, otherwise 'snippet'
+      citation: doc.url || null, // Using URL as a form of citation for web results
+      case_id: null, // Not available from web search
+      document_type: "web_page", // Explicitly set type for web search results
+      publication_date: doc.datePublished || null,
+      author: null, // Not available from web search
+      keywords: null, // Not available from web search
     }));
 
     return legalDocuments;

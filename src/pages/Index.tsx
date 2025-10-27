@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import Sidebar from "@/components/Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 interface Message {
   text: string;
@@ -294,7 +295,7 @@ const Index = () => {
               <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />
             ))}
             {isAiResponding && (
-              <ChatMessage message="AI is thinking..." isUser={false} />
+              <LoadingSpinner /> {/* Use the new LoadingSpinner here */}
             )}
           </ChatLayout>
         ) : (

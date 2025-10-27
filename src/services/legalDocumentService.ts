@@ -73,13 +73,15 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
   }
 };
 
-export const searchCurrentNews = async (query: string, count: number = 2): Promise<LegalDocument[]> => {
+export const searchCurrentNews = async (query: string, count: number = 2, country: string | null = null): Promise<LegalDocument[]> => {
   if (!query.trim()) {
     return [];
   }
 
   try {
     const { LANGSEARCH_API_KEY, LANGSEARCH_API_URL } = getLangsearchCredentials();
+
+    const fullQuery = country ? `current news about ${query} in ${country}` : `current news about ${query}`;
 
     const response = await fetch(LANGSEARCH_API_URL, {
       method: 'POST',
@@ -88,7 +90,7 @@ export const searchCurrentNews = async (query: string, count: number = 2): Promi
         'Authorization': `Bearer ${LANGSEARCH_API_KEY}`,
       },
       body: JSON.stringify({ 
-        query: `current news about ${query}`,
+        query: fullQuery, // Use the fullQuery
         freshness: "oneDay",
         count: count,
         summary: false

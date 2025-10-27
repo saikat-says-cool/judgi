@@ -52,28 +52,39 @@ export const getLongCatCompletion = async (
 
     const latestUserMessage = messages.findLast(msg => msg.role === "user")?.content || "";
     let context = "";
-    let documents: any[] = [];
+    let legalDocuments: any[] = [];
+    let newsDocuments: any[] = [];
 
     if (latestUserMessage) {
       if (researchMode === 'none') {
-        documents = await searchCurrentNews(latestUserMessage, 2);
-        if (documents.length > 0) {
-          context += "Based on the following current news articles:\n\n";
-          documents.forEach((doc, index) => {
-            context += `News Article ${index + 1}:\nTitle: ${doc.title}\nURL: ${doc.citation || 'N/A'}\nSnippet: ${doc.content}\n\n`;
-          });
-          context += "Please answer the user's question, incorporating this recent information.\n\n";
-        }
+        // Only current news, fewer articles
+        newsDocuments = await searchCurrentNews(latestUserMessage, 3, userCountry);
       } else {
-        const count = researchMode === 'medium' ? 3 : 10;
-        documents = await searchLegalDocuments(latestUserMessage, count, userCountry); // Pass userCountry
-        if (documents.length > 0) {
-          context += "Based on the following legal documents:\n\n";
-          documents.forEach((doc, index) => {
-            context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 500)}...\n\n`;
-          });
-          context += "Please answer the user's question using this information.\n\n";
-        }
+        // Fetch both legal documents and current news for 'medium' and 'max' modes
+        const legalDocCount = researchMode === 'medium' ? 10 : 20; // More retrievals
+        const newsDocCount = researchMode === 'medium' ? 3 : 5; // More news articles
+
+        legalDocuments = await searchLegalDocuments(latestUserMessage, legalDocCount, userCountry);
+        newsDocuments = await searchCurrentNews(latestUserMessage, newsDocCount, userCountry);
+      }
+
+      if (legalDocuments.length > 0) {
+        context += "Based on the following legal documents (similar cases, legal documents, historical cases):\n\n";
+        legalDocuments.forEach((doc, index) => {
+          context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 500)}...\n\n`;
+        });
+      }
+
+      if (newsDocuments.length > 0) {
+        if (legalDocuments.length > 0) context += "\n"; // Add a separator if both are present
+        context += "Based on the following current news articles relevant to the user's country:\n\n";
+        newsDocuments.forEach((doc, index) => {
+          context += `News Article ${index + 1}:\nTitle: ${doc.title}\nURL: ${doc.citation || 'N/A'}\nSnippet: ${doc.content}\n\n`;
+        });
+      }
+
+      if (context) {
+        context += "Please answer the user's question, incorporating this information.\n\n";
       }
     }
 

@@ -6,6 +6,7 @@ import OpenAI from "openai";
 const longcatClient = new OpenAI({
   apiKey: import.meta.env.VITE_LONGCAT_API_KEY,
   baseURL: "https://api.longcat.chat/openai",
+  dangerouslyAllowBrowser: true, // <--- Added this line to allow client-side calls
 });
 
 interface LongCatMessage {

@@ -96,16 +96,15 @@ const Index = () => {
           const fetchedConversations = await fetchConversations(session.user.id);
           setConversations(fetchedConversations);
 
-          let currentConvId: string | null = null;
-          if (fetchedConversations.length > 0) {
-            currentConvId = fetchedConversations[0].id;
-            await loadConversationMessages(currentConvId);
-          } else {
-            currentConvId = uuidv4();
-            setMessages([]);
-            setHasChatStarted(false);
+          // Always start a new chat on load/sign-in
+          const newConvId = uuidv4();
+          setConversationId(newConvId);
+          setMessages([]);
+          setHasChatStarted(false);
+          // Add the new chat to the conversations list if it's not already there
+          if (!fetchedConversations.some(conv => conv.id === newConvId)) {
+            setConversations(prev => [{ id: newConvId, title: "New Chat" }, ...prev]);
           }
-          setConversationId(currentConvId);
         } catch (error) {
           console.error("Error initializing chat:", error);
           showError("Failed to initialize chat.");
@@ -120,7 +119,7 @@ const Index = () => {
       setHasChatStarted(false);
       setConversations([]);
     }
-  }, [session, isSessionLoading, fetchConversations, loadConversationMessages]);
+  }, [session, isSessionLoading, fetchConversations]); // Removed loadConversationMessages from dependencies as it's not called directly here
 
   const saveMessage = async (message: Message, currentConvId: string) => {
     if (!session) {
@@ -151,10 +150,10 @@ const Index = () => {
 
     if (!hasChatStarted) {
       setHasChatStarted(true);
-      if (session) {
-        const updatedConversations = await fetchConversations(session.user.id);
-        setConversations(updatedConversations);
-      }
+      // After the first message, update the title of the new chat in the sidebar
+      setConversations(prev => prev.map(conv => 
+        conv.id === conversationId ? { ...conv, title: text.substring(0, 50) + (text.length > 50 ? "..." : "") } : conv
+      ));
     }
 
     setIsAiResponding(true);

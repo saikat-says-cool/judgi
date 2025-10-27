@@ -20,7 +20,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children, inputArea, onToggleSi
   const isMobile = useIsMobile();
 
   return (
-    <div className={cn("flex flex-col h-full w-full max-w-4xl mx-auto p-4", className)}> {/* Changed h-screen to h-full */}
+    <div className={cn("flex flex-col h-full w-full max-w-4xl mx-auto p-4", className)}>
       <Card className="flex flex-col flex-grow">
         <CardHeader className="p-4 border-b flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
@@ -32,7 +32,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children, inputArea, onToggleSi
             <CardTitle className="text-xl">{currentChatTitle || "New Chat"}</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="flex-grow overflow-y-auto p-4 space-y-4">
+        <CardContent className="flex-grow overflow-y-auto p-4 space-y-4 h-0"> {/* Added h-0 here */}
           {children}
         </CardContent>
         <Separator />

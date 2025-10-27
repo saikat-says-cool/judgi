@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -102,9 +102,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Outfit', sans-serif; /* Apply Outfit font */
+    font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
     position: relative; /* Needed for pseudo-element positioning */
-    overflow: hidden; /* To prevent scrollbars if the glow extends beyond viewport */
+    /* Removed overflow: hidden to allow scrolling */
   }
 
   body::before {

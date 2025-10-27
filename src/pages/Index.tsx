@@ -6,7 +6,7 @@ import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
 import InitialPrompt from "@/components/InitialPrompt";
 import { getLongCatCompletion } from "@/services/longcatApi";
-import { showError } from "@/utils/toast"; // Keep showError for other errors
+import { showError } from "@/utils/toast";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -53,7 +53,7 @@ const Index = () => {
       if (!conversationMap.has(chat.conversation_id)) {
         conversationMap.set(chat.conversation_id, {
           id: chat.conversation_id,
-          title: chat.content.substring(0, 50) + (chat.content.length > 50 ? "..." : ""), // Use first message as title
+          title: chat.content.substring(0, 50) + (chat.content.length > 50 ? "..." : ""),
         });
       }
     });
@@ -197,6 +197,62 @@ const Index = () => {
     setConversations(prev => [{ id: newConvId, title: "New Chat" }, ...prev]);
   };
 
+  const handleRenameConversation = async (id: string, newTitle: string) => {
+    if (!session) {
+      showError("Please log in to rename a chat.");
+      return;
+    }
+    // Update the content of the first message in the conversation to reflect the new title
+    const { error } = await supabase
+      .from('chats')
+      .update({ content: newTitle })
+      .eq('conversation_id', id)
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    if (error) {
+      console.error("Error renaming conversation:", error);
+      showError("Failed to rename conversation.");
+    } else {
+      // Refresh conversations to show the updated title
+      if (session) {
+        const updatedConversations = await fetchConversations(session.user.id);
+        setConversations(updatedConversations);
+      }
+    }
+  };
+
+  const handleDeleteConversation = async (id: string) => {
+    if (!session) {
+      showError("Please log in to delete a chat.");
+      return;
+    }
+    const { error } = await supabase
+      .from('chats')
+      .delete()
+      .eq('conversation_id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error("Error deleting conversation:", error);
+      showError("Failed to delete conversation.");
+    } else {
+      // If the deleted conversation was the currently active one, start a new chat
+      if (conversationId === id) {
+        const newConvId = uuidv4();
+        setConversationId(newConvId);
+        setMessages([]);
+        setHasChatStarted(false);
+      }
+      // Refresh conversations list
+      if (session) {
+        const updatedConversations = await fetchConversations(session.user.id);
+        setConversations(updatedConversations);
+      }
+    }
+  };
+
   if (isSessionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -215,6 +271,8 @@ const Index = () => {
         conversations={conversations}
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
+        onRenameConversation={handleRenameConversation}
+        onDeleteConversation={handleDeleteConversation}
         currentConversationId={conversationId}
         isDesktopOpen={isDesktopSidebarOpen}
         onToggleDesktopSidebar={() => setIsDesktopSidebarOpen(prev => !prev)}

@@ -7,9 +7,10 @@ import { Send } from "lucide-react";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
+  placeholder?: string; // Added placeholder prop
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, placeholder = "Type your message here..." }) => {
   const [input, setInput] = useState("");
 
   const handleSend = () => {
@@ -29,15 +30,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage }) => {
   return (
     <div className="flex items-center gap-2">
       <Textarea
-        placeholder="Type your message here..."
+        placeholder={placeholder} // Use the placeholder prop
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyPress={handleKeyPress}
         className="flex-grow resize-none min-h-[40px]"
       />
-      <Button onClick={handleSend} disabled={!input.trim()}>
+      <Button onClick={handleSend} disabled={!input.trim()} className="flex items-center gap-1"> {/* Added flex and gap for icon and text */}
         <Send className="h-4 w-4" />
-        <span className="sr-only">Send message</span>
+        <span>Send</span> {/* Added Send text */}
       </Button>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ChatLayout from "@/components/ChatLayout";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
@@ -215,7 +215,6 @@ const Index = () => {
       console.error("Error renaming conversation:", error);
       showError("Failed to rename conversation.");
     } else {
-      // Refresh conversations to show the updated title
       if (session) {
         const updatedConversations = await fetchConversations(session.user.id);
         setConversations(updatedConversations);
@@ -238,20 +237,25 @@ const Index = () => {
       console.error("Error deleting conversation:", error);
       showError("Failed to delete conversation.");
     } else {
-      // If the deleted conversation was the currently active one, start a new chat
       if (conversationId === id) {
         const newConvId = uuidv4();
         setConversationId(newConvId);
         setMessages([]);
         setHasChatStarted(false);
       }
-      // Refresh conversations list
       if (session) {
         const updatedConversations = await fetchConversations(session.user.id);
         setConversations(updatedConversations);
       }
     }
   };
+
+  // Determine the current chat title based on the active conversationId
+  const currentChatTitle = useMemo(() => {
+    if (!conversationId) return "New Chat";
+    const activeConversation = conversations.find(conv => conv.id === conversationId);
+    return activeConversation?.title || "New Chat";
+  }, [conversationId, conversations]);
 
   if (isSessionLoading) {
     return (
@@ -282,6 +286,7 @@ const Index = () => {
           <ChatLayout
             inputArea={<ChatInput onSendMessage={handleSendMessage} />}
             onToggleSidebar={() => setIsDesktopSidebarOpen(prev => !prev)}
+            currentChatTitle={currentChatTitle} // Pass the current chat title
           >
             {messages.map((msg, index) => (
               <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />

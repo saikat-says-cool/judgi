@@ -10,10 +10,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface ChatLayoutProps {
   children: React.ReactNode;
   inputArea: React.ReactNode;
-  onToggleSidebar?: () => void; // New prop for sidebar toggle
+  onToggleSidebar?: () => void;
+  currentChatTitle: string | null; // New prop for the chat title
 }
 
-const ChatLayout: React.FC<ChatLayoutProps> = ({ children, inputArea, onToggleSidebar }) => {
+const ChatLayout: React.FC<ChatLayoutProps> = ({ children, inputArea, onToggleSidebar, currentChatTitle }) => {
   const isMobile = useIsMobile();
 
   return (
@@ -21,12 +22,12 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children, inputArea, onToggleSi
       <Card className="flex flex-col flex-grow">
         <CardHeader className="p-4 border-b flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
-            {!isMobile && onToggleSidebar && ( // Show toggle button only on desktop
+            {!isMobile && onToggleSidebar && (
               <Button variant="ghost" size="icon" onClick={onToggleSidebar} aria-label="Toggle sidebar">
                 <Menu className="h-5 w-5" />
               </Button>
             )}
-            <CardTitle className="text-xl">Dyad Chat</CardTitle>
+            <CardTitle className="text-xl">{currentChatTitle || "New Chat"}</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="flex-grow overflow-y-auto p-4 space-y-4">

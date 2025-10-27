@@ -295,7 +295,7 @@ const Index = () => {
               <ChatMessage key={index} message={msg.text} isUser={msg.role === "user"} />
             ))}
             {isAiResponding && (
-              <LoadingSpinner /> {/* Use the new LoadingSpinner here */}
+              <LoadingSpinner />
             )}
           </ChatLayout>
         ) : (

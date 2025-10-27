@@ -31,9 +31,9 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
         setIsLoading(false);
 
         if (event === 'SIGNED_IN') {
-          navigate('/'); // Redirect to home page on sign in
+          navigate('/chat'); // Redirect to chat page on sign in
         } else if (event === 'SIGNED_OUT') {
-          navigate('/login'); // Redirect to login page on sign out
+          navigate('/'); // Redirect to landing page on sign out
         } else if (event === 'AUTH_API_ERROR') {
           showError("Authentication error. Please try again.");
           console.error("Supabase Auth API Error:", currentSession);
@@ -46,7 +46,9 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       setSession(session);
       setIsLoading(false);
       if (!session) {
-        navigate('/login');
+        navigate('/'); // Redirect to landing page if no session
+      } else {
+        navigate('/chat'); // Redirect to chat if session exists
       }
     });
 

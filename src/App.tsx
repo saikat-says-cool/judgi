@@ -5,9 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Login from "./pages/Login"; // Import the Login page
-import Profile from "./pages/Profile"; // Import the Profile page
-import { SessionContextProvider } from "./contexts/SessionContext"; // Import the SessionContextProvider
+import Login from "./pages/Login";
+import Profile from "./pages/Profile";
+import LandingPage from "./pages/LandingPage"; // Import the new LandingPage
+import { SessionContextProvider } from "./contexts/SessionContext";
 
 const queryClient = new QueryClient();
 
@@ -17,11 +18,12 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <SessionContextProvider> {/* Wrap the app with SessionContextProvider */}
+        <SessionContextProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} /> {/* Add the login route */}
-            <Route path="/profile" element={<Profile />} /> {/* Add the profile route */}
+            <Route path="/" element={<LandingPage />} /> {/* Landing page is now the root */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/chat" element={<Index />} /> {/* Main chat interface is now /chat */}
+            <Route path="/profile" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

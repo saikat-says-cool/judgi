@@ -28,7 +28,7 @@ const Login = () => {
               },
             }}
             theme="light"
-            redirectTo={window.location.origin}
+            redirectTo="/chat" // Redirect to /chat after login
           />
         </div>
       </div>

@@ -35,42 +35,26 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 220 10% 3%; /* Even darker, almost black */
-    --foreground: 180 20% 90%; /* Light, slightly warm off-white */
+    --background: 220 10% 3%;
+    --foreground: 180 20% 90%;
 
-    --card: 180 10% 10%; /* Slightly lighter dark for cards/input */
+    --card: 180 10% 10%;
     --card-foreground: 180 20% 90%;
 
     --popover: 180 10% 10%;
     --popover-foreground: 180 20% 90%;
 
-    --primary: 180 60% 40%; /* Vibrant teal for primary actions (send button) */
+    --primary: 180 60% 40%;
     --primary-foreground: 180 20% 90%;
 
-    --secondary: 180 10% 15%; /* Darker gray for secondary elements */
+    --secondary: 180 10% 15%;
     --secondary-foreground: 180 20% 90%;
 
-    --muted: 180 10% 12%; /* Slightly lighter than background for AI messages */
-    --muted-foreground: 180 20% 70%; /* Lighter gray for muted text */
+    --muted: 180 10% 12%;
+    --muted-foreground: 180 20% 70%;
 
     --accent: 180 10% 15%;
     --accent-foreground: 180 20% 90%;
@@ -78,20 +62,11 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 180 10% 20%; /* Slightly lighter border */
-    --input: 180 10% 10%; /* Same as card */
-    --ring: 180 60% 40%; /* Same as primary */
+    --border: 180 10% 20%;
+    --input: 180 10% 10%;
+    --ring: 180 60% 40%;
 
-    --radius: 0.5rem; /* Keep existing radius */
-
-    --sidebar-background: 180 10% 5%; /* Same as main background */
-    --sidebar-foreground: 180 20% 90%;
-    --sidebar-primary: 180 60% 40%; /* Active item, same as main primary */
-    --sidebar-primary-foreground: 180 20% 90%;
-    --sidebar-accent: 180 10% 10%; /* Hover state, same as main card */
-    --sidebar-accent-foreground: 180 20% 90%;
-    --sidebar-border: 180 10% 20%;
-    --sidebar-ring: 180 60% 40%;
+    --radius: 0.5rem;
   }
 }
 
@@ -102,36 +77,6 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif; /* Apply Inter font */
-    position: relative; /* Needed for pseudo-element positioning */
-  }
-
-  body::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 80vw; /* Adjust size as needed */
-    height: 80vh; /* Adjust size as needed */
-    background: radial-gradient(circle at center, hsl(180 60% 40% / 0.15) 0%, transparent 70%); /* Subtle teal glow */
-    filter: blur(100px); /* Soft blur */
-    transform: translate(-50%, -50%); /* Center the glow */
-    z-index: -1; /* Keep it behind content */
-    animation: pulse-glow 10s infinite alternate ease-in-out; /* Subtle animation */
-  }
-
-  @keyframes pulse-glow {
-    0% {
-      transform: translate(-50%, -50%) scale(1);
-      opacity: 0.7;
-    }
-    50% {
-      transform: translate(-50%, -50%) scale(1.05);
-      opacity: 1;
-    }
-    100% {
-      transform: translate(-50%, -50%) scale(1);
-      opacity: 0.7;
-    }
+    font-family: 'Inter', sans-serif;
   }
 }

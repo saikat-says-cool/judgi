@@ -10,6 +10,7 @@ import { Send, Loader2 } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
+import NewChatWelcome from '@/components/NewChatWelcome'; // Import the new component
 
 interface ChatMessage {
   id: string;
@@ -245,12 +246,6 @@ const ChatPage = () => {
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && !loadingAIResponse) {
-      handleSendMessage();
-    }
-  };
-
   if (loadingHistory) {
     return (
       <Card className="flex flex-col h-full items-center justify-center">
@@ -261,64 +256,67 @@ const ChatPage = () => {
 
   return (
     <Card className="flex flex-col h-full">
-      <CardContent className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full pr-4"> {/* Removed ref from ScrollArea, will use ref on last message */}
-            <div className="space-y-4 p-4">
-              {messages.length === 0 && conversationId === 'new' ? (
-                <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
-                  <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>
-                  <p>Ask JudgiAI a legal question to get started.</p>
-                </div>
-              ) : messages.length === 0 && conversationId !== 'new' ? (
-                <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
-                  <h3 className="text-xl font-semibold mb-2">This conversation is empty.</h3>
-                  <p>Start typing to continue.</p>
-                </div>
-              ) : (
-                messages.map((message, index) => (
-                  <div
-                    key={message.id}
-                    ref={index === messages.length - 1 ? lastMessageRef : null} // Assign ref only to the last message
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[70%] p-3 rounded-lg ${
-                        message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {message.content}
-                    </div>
-                  </div>
-                ))
-              )}
-              {loadingAIResponse && (
-                <div className="flex justify-start">
-                  <div className="max-w-[70%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>JudgiAI is thinking...</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-      </CardContent>
-      <CardFooter className="p-4 border-t flex items-center gap-2">
-        <Input
-          placeholder="Type your message..."
-          className="flex-1"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyDown={handleKeyPress}
-          disabled={loadingAIResponse}
+      {messages.length === 0 && conversationId === 'new' ? (
+        <NewChatWelcome
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          handleSendMessage={handleSendMessage}
+          loadingAIResponse={loadingAIResponse}
         />
-        <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
-          {loadingAIResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
-      </CardFooter>
+      ) : (
+        <>
+          <CardContent className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full pr-4">
+                <div className="space-y-4 p-4">
+                  {messages.map((message, index) => (
+                    <div
+                      key={message.id}
+                      ref={index === messages.length - 1 ? lastMessageRef : null}
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[70%] p-3 rounded-lg ${
+                          message.role === 'user'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    </div>
+                  ))}
+                  {loadingAIResponse && (
+                    <div className="flex justify-start">
+                      <div className="max-w-[70%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>JudgiAI is thinking...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          </CardContent>
+          <CardFooter className="p-4 border-t flex items-center gap-2">
+            <Input
+              placeholder="Type your message..."
+              className="flex-1"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !loadingAIResponse) {
+                  handleSendMessage();
+                }
+              }}
+              disabled={loadingAIResponse}
+            />
+            <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
+              {loadingAIResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </CardFooter>
+        </>
+      )}
     </Card>
   );
 };

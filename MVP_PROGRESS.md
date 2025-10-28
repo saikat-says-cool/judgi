@@ -23,6 +23,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **1.2.4 Send Message Functionality:** Handle sending messages and displaying them.
 - [x] **1.2.5 Chat History Storage:** Store chat messages in Supabase database.
 - [x] **1.2.6 Fetch Chat History:** Retrieve and display past conversations.
+- [x] **1.2.7 New Chat Welcome UI:** Implemented a centered welcome interface for new, empty chats, transitioning to full chat on first message.
 
 ### 1.3 AI Integration (LongCat API)
 - [x] **1.3.1 Integrate LongCat API:** Set up the client-side integration for `getLongCatCompletion`.

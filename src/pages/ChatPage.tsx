@@ -35,7 +35,7 @@ const ChatPage = () => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages]); // This effect runs every time the 'messages' array changes.
 
   // Effect to handle conversation ID changes and fetch history
   useEffect(() => {
@@ -261,10 +261,10 @@ const ChatPage = () => {
 
   return (
     <Card className="flex flex-col h-full">
-      <CardContent className="flex-1 flex flex-col overflow-hidden"> {/* Added overflow-hidden here */}
-        <div className="flex-1 overflow-hidden"> {/* New div to explicitly constrain ScrollArea */}
-          <ScrollArea className="h-full pr-4" ref={scrollAreaRef}> {/* ScrollArea takes full height of its constrained parent */}
-            <div className="space-y-4 p-4"> {/* Removed h-full from here */}
+      <CardContent className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
+            <div className="space-y-4 p-4">
               {messages.length === 0 && conversationId === 'new' ? (
                 <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
                   <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>

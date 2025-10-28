@@ -168,8 +168,8 @@ const ChatPage = () => {
 
   return (
     <Card className="flex flex-col h-full">
-      <CardContent className="flex-1 flex flex-col overflow-hidden">
-        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}> {/* Changed h-full to flex-1 */}
+      <CardContent className="flex-1 flex flex-col"> {/* Removed overflow-hidden from CardContent */}
+        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}> {/* Kept flex-1 */}
           <div className="space-y-4 p-4">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">

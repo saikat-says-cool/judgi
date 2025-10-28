@@ -31,7 +31,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
         setIsLoading(false);
 
         if (event === 'SIGNED_IN') {
-          navigate('/'); // Redirect to home page on sign in
+          navigate('/app'); // Corrected redirect to /app on sign in
         } else if (event === 'SIGNED_OUT') {
           navigate('/login'); // Redirect to login page on sign out
         } else if (event === 'AUTH_API_ERROR') {

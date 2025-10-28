@@ -11,7 +11,7 @@ const LandingPage = () => {
 
   // If already logged in, redirect to the main app
   if (!isLoading && session) {
-    navigate('/');
+    navigate('/app'); // Corrected redirect to /app
     return null;
   }
 

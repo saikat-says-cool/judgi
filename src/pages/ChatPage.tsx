@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
+import { useSession } from '@/contexts/SessionContext'; // Import useSession
+import { showError } from '@/utils/toast'; // Import toast for error handling
 
 interface ChatMessage {
   id: string;
@@ -14,6 +16,7 @@ interface ChatMessage {
 }
 
 const ChatPage = () => {
+  const { supabase, session } = useSession(); // Get supabase client and session
   const [inputMessage, setInputMessage] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: '1', role: 'user', content: 'What are the key provisions of Article 370 of the Indian Constitution?' },
@@ -22,16 +25,36 @@ const ChatPage = () => {
     { id: '4', role: 'assistant', content: 'The primary landmark judgment concerning the abrogation of Article 370 is the Supreme Court of India\'s decision in *In Re: Article 370 of the Constitution* (2023). The court upheld the President\'s power to abrogate Article 370 and affirmed the temporary nature of the provision.' },
   ]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
+    if (!session?.user?.id) {
+      showError("You must be logged in to send messages.");
+      return;
+    }
+
     if (inputMessage.trim()) {
       const newMessage: ChatMessage = {
-        id: Date.now().toString(), // Simple unique ID
+        id: Date.now().toString(), // Simple unique ID for UI
         role: 'user',
         content: inputMessage.trim(),
       };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setInputMessage('');
-      // In a real app, you'd send this message to an API and then add the AI's response
+
+      // Store message in Supabase
+      const { error } = await supabase
+        .from('chats')
+        .insert({
+          user_id: session.user.id,
+          role: newMessage.role,
+          content: newMessage.content,
+        });
+
+      if (error) {
+        console.error("Error saving message to Supabase:", error);
+        showError("Failed to save message. Please try again.");
+        // Optionally, revert the message from UI if saving fails
+        setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newMessage.id));
+      }
     }
   };
 

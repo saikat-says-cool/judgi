@@ -34,7 +34,7 @@ export const getLongCatCompletion = async (
   }
 
   try {
-    // Fetch user's country from profiles table
+    // Fetch user's country from profiles table (still useful for general context if needed, but not for legal focus)
     let userCountry: string | null = null;
     if (userId) {
       const { data, error } = await supabase
@@ -69,7 +69,7 @@ export const getLongCatCompletion = async (
       }
 
       if (legalDocuments.length > 0) {
-        context += "Based on the following legal documents (similar cases, legal documents, historical cases):\n\n";
+        context += "Based on the following documents:\n\n";
         legalDocuments.forEach((doc, index) => {
           // Increased content length for more detail
           context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 1500)}...\n\n`;
@@ -78,7 +78,7 @@ export const getLongCatCompletion = async (
 
       if (newsDocuments.length > 0) {
         if (legalDocuments.length > 0) context += "\n"; // Add a separator if both are present
-        context += "Based on the following current news articles relevant to the user's country:\n\n";
+        context += "Based on the following current news articles:\n\n";
         newsDocuments.forEach((doc, index) => {
           context += `News Article ${index + 1}:\nTitle: ${doc.title}\nURL: ${doc.citation || 'N/A'}\nSnippet: ${doc.content}\n\n`;
         });
@@ -91,11 +91,13 @@ export const getLongCatCompletion = async (
 
     const model = deepthinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
-    // Construct the system prompt with country context
-    let systemPrompt = "You are JudgiAI, an expert legal assistant. Provide accurate and concise legal information. Always cite sources when possible. ";
+    // Construct the system prompt for a normal assistant
+    let systemPrompt = "You are a helpful and friendly AI assistant. Provide clear, concise, and accurate information. ";
+    // Removed country-specific legal focus. User country can still be used for general context if desired by the AI.
     if (userCountry) {
-      systemPrompt += `Unless explicitly stated otherwise in the user's query, assume all legal discussions and research should be focused on the laws and precedents of ${userCountry}.`;
+      systemPrompt += `Consider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;
     }
+
 
     const messagesWithContext = [...messages];
     if (context) {

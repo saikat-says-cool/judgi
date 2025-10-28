@@ -50,57 +50,58 @@ export const getLongCatCompletion = async (
       }
     }
 
-    const latestUserMessage = messages.findLast(msg => msg.role === "user")?.content || "";
+    // const latestUserMessage = messages.findLast(msg => msg.role === "user")?.content || "";
     let context = "";
-    let legalDocuments: any[] = [];
-    let newsDocuments: any[] = [];
+    // let legalDocuments: any[] = [];
+    // let newsDocuments: any[] = [];
 
-    if (latestUserMessage) {
-      if (researchMode === 'none') {
-        // Only current news, fewer articles
-        newsDocuments = await searchCurrentNews(latestUserMessage, 3, userCountry);
-      } else {
-        // Fetch both legal documents and current news for 'medium' and 'max' modes
-        const legalDocCount = researchMode === 'medium' ? 10 : 20; // More retrievals
-        const newsDocCount = researchMode === 'medium' ? 3 : 5; // More news articles
+    // // Temporarily detaching Langsearch calls
+    // if (latestUserMessage) {
+    //   if (researchMode === 'none') {
+    //     // Only current news, fewer articles
+    //     newsDocuments = await searchCurrentNews(latestUserMessage, 3, userCountry);
+    //   } else {
+    //     // Fetch both legal documents and current news for 'medium' and 'max' modes
+    //     const legalDocCount = researchMode === 'medium' ? 10 : 20; // More retrievals
+    //     const newsDocCount = researchMode === 'medium' ? 3 : 5; // More news articles
 
-        legalDocuments = await searchLegalDocuments(latestUserMessage, legalDocCount, userCountry);
-        newsDocuments = await searchCurrentNews(latestUserMessage, newsDocCount, userCountry);
-      }
+    //     legalDocuments = await searchLegalDocuments(latestUserMessage, legalDocCount, userCountry);
+    //     newsDocuments = await searchCurrentNews(latestUserMessage, newsDocCount, userCountry);
+    //   }
 
-      if (legalDocuments.length > 0) {
-        context += "Based on the following documents:\n\n";
-        legalDocuments.forEach((doc, index) => {
-          // Increased content length for more detail
-          context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 1500)}...\n\n`;
-        });
-      }
+    //   if (legalDocuments.length > 0) {
+    //     context += "Based on the following documents:\n\n";
+    //     legalDocuments.forEach((doc, index) => {
+    //       // Increased content length for more detail
+    //       context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 1500)}...\n\n`;
+    //     });
+    //   }
 
-      if (newsDocuments.length > 0) {
-        if (legalDocuments.length > 0) context += "\n"; // Add a separator if both are present
-        context += "Based on the following current news articles:\n\n";
-        newsDocuments.forEach((doc, index) => {
-          context += `News Article ${index + 1}:\nTitle: ${doc.title}\nURL: ${doc.citation || 'N/A'}\nSnippet: ${doc.content}\n\n`;
-        });
-      }
+    //   if (newsDocuments.length > 0) {
+    //     if (legalDocuments.length > 0) context += "\n"; // Add a separator if both are present
+    //     context += "Based on the following current news articles:\n\n";
+    //     newsDocuments.forEach((doc, index) => {
+    //       context += `News Article ${index + 1}:\nTitle: ${doc.title}\nURL: ${doc.citation || 'N/A'}\nSnippet: ${doc.content}\n\n`;
+    //     });
+    //   }
 
-      if (context) {
-        context += "Please answer the user's question, incorporating this information.\n\n";
-      }
-    }
+    //   if (context) {
+    //     context += "Please answer the user's question, incorporating this information.\n\n";
+    //   }
+    // }
 
     const model = deepthinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Construct the system prompt for a normal assistant
     let systemPrompt = "You are a helpful and friendly AI assistant. Provide clear, concise, and accurate information. ";
-    // Removed country-specific legal focus. User country can still be used for general context if desired by the AI.
+    // User country can still be used for general context if desired by the AI.
     if (userCountry) {
       systemPrompt += `Consider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;
     }
 
 
     const messagesWithContext = [...messages];
-    if (context) {
+    if (context) { // This block will now likely not be entered as context is empty
       // Prepend context to the system message if it exists, otherwise create one
       const existingSystemMessageIndex = messagesWithContext.findIndex(msg => msg.role === "system");
       if (existingSystemMessageIndex !== -1) {

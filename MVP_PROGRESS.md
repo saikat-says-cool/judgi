@@ -26,8 +26,8 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ### 1.3 AI Integration (LongCat API)
 - [x] **1.3.1 Integrate LongCat API:** Set up the client-side integration for `getLongCatCompletion`.
-- [x] **1.3.2 Research Modes:** Implement "Quick Lookup", "Deep Think", "Deeper Research" selection. (The underlying functionality is there, but the UI for selecting modes is not yet built.)
-- [x] **1.3.3 Contextual Search:** Integrate `searchLegalDocuments` and `searchCurrentNews` based on research mode and user country.
+- [ ] **1.3.2 Research Modes:** Implement "Quick Lookup", "Deep Think", "Deeper Research" selection. (The underlying functionality is there, but the UI for selecting modes is not yet built.)
+- [ ] **1.3.3 Contextual Search:** Integrate `searchLegalDocuments` and `searchCurrentNews` based on research mode and user country. (Temporarily dormant for future engineering.)
 - [x] **1.3.4 Display AI Response:** Render AI's response, including citations.
 - [x] **1.3.5 AI Persona & Parameters:** Adjusted AI persona to a general assistant (like ChatGPT) and set parameters (temperature, top_p, max_tokens) to normal-like values. This change is foundational for future, more refined prompt engineering.
 

@@ -118,6 +118,7 @@ export const getLongCatCompletion = async (
       messages: messagesWithContext,
       max_tokens: 4096, // Max tokens remains high for long responses
       temperature: 0.7,
+      top_p: 1.0, // Explicitly setting top_p for normal-like behavior
     });
     return response.choices[0].message?.content || "No response from AI.";
   } catch (error) {

@@ -172,6 +172,16 @@ const Sidebar: React.FC = () => {
       </div>
 
       <div className="space-y-2 mb-4">
+        {/* Always visible Chat link */}
+        <NavLink
+          to="/app/chat/new" // Directs to a new chat by default
+          icon={<MessageSquare className="h-4 w-4" />}
+          label="Chat"
+          isActive={isChatMode}
+          isMobile={isMobile}
+          onClick={closeSheet}
+          isSidebarExpanded={isSidebarExpanded}
+        />
         {isChatMode && isSidebarExpanded && ( // Only show New Chat button in chat mode and when expanded
           <Button
             variant="default"

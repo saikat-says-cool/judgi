@@ -5,10 +5,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2 } from 'lucide-react'; // Import Loader2 for loading indicator
+import { Send, Loader2 } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
-import { getLongCatCompletion } from '@/services/longcatApi'; // Import the LongCat API service
+import { getLongCatCompletion } from '@/services/longcatApi';
 
 interface ChatMessage {
   id: string;
@@ -22,17 +22,15 @@ const ChatPage = () => {
   const [inputMessage, setInputMessage] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
-  const [loadingAIResponse, setLoadingAIResponse] = useState(false); // New state for AI loading
-  const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for auto-scrolling
+  const [loadingAIResponse, setLoadingAIResponse] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Fetch chat history on component mount
   useEffect(() => {
     const fetchChatHistory = async () => {
       if (!session?.user?.id) {
@@ -64,7 +62,7 @@ const ChatPage = () => {
       showError("You must be logged in to send messages.");
       return;
     }
-    if (loadingAIResponse) { // Prevent sending new messages while AI is responding
+    if (loadingAIResponse) {
       showError("Please wait for the current AI response to complete.");
       return;
     }
@@ -72,16 +70,15 @@ const ChatPage = () => {
     if (inputMessage.trim()) {
       const userMessageContent = inputMessage.trim();
       const newUserMessage: ChatMessage = {
-        id: Date.now().toString(), // Temporary ID for UI
+        id: Date.now().toString(),
         role: 'user',
         content: userMessageContent,
         created_at: new Date().toISOString(),
       };
       setMessages((prevMessages) => [...prevMessages, newUserMessage]);
       setInputMessage('');
-      setLoadingAIResponse(true); // Start AI loading
+      setLoadingAIResponse(true);
 
-      // Store user message in Supabase
       const { data: userMessageData, error: userMessageError } = await supabase
         .from('chats')
         .insert({
@@ -106,26 +103,24 @@ const ChatPage = () => {
         );
       }
 
-      // Prepare messages for LongCat API (excluding temporary IDs)
       const messagesForAI = messages.map(msg => ({ role: msg.role, content: msg.content }));
-      messagesForAI.push({ role: newUserMessage.role, content: newUserMessage.content }); // Add the current user message
+      messagesForAI.push({ role: newUserMessage.role, content: newUserMessage.content });
 
       try {
         const aiResponseContent = await getLongCatCompletion(messagesForAI, {
-          researchMode: 'none', // Default to 'none' for now, will be configurable later
-          deepthinkMode: false, // Default to 'false' for now, will be configurable later
-          userId: session.user.id, // Pass userId for country context
+          researchMode: 'none',
+          deepthinkMode: false,
+          userId: session.user.id,
         });
 
         const newAIMessage: ChatMessage = {
-          id: Date.now().toString() + '-ai', // Temporary ID for UI
+          id: Date.now().toString() + '-ai',
           role: 'assistant',
           content: aiResponseContent,
           created_at: new Date().toISOString(),
         };
         setMessages((prevMessages) => [...prevMessages, newAIMessage]);
 
-        // Store AI message in Supabase
         const { data: aiMessageData, error: aiMessageError } = await supabase
           .from('chats')
           .insert({
@@ -150,10 +145,9 @@ const ChatPage = () => {
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
-        // Optionally, remove the user's message if AI response fails
         setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
       } finally {
-        setLoadingAIResponse(false); // End AI loading
+        setLoadingAIResponse(false);
       }
     }
   };
@@ -166,14 +160,14 @@ const ChatPage = () => {
 
   if (loadingHistory) {
     return (
-      <Card className="flex flex-col h-full max-h-[calc(100vh-150px)] items-center justify-center">
+      <Card className="flex flex-col h-full items-center justify-center"> {/* Changed max-h to h-full */}
         <p className="text-muted-foreground">Loading chat history...</p>
       </Card>
     );
   }
 
   return (
-    <Card className="flex flex-col h-full max-h-[calc(100vh-150px)]">
+    <Card className="flex flex-col h-full"> {/* Changed max-h to h-full */}
       <CardContent className="flex-1 p-4 overflow-hidden">
         <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
           <div className="space-y-4">
@@ -218,7 +212,7 @@ const ChatPage = () => {
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={handleKeyPress}
-          disabled={loadingAIResponse} // Disable input while AI is loading
+          disabled={loadingAIResponse}
         />
         <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
           {loadingAIResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

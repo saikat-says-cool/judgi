@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardFooter } from '@/components/ui/card'; // Corrected import syntax
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -172,7 +172,7 @@ const ChatPage = () => {
         <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
           <div className="space-y-4 p-4">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center py-10">
+              <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10"> {/* Removed h-full */}
                 <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>
                 <p>Ask JudgiAI a legal question to get started.</p>
               </div>

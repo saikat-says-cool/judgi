@@ -19,8 +19,8 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 ### 1.2 Research Chat Interface
 - [x] **1.2.1 Chat Layout:** Implement a basic chat layout within the "Chat" tab (input field, message display area).
 - [x] **1.2.2 Message Display:** Display user and AI messages.
-- [ ] **1.2.3 Chat Input:** Create an input component for users to type questions.
-- [ ] **1.2.4 Send Message Functionality:** Handle sending messages and displaying them.
+- [x] **1.2.3 Chat Input:** Create an input component for users to type questions.
+- [x] **1.2.4 Send Message Functionality:** Handle sending messages and displaying them.
 - [ ] **1.2.5 Chat History Storage:** Store chat messages in Supabase database.
 - [ ] **1.2.6 Fetch Chat History:** Retrieve and display past conversations.
 

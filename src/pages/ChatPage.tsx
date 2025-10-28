@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardFooter } = '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card'; // Corrected import syntax
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -168,9 +168,9 @@ const ChatPage = () => {
 
   return (
     <Card className="flex flex-col h-full">
-      <CardContent className="flex-1 flex flex-col"> {/* Removed p-4 from CardContent */}
+      <CardContent className="flex-1 flex flex-col">
         <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
-          <div className="space-y-4 p-4"> {/* Added p-4 here */}
+          <div className="space-y-4 p-4">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center py-10">
                 <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>

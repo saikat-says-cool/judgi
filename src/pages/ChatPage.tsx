@@ -263,7 +263,7 @@ const ChatPage = () => {
     <Card className="flex flex-col h-full">
       <CardContent className="flex-1 flex flex-col">
         <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
-          <div className="space-y-4 p-4 h-full"> {/* Added h-full here */}
+          <div className="space-y-4 p-4"> {/* REMOVED h-full from here */}
             {messages.length === 0 && conversationId === 'new' ? (
               <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
                 <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>

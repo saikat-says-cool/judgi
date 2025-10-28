@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import LandingPage from "./pages/LandingPage"; // Import LandingPage
+import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
 import { SessionContextProvider } from "./contexts/SessionContext";
 
 const queryClient = new QueryClient();
@@ -18,8 +20,16 @@ const App = () => (
       <BrowserRouter>
         <SessionContextProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<LandingPage />} /> {/* Landing page for unauthenticated users */}
               <Route path="/login" element={<Login />} />
+              <Route 
+                path="/app" 
+                element={
+                  <ProtectedRoute>
+                    <Index /> {/* Protected main app content */}
+                  </ProtectedRoute>
+                } 
+              />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

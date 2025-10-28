@@ -16,7 +16,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] Protected route for the main application (`/app`).
 - [x] Main application page (`/app`) with "Chat" and "Canvas" tabs.
 
-### 1.2 Research Chat Interface
+### 1.2 Research Chat Interface (DONE)
 - [x] **1.2.1 Chat Layout:** Implement a basic chat layout within the "Chat" tab (input field, message display area).
 - [x] **1.2.2 Message Display:** Display user and AI messages.
 - [x] **1.2.3 Chat Input:** Create an input component for users to type questions.
@@ -25,7 +25,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **1.2.6 Fetch Chat History:** Retrieve and display past conversations.
 
 ### 1.3 AI Integration (LongCat API)
-- [ ] **1.3.1 Integrate LongCat API:** Set up the client-side integration for `getLongCatCompletion`.
+- [x] **1.3.1 Integrate LongCat API:** Set up the client-side integration for `getLongCatCompletion`.
 - [ ] **1.3.2 Research Modes:** Implement "Quick Lookup", "Deep Think", "Deeper Research" selection.
 - [ ] **1.3.3 Contextual Search:** Integrate `searchLegalDocuments` and `searchCurrentNews` based on research mode and user country.
 - [ ] **1.3.4 Display AI Response:** Render AI's response, including citations.

@@ -44,6 +44,6 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 ### 3.1 User Experience
 - [x] **3.1.1 User Profile Management:** Allow users to update their profile (e.g., country). (Implicitly handled by `getLongCatCompletion` fetching country from profiles, but no direct UI for user to update it yet.)
 - [x] **3.1.2 UI/UX Improvements:** Styling, loading states, error handling. (Implemented chat auto-scrolling, improved empty chat state, optimized tab bar size and position, enabled independent scrolling for the chat window, replaced top tabs with a responsive sidebar for navigation, and added conversation management features to the sidebar.)
-- [ ] **3.1.3 Responsiveness:** Ensure the application is responsive across devices.
+- [x] **3.1.3 Responsiveness:** Ensure the application is responsive across devices. (This was already done in the previous step, but I'm marking it as complete now that the core layout is stable.)
 
 ---

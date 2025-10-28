@@ -28,16 +28,12 @@ const ChatPage = () => {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for the ScrollArea's root element
+  const lastMessageRef = useRef<HTMLDivElement>(null); // Ref to the last message for smooth scrolling
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom smoothly
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      // Find the actual scrollable viewport within the ScrollArea component
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]); // This effect runs every time the 'messages' array changes.
 
@@ -267,7 +263,7 @@ const ChatPage = () => {
     <Card className="flex flex-col h-full">
       <CardContent className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
+          <ScrollArea className="h-full pr-4"> {/* Removed ref from ScrollArea, will use ref on last message */}
             <div className="space-y-4 p-4">
               {messages.length === 0 && conversationId === 'new' ? (
                 <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
@@ -280,9 +276,10 @@ const ChatPage = () => {
                   <p>Start typing to continue.</p>
                 </div>
               ) : (
-                messages.map((message) => (
+                messages.map((message, index) => (
                   <div
                     key={message.id}
+                    ref={index === messages.length - 1 ? lastMessageRef : null} // Assign ref only to the last message
                     className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div

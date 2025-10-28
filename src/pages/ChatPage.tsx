@@ -261,47 +261,49 @@ const ChatPage = () => {
 
   return (
     <Card className="flex flex-col h-full">
-      <CardContent className="flex-1 flex flex-col">
-        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
-          <div className="space-y-4 p-4"> {/* REMOVED h-full from here */}
-            {messages.length === 0 && conversationId === 'new' ? (
-              <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
-                <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>
-                <p>Ask JudgiAI a legal question to get started.</p>
-              </div>
-            ) : messages.length === 0 && conversationId !== 'new' ? (
-              <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
-                <h3 className="text-xl font-semibold mb-2">This conversation is empty.</h3>
-                <p>Start typing to continue.</p>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+      <CardContent className="flex-1 flex flex-col overflow-hidden"> {/* Added overflow-hidden here */}
+        <div className="flex-1 overflow-hidden"> {/* New div to explicitly constrain ScrollArea */}
+          <ScrollArea className="h-full pr-4" ref={scrollAreaRef}> {/* ScrollArea takes full height of its constrained parent */}
+            <div className="space-y-4 p-4"> {/* Removed h-full from here */}
+              {messages.length === 0 && conversationId === 'new' ? (
+                <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
+                  <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>
+                  <p>Ask JudgiAI a legal question to get started.</p>
+                </div>
+              ) : messages.length === 0 && conversationId !== 'new' ? (
+                <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
+                  <h3 className="text-xl font-semibold mb-2">This conversation is empty.</h3>
+                  <p>Start typing to continue.</p>
+                </div>
+              ) : (
+                messages.map((message) => (
                   <div
-                    className={`max-w-[70%] p-3 rounded-lg ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
+                    key={message.id}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    {message.content}
+                    <div
+                      className={`max-w-[70%] p-3 rounded-lg ${
+                        message.role === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {message.content}
+                    </div>
+                  </div>
+                ))
+              )}
+              {loadingAIResponse && (
+                <div className="flex justify-start">
+                  <div className="max-w-[70%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>JudgiAI is thinking...</span>
                   </div>
                 </div>
-              ))
-            )}
-            {loadingAIResponse && (
-              <div className="flex justify-start">
-                <div className="max-w-[70%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>JudgiAI is thinking...</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       </CardContent>
       <CardFooter className="p-4 border-t flex items-center gap-2">
         <Input

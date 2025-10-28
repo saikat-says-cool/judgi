@@ -54,7 +54,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between group">
+    <div className="flex items-center group w-full"> {/* Make the outer div the flex container */}
       {isEditing ? (
         <div className="flex-1 flex items-center space-x-2">
           <Input
@@ -75,70 +75,70 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           </Button>
         </div>
       ) : (
-        <Button
-          asChild
-          variant={isActive ? "secondary" : "ghost"}
-          className={cn(
-            "w-full justify-start pr-2",
-            isMobile ? "text-base" : "text-sm"
-          )}
-          onClick={onClick}
-        >
-          <Link to={`/app/chat/${id}`} className="flex-1 flex items-center overflow-hidden whitespace-nowrap">
-            <MessageSquare className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span className="truncate">{title}</span>
-          </Link>
-        </Button>
-      )}
+        <>
+          <Button
+            asChild
+            variant={isActive ? "secondary" : "ghost"}
+            className={cn(
+              "flex-1 justify-start pr-2", // Use flex-1 here
+              isMobile ? "text-base" : "text-sm"
+            )}
+            onClick={onClick}
+          >
+            <Link to={`/app/chat/${id}`} className="flex items-center overflow-hidden whitespace-nowrap">
+              <MessageSquare className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{title}</span>
+            </Link>
+          </Button>
 
-      {!isEditing && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-40 p-1">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-sm"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Rename
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-sm text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete your
-                    conversation and all associated messages.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0" // Ensure it doesn't shrink
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-sm"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Rename
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-sm text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
                     Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </PopoverContent>
-        </Popover>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your
+                      conversation and all associated messages.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onDelete(id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </PopoverContent>
+          </Popover>
+        </>
       )}
     </div>
   );

@@ -63,27 +63,32 @@ const ChatPage = () => {
       setLoadingHistory(false);
     };
 
+    // Logic to prevent flickering when navigating from 'new' to a real ID
     if (conversationId === 'new') {
-      setMessages([]);
-      setCurrentConversationId(null); // Indicate no conversation is active yet
+      // Only clear messages if we are truly starting fresh, not if we just navigated from 'new' to a real ID
+      if (currentConversationId !== null) { // If we had an active conversation (even a temp one)
+         setMessages([]); // Clear messages only if we are transitioning from an existing chat to a new blank one
+      }
+      setCurrentConversationId(null); // No active conversation yet
       setLoadingHistory(false);
-    } else if (conversationId) {
+    } else if (conversationId && conversationId !== currentConversationId) {
+      // Only fetch if the conversationId in the URL has actually changed
       setCurrentConversationId(conversationId);
       fetchChatHistory(conversationId);
-    } else {
-      // Default to new chat if no conversationId is in URL
+    } else if (!conversationId) {
+      // If no conversationId in URL, default to new chat
       navigate('/app/chat/new', { replace: true });
     }
-  }, [conversationId, session?.user?.id, supabase, navigate]);
+  }, [conversationId, session?.user?.id, supabase, navigate, currentConversationId]);
 
-  const createNewConversation = useCallback(async () => {
+  const createNewConversation = useCallback(async (initialTitle: string) => {
     if (!session?.user?.id) {
       showError("You must be logged in to create a new chat.");
       return null;
     }
     const { data, error } = await supabase
       .from('conversations')
-      .insert({ user_id: session.user.id, title: 'New Chat' })
+      .insert({ user_id: session.user.id, title: initialTitle })
       .select('id')
       .single();
 
@@ -109,61 +114,84 @@ const ChatPage = () => {
       const userMessageContent = inputMessage.trim();
       let activeConversationId = currentConversationId;
 
-      // If it's a new chat, create the conversation first
+      // If it's a new chat, create the conversation and save the first message
       if (!activeConversationId) {
-        activeConversationId = await createNewConversation();
+        const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
+        activeConversationId = await createNewConversation(initialTitle);
         if (!activeConversationId) return; // Failed to create conversation
+
+        // Save the first user message to the newly created conversation
+        const { data: userMessageData, error: userMessageError } = await supabase
+          .from('chats')
+          .insert({
+            user_id: session.user.id,
+            conversation_id: activeConversationId,
+            role: 'user',
+            content: userMessageContent,
+          })
+          .select('id, created_at')
+          .single();
+
+        if (userMessageError) {
+          console.error("Error saving first user message to Supabase:", userMessageError);
+          showError("Failed to save your message. Please try again.");
+          setLoadingAIResponse(false);
+          return;
+        }
+
+        // Now navigate to the new conversation ID
         setCurrentConversationId(activeConversationId);
-        navigate(`/app/chat/${activeConversationId}`, { replace: true }); // Update URL
-      }
+        navigate(`/app/chat/${activeConversationId}`, { replace: true });
 
-      const newUserMessage: ChatMessage = {
-        id: Date.now().toString(), // Temporary ID
-        role: 'user',
-        content: userMessageContent,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prevMessages) => [...prevMessages, newUserMessage]);
-      setInputMessage('');
-      setLoadingAIResponse(true);
+        // Add the message to local state after successful save and navigation
+        setMessages([{
+          id: userMessageData.id,
+          role: 'user',
+          content: userMessageContent,
+          created_at: userMessageData.created_at,
+        }]);
 
-      // Save user message to Supabase
-      const { data: userMessageData, error: userMessageError } = await supabase
-        .from('chats')
-        .insert({
-          user_id: session.user.id,
-          conversation_id: activeConversationId,
-          role: newUserMessage.role,
-          content: newUserMessage.content,
-        })
-        .select('id, created_at')
-        .single();
+      } else {
+        // For existing chats, add to local state immediately, then save
+        const newUserMessage: ChatMessage = {
+          id: Date.now().toString(), // Temporary ID for immediate display
+          role: 'user',
+          content: userMessageContent,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prevMessages) => [...prevMessages, newUserMessage]);
 
-      if (userMessageError) {
-        console.error("Error saving user message to Supabase:", userMessageError);
-        showError("Failed to save your message. Please try again.");
-        setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
-        setLoadingAIResponse(false);
-        return;
-      } else if (userMessageData) {
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at } : msg
-          )
-        );
-        // If this is the first message in a new chat, update conversation title
-        if (messages.length === 0 && userMessageContent.length > 0) {
-          const newTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
-          await supabase
-            .from('conversations')
-            .update({ title: newTitle, updated_at: new Date().toISOString() })
-            .eq('id', activeConversationId)
-            .eq('user_id', session.user.id);
+        const { data: userMessageData, error: userMessageError } = await supabase
+          .from('chats')
+          .insert({
+            user_id: session.user.id,
+            conversation_id: activeConversationId,
+            role: newUserMessage.role,
+            content: newUserMessage.content,
+          })
+          .select('id, created_at')
+          .single();
+
+        if (userMessageError) {
+          console.error("Error saving user message to Supabase:", userMessageError);
+          showError("Failed to save your message. Please try again.");
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id)); // Remove temp message
+          setLoadingAIResponse(false);
+          return;
+        } else if (userMessageData) {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at } : msg
+            )
+          );
         }
       }
 
-      const messagesForAI = messages.map(msg => ({ role: msg.role, content: msg.content }));
-      messagesForAI.push({ role: newUserMessage.role, content: newUserMessage.content });
+      setInputMessage('');
+      setLoadingAIResponse(true);
+
+      // Prepare messages for AI, including the latest user message
+      const messagesForAI = [...messages, { role: 'user', content: userMessageContent }];
 
       try {
         const aiResponseContent = await getLongCatCompletion(messagesForAI, {
@@ -195,7 +223,7 @@ const ChatPage = () => {
         if (aiMessageError) {
           console.error("Error saving AI message to Supabase:", aiMessageError);
           showError("Failed to save AI response.");
-          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newAIMessage.id));
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newAIMessage.id)); // Remove temp message
         } else if (aiMessageData) {
           setMessages((prevMessages) =>
             prevMessages.map((msg) =>
@@ -206,7 +234,11 @@ const ChatPage = () => {
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
-        setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
+        // If AI fails, remove the user message that was just sent if it was the first message in a new chat
+        if (messages.length === 0 && !currentConversationId) { // This condition needs careful thought
+             // If it was a new chat and AI failed, we might want to revert the conversation creation or mark it as failed.
+             // For now, we'll just show an error. The user message is already saved.
+        }
       } finally {
         setLoadingAIResponse(false);
       }

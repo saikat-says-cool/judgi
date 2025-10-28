@@ -5,11 +5,12 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Menu, MessageSquare, LayoutDashboard, PlusCircle } from 'lucide-react';
+import { Menu, MessageSquare, LayoutDashboard, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
-import ConversationItem from './ConversationItem'; // Import the new ConversationItem
+import ConversationItem from './ConversationItem';
+import { cn } from '@/lib/utils';
 
 interface NavLinkProps {
   to: string;
@@ -18,18 +19,23 @@ interface NavLinkProps {
   isActive: boolean;
   isMobile?: boolean;
   onClick?: () => void;
+  isSidebarExpanded: boolean; // New prop
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ to, icon, label, isActive, isMobile, onClick }) => (
+const NavLink: React.FC<NavLinkProps> = ({ to, icon, label, isActive, isMobile, onClick, isSidebarExpanded }) => (
   <Button
     asChild
     variant={isActive ? "secondary" : "ghost"}
-    className={`w-full justify-start ${isMobile ? "text-base" : "text-sm"}`}
+    className={cn(
+      "w-full justify-start",
+      isMobile ? "text-base" : "text-sm",
+      !isSidebarExpanded && "justify-center px-0" // Center icon when collapsed
+    )}
     onClick={onClick}
   >
-    <Link to={to}>
+    <Link to={to} className="flex items-center">
       {icon}
-      <span className="ml-2">{label}</span>
+      {isSidebarExpanded && <span className="ml-2">{label}</span>} {/* Only show label when expanded */}
     </Link>
   </Button>
 );
@@ -45,21 +51,25 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false); // For mobile sheet
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true); // For desktop sidebar expansion
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const { supabase, session } = useSession();
 
-  const closeSidebar = () => {
+  const isChatMode = location.pathname.startsWith('/app/chat');
+
+  const closeSheet = () => {
     if (isMobile) {
-      setIsOpen(false);
+      setIsSheetOpen(false);
     }
   };
 
   useEffect(() => {
     const fetchConversations = async () => {
-      if (!session?.user?.id) {
+      if (!session?.user?.id || !isChatMode) { // Only fetch if in chat mode
         setLoadingConversations(false);
+        setConversations([]); // Clear conversations if not in chat mode
         return;
       }
 
@@ -81,27 +91,28 @@ const Sidebar: React.FC = () => {
 
     fetchConversations();
 
-    // Realtime listener for conversations (optional, but good for dynamic updates)
+    // Realtime listener for conversations
     const channel = supabase
       .channel('public:conversations')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations', filter: `user_id=eq.${session?.user?.id}` }, payload => {
-        fetchConversations(); // Re-fetch on any change
+        if (isChatMode) { // Only re-fetch if in chat mode
+          fetchConversations();
+        }
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session?.user?.id, supabase]);
+  }, [session?.user?.id, supabase, isChatMode]); // Added isChatMode to dependencies
 
   const handleNewChat = async () => {
     if (!session?.user?.id) {
       showError("You must be logged in to start a new chat.");
       return;
     }
-    // Navigate to a special 'new' route, ChatPage will handle creation
     navigate('/app/chat/new');
-    closeSidebar();
+    closeSheet();
   };
 
   const handleRenameConversation = async (id: string, newTitle: string) => {
@@ -139,69 +150,82 @@ const Sidebar: React.FC = () => {
       showError("Failed to delete conversation.");
     } else {
       setConversations(prev => prev.filter(conv => conv.id !== id));
-      // If the deleted conversation was the active one, navigate to a new chat
       if (conversationId === id) {
         navigate('/app/chat/new');
       }
     }
   };
 
-  const navItems = [
-    { to: "/app/chat/new", label: "New Chat", icon: <PlusCircle className="h-4 w-4" />, action: handleNewChat },
-    { to: "/app/canvas", label: "Canvas", icon: <LayoutDashboard className="h-4 w-4" /> },
-  ];
+  const toggleSidebar = () => {
+    setIsSidebarExpanded(!isSidebarExpanded);
+  };
 
   const sidebarContent = (
     <div className="flex flex-col h-full p-4">
-      <h2 className="text-lg font-semibold mb-4">JudgiAI</h2>
+      <div className="flex items-center justify-between mb-4">
+        {isSidebarExpanded && <h2 className="text-lg font-semibold">JudgiAI</h2>}
+        {!isMobile && (
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8">
+            {isSidebarExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </Button>
+        )}
+      </div>
+
       <div className="space-y-2 mb-4">
-        <Button
-          variant="default"
-          className="w-full justify-start text-sm"
-          onClick={handleNewChat}
-        >
-          <PlusCircle className="h-4 w-4 mr-2" />
-          New Chat
-        </Button>
+        {isChatMode && isSidebarExpanded && ( // Only show New Chat button in chat mode and when expanded
+          <Button
+            variant="default"
+            className="w-full justify-start text-sm"
+            onClick={handleNewChat}
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            New Chat
+          </Button>
+        )}
         <NavLink
           to="/app/canvas"
           icon={<LayoutDashboard className="h-4 w-4" />}
           label="Canvas"
           isActive={location.pathname === "/app/canvas"}
           isMobile={isMobile}
-          onClick={closeSidebar}
+          onClick={closeSheet}
+          isSidebarExpanded={isSidebarExpanded}
         />
       </div>
 
-      <div className="mb-2 text-sm font-medium text-muted-foreground">Recent Chats</div>
-      {loadingConversations ? (
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      ) : conversations.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No recent chats.</p>
-      ) : (
-        <ScrollArea className="flex-1 pr-2">
-          <div className="space-y-1">
-            {conversations.map((conv) => (
-              <ConversationItem
-                key={conv.id}
-                id={conv.id}
-                title={conv.title}
-                isActive={conversationId === conv.id}
-                onRename={handleRenameConversation}
-                onDelete={handleDeleteConversation}
-                isMobile={isMobile}
-                onClick={closeSidebar}
-              />
-            ))}
-          </div>
-        </ScrollArea>
+      {isChatMode && isSidebarExpanded && ( // Only show recent chats in chat mode and when expanded
+        <>
+          <div className="mb-2 text-sm font-medium text-muted-foreground">Recent Chats</div>
+          {loadingConversations ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : conversations.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No recent chats.</p>
+          ) : (
+            <ScrollArea className="flex-1 pr-2">
+              <div className="space-y-1">
+                {conversations.map((conv) => (
+                  <ConversationItem
+                    key={conv.id}
+                    id={conv.id}
+                    title={conv.title}
+                    isActive={conversationId === conv.id}
+                    onRename={handleRenameConversation}
+                    onDelete={handleDeleteConversation}
+                    isMobile={isMobile}
+                    onClick={closeSheet}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </>
       )}
     </div>
   );
 
   if (isMobile) {
     return (
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50">
             <Menu className="h-6 w-6" />
@@ -215,7 +239,12 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <div className="hidden md:flex flex-col h-full w-64 border-r bg-sidebar text-sidebar-foreground">
+    <div
+      className={cn(
+        "hidden md:flex flex-col h-full border-r bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
+        isSidebarExpanded ? "w-64" : "w-16 items-center" // Adjust width and center items when collapsed
+      )}
+    >
       {sidebarContent}
     </div>
   );

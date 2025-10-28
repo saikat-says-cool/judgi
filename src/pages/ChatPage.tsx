@@ -167,10 +167,10 @@ const ChatPage = () => {
   }
 
   return (
-    <Card className="flex flex-col h-full">
-      <CardContent className="flex-1 flex flex-col"> {/* Removed overflow-hidden from CardContent */}
-        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}> {/* Kept flex-1 */}
-          <div className="space-y-4 p-4">
+    <Card className="flex flex-col h-full"> {/* Card is a flex column, takes full height */}
+      <CardContent className="flex-1 flex flex-col"> {/* CardContent takes remaining space, is also a flex column */}
+        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}> {/* ScrollArea takes remaining space within CardContent */}
+          <div className="space-y-4 p-4"> {/* This div contains the messages and has padding */}
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
                 <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>
@@ -205,7 +205,7 @@ const ChatPage = () => {
           </div>
         </ScrollArea>
       </CardContent>
-      <CardFooter className="p-4 border-t flex items-center gap-2">
+      <CardFooter className="p-4 border-t flex items-center gap-2"> {/* CardFooter is fixed height */}
         <Input
           placeholder="Type your message..."
           className="flex-1"

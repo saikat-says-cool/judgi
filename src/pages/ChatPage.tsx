@@ -178,8 +178,9 @@ const ChatPage = () => {
         <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
           <div className="space-y-4">
             {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Start a new conversation!
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center py-10">
+                <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>
+                <p>Ask JudgiAI a legal question to get started.</p>
               </div>
             ) : (
               messages.map((message) => (

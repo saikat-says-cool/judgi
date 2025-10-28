@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Menu, MessageSquare, LayoutDashboard, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, MessageSquare, LayoutDashboard, PlusCircle, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
@@ -19,7 +19,7 @@ interface NavLinkProps {
   isActive: boolean;
   isMobile?: boolean;
   onClick?: () => void;
-  isSidebarExpanded: boolean; // New prop
+  isSidebarExpanded: boolean;
 }
 
 const NavLink: React.FC<NavLinkProps> = ({ to, icon, label, isActive, isMobile, onClick, isSidebarExpanded }) => (
@@ -29,13 +29,13 @@ const NavLink: React.FC<NavLinkProps> = ({ to, icon, label, isActive, isMobile, 
     className={cn(
       "w-full justify-start",
       isMobile ? "text-base" : "text-sm",
-      !isSidebarExpanded && "justify-center px-0" // Center icon when collapsed
+      !isSidebarExpanded && "justify-center px-0"
     )}
     onClick={onClick}
   >
     <Link to={to} className="flex items-center">
       {icon}
-      {isSidebarExpanded && <span className="ml-2">{label}</span>} {/* Only show label when expanded */}
+      {isSidebarExpanded && <span className="ml-2">{label}</span>}
     </Link>
   </Button>
 );
@@ -46,18 +46,29 @@ interface Conversation {
   created_at: string;
 }
 
+interface Document {
+  id: string;
+  title: string;
+  created_at: string;
+}
+
 const Sidebar: React.FC = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
-  const [isSheetOpen, setIsSheetOpen] = useState(false); // For mobile sheet
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true); // For desktop sidebar expansion
+  const { documentId } = useParams<{ documentId?: string }>(); // New param for documents
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]); // State for documents
   const [loadingConversations, setLoadingConversations] = useState(true);
+  const [loadingDocuments, setLoadingDocuments] = useState(true); // Loading state for documents
   const { supabase, session } = useSession();
 
   const isChatMode = location.pathname.startsWith('/app/chat');
+  const isCanvasMode = location.pathname.startsWith('/app/canvas');
+  const isCanvasHomePage = location.pathname === '/app/canvas';
 
   const closeSheet = () => {
     if (isMobile) {
@@ -65,11 +76,12 @@ const Sidebar: React.FC = () => {
     }
   };
 
+  // Fetch Conversations
   useEffect(() => {
     const fetchConversations = async () => {
-      if (!session?.user?.id || !isChatMode) { // Only fetch if in chat mode
+      if (!session?.user?.id || !isChatMode) {
         setLoadingConversations(false);
-        setConversations([]); // Clear conversations if not in chat mode
+        setConversations([]);
         return;
       }
 
@@ -91,11 +103,10 @@ const Sidebar: React.FC = () => {
 
     fetchConversations();
 
-    // Realtime listener for conversations
     const channel = supabase
       .channel('public:conversations')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations', filter: `user_id=eq.${session?.user?.id}` }, payload => {
-        if (isChatMode) { // Only re-fetch if in chat mode
+        if (isChatMode) {
           fetchConversations();
         }
       })
@@ -104,7 +115,49 @@ const Sidebar: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session?.user?.id, supabase, isChatMode]); // Added isChatMode to dependencies
+  }, [session?.user?.id, supabase, isChatMode]);
+
+  // Fetch Documents
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      if (!session?.user?.id || !isCanvasHomePage) { // Only fetch if on canvas home page
+        setLoadingDocuments(false);
+        setDocuments([]);
+        return;
+      }
+
+      setLoadingDocuments(true);
+      const { data, error } = await supabase
+        .from('documents')
+        .select('id, title, created_at')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching documents:", error);
+        showError("Failed to load documents.");
+      } else if (data) {
+        setDocuments(data as Document[]);
+      }
+      setLoadingDocuments(false);
+    };
+
+    fetchDocuments();
+
+    const channel = supabase
+      .channel('public:documents')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents', filter: `user_id=eq.${session?.user?.id}` }, payload => {
+        if (isCanvasHomePage) {
+          fetchDocuments();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id, supabase, isCanvasHomePage]);
+
 
   const handleNewChat = async () => {
     if (!session?.user?.id) {
@@ -172,9 +225,8 @@ const Sidebar: React.FC = () => {
       </div>
 
       <div className="space-y-2 mb-4">
-        {/* Always visible Chat link */}
         <NavLink
-          to="/app/chat/new" // Directs to a new chat by default
+          to="/app/chat/new"
           icon={<MessageSquare className="h-4 w-4" />}
           label="Chat"
           isActive={isChatMode}
@@ -182,28 +234,18 @@ const Sidebar: React.FC = () => {
           onClick={closeSheet}
           isSidebarExpanded={isSidebarExpanded}
         />
-        {isChatMode && isSidebarExpanded && ( // Only show New Chat button in chat mode and when expanded
-          <Button
-            variant="default"
-            className="w-full justify-start text-sm"
-            onClick={handleNewChat}
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            New Chat
-          </Button>
-        )}
         <NavLink
-          to="/app/canvas"
+          to="/app/canvas" // Link to the Canvas home page
           icon={<LayoutDashboard className="h-4 w-4" />}
           label="Canvas"
-          isActive={location.pathname === "/app/canvas"}
+          isActive={isCanvasMode} // Active if any canvas route is active
           isMobile={isMobile}
           onClick={closeSheet}
           isSidebarExpanded={isSidebarExpanded}
         />
       </div>
 
-      {isChatMode && isSidebarExpanded && ( // Only show recent chats in chat mode and when expanded
+      {isChatMode && isSidebarExpanded && (
         <>
           <div className="mb-2 text-sm font-medium text-muted-foreground">Recent Chats</div>
           {loadingConversations ? (
@@ -224,6 +266,36 @@ const Sidebar: React.FC = () => {
                     isMobile={isMobile}
                     onClick={closeSheet}
                   />
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </>
+      )}
+
+      {isCanvasHomePage && isSidebarExpanded && ( // Only show recent documents on Canvas home page and when expanded
+        <>
+          <div className="mb-2 text-sm font-medium text-muted-foreground mt-4">Recent Documents</div>
+          {loadingDocuments ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : documents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No recent documents.</p>
+          ) : (
+            <ScrollArea className="flex-1 pr-2">
+              <div className="space-y-1">
+                {documents.map((doc) => (
+                  <Button
+                    key={doc.id}
+                    asChild
+                    variant={documentId === doc.id ? "secondary" : "ghost"}
+                    className="w-full justify-start text-sm"
+                    onClick={closeSheet}
+                  >
+                    <Link to={`/app/canvas/${doc.id}`} className="flex items-center overflow-hidden whitespace-nowrap">
+                      <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">{doc.title}</span>
+                    </Link>
+                  </Button>
                 ))}
               </div>
             </ScrollArea>
@@ -252,7 +324,7 @@ const Sidebar: React.FC = () => {
     <div
       className={cn(
         "hidden md:flex flex-col h-full border-r bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
-        isSidebarExpanded ? "w-64" : "w-16 items-center" // Adjust width and center items when collapsed
+        isSidebarExpanded ? "w-64" : "w-16 items-center"
       )}
     >
       {sidebarContent}

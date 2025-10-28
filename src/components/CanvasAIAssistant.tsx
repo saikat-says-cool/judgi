@@ -5,15 +5,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2, CornerDownLeft } from 'lucide-react'; // Added CornerDownLeft icon
+import { Send, Loader2, CornerDownLeft } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
-
-interface CanvasAIAssistantProps {
-  writingContent: string;
-  onInsertContent: (content: string) => void; // New prop for inserting content
-}
 
 interface ChatMessage {
   id: string;
@@ -22,18 +17,36 @@ interface ChatMessage {
   created_at?: string;
 }
 
-const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({ writingContent, onInsertContent }) => {
+interface CanvasAIAssistantProps {
+  writingContent: string;
+  onInsertContent: (content: string) => void;
+  aiChatHistory: ChatMessage[]; // New prop for AI chat history
+  onAIChatHistoryChange: (history: ChatMessage[]) => void; // Callback to update AI chat history
+  documentId: string | null; // New prop for current document ID
+}
+
+const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
+  writingContent,
+  onInsertContent,
+  aiChatHistory,
+  onAIChatHistoryChange,
+  documentId,
+}) => {
   const { session } = useSession();
   const [inputMessage, setInputMessage] = useState<string>('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+
+  // Sync internal messages state with prop
+  useEffect(() => {
+    onAIChatHistoryChange(aiChatHistory); // Ensure parent's state is the source of truth
+  }, [aiChatHistory, onAIChatHistoryChange]);
 
   useEffect(() => {
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [aiChatHistory]); // Changed dependency to aiChatHistory prop
 
   const handleSendMessage = async () => {
     if (!session?.user?.id) {
@@ -53,20 +66,20 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({ writingContent, o
         content: userMessageContent,
         created_at: new Date().toISOString(),
       };
-      setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+
+      const updatedChatHistory = [...aiChatHistory, newUserMessage];
+      onAIChatHistoryChange(updatedChatHistory); // Update parent's state
       setInputMessage('');
       setLoadingAIResponse(true);
 
       try {
-        // Combine writing content with the chat history for AI context
         const messagesForAI = [
           { role: 'system', content: `The user is currently working on a document. Here is the current content of their writing space:\n\n${writingContent}\n\nBased on this context and our conversation, please provide your response.` },
-          ...messages.map(msg => ({ role: msg.role, content: msg.content })),
-          { role: 'user', content: userMessageContent }
+          ...updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content }))
         ];
 
         const aiResponseContent = await getLongCatCompletion(messagesForAI, {
-          researchMode: 'none', // For now, no research mode in canvas assistant
+          researchMode: 'none',
           deepthinkMode: false,
           userId: session.user.id,
         });
@@ -77,10 +90,12 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({ writingContent, o
           content: aiResponseContent,
           created_at: new Date().toISOString(),
         };
-        setMessages((prevMessages) => [...prevMessages, newAIMessage]);
+        onAIChatHistoryChange([...updatedChatHistory, newAIMessage]); // Update parent's state with AI response
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
+        // Optionally, revert the user message if AI fails
+        onAIChatHistoryChange(aiChatHistory);
       } finally {
         setLoadingAIResponse(false);
       }
@@ -96,16 +111,16 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({ writingContent, o
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full p-4">
             <div className="space-y-4">
-              {messages.length === 0 && (
+              {aiChatHistory.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">
                   <p>Your AI writing partner is ready!</p>
                   <p>Ask questions or get suggestions based on your document.</p>
                 </div>
               )}
-              {messages.map((message, index) => (
+              {aiChatHistory.map((message, index) => (
                 <div
                   key={message.id}
-                  ref={index === messages.length - 1 ? lastMessageRef : null}
+                  ref={index === aiChatHistory.length - 1 ? lastMessageRef : null}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div

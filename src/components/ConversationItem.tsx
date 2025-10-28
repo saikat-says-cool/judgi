@@ -54,7 +54,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   };
 
   return (
-    <div className="flex items-center group w-full"> {/* Make the outer div the flex container */}
+    <div className="flex items-center group w-full">
       {isEditing ? (
         <div className="flex-1 flex items-center space-x-2">
           <Input
@@ -80,7 +80,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
             asChild
             variant={isActive ? "secondary" : "ghost"}
             className={cn(
-              "flex-1 justify-start pr-2", // Use flex-1 here
+              "flex-grow justify-start pr-2 min-w-0", // Changed from flex-1 to flex-grow and added min-w-0
               isMobile ? "text-base" : "text-sm"
             )}
             onClick={onClick}
@@ -96,7 +96,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0" // Ensure it doesn't shrink
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>

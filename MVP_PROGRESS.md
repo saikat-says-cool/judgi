@@ -43,7 +43,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ### 3.1 User Experience
 - [ ] **3.1.1 User Profile Management:** Allow users to update their profile (e.g., country).
-- [x] **3.1.2 UI/UX Improvements:** Styling, loading states, error handling. (Implemented chat auto-scrolling, improved empty chat state, optimized tab bar size and position, and enabled independent scrolling for the chat window.)
+- [x] **3.1.2 UI/UX Improvements:** Styling, loading states, error handling. (Implemented chat auto-scrolling, improved empty chat state, optimized tab bar size and position, enabled independent scrolling for the chat window, and replaced top tabs with a responsive sidebar for navigation.)
 - [ ] **3.1.3 Responsiveness:** Ensure the application is responsive across devices.
 
 ---

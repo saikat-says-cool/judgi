@@ -6,8 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import LandingPage from "./pages/LandingPage"; // Import LandingPage
-import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
+import LandingPage from "./pages/LandingPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { SessionContextProvider } from "./contexts/SessionContext";
 
 const queryClient = new QueryClient();
@@ -20,13 +20,13 @@ const App = () => (
       <BrowserRouter>
         <SessionContextProvider>
             <Routes>
-              <Route path="/" element={<LandingPage />} /> {/* Landing page for unauthenticated users */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route 
-                path="/app" 
+                path="/app/*" // Use /* to allow nested routes under /app
                 element={
                   <ProtectedRoute>
-                    <Index /> {/* Protected main app content */}
+                    <Index />
                   </ProtectedRoute>
                 } 
               />

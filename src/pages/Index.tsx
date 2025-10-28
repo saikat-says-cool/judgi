@@ -17,18 +17,16 @@ const Index = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col px-4 pt-2 pb-4"> {/* Changed min-h-screen to h-screen */}
-      <div className="flex justify-center w-full mb-2">
-        <TabsList className="grid grid-cols-2 w-fit h-8">
+    <div className="h-screen flex flex-col px-4 pt-2 pb-4">
+      <Tabs defaultValue="chat" className="w-full flex-1 flex flex-col items-center"> {/* Added items-center here */}
+        <TabsList className="grid grid-cols-2 w-fit h-8 mb-2"> {/* Moved TabsList back inside Tabs, added mb-2 */}
           <TabsTrigger value="chat" className="text-sm">Chat</TabsTrigger>
           <TabsTrigger value="canvas" className="text-sm">Canvas</TabsTrigger>
         </TabsList>
-      </div>
-      <Tabs defaultValue="chat" className="w-full flex-1 flex flex-col"> {/* Added flex-1 and flex flex-col */}
-        <TabsContent value="chat" className="h-full flex-1">
+        <TabsContent value="chat" className="h-full flex-1 w-full"> {/* Added w-full to ensure content takes full width */}
           <ChatPage />
         </TabsContent>
-        <TabsContent value="canvas" className="h-full flex-1">
+        <TabsContent value="canvas" className="h-full flex-1 w-full"> {/* Added w-full to ensure content takes full width */}
           <CanvasPage />
         </TabsContent>
       </Tabs>

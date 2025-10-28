@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** Initial Setup Complete (UI Reset, Supabase Reset, Landing Page, Login, Protected Routes, Chat/Canvas Tabs are in place).
+**Current Status:** Canvas UI with integrated AI assistant is now functional.
 
 ---
 
@@ -34,8 +34,10 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ## Phase 2: Copilot Canvas Infrastructure
 
-### 2.1 Canvas Layout
-- [ ] **2.1.1 Basic Text Editor:** Implement a basic text editor within the "Canvas" tab.
+### 2.1 Canvas Layout (DONE)
+- [x] **2.1.1 Basic Text Editor:** Implemented a basic text editor (`WritingCanvas`) within the "Canvas" tab.
+- [x] **2.1.2 Split-Screen Layout:** Created a resizable split-screen layout in `CanvasPage` with `WritingCanvas` on the left and `CanvasAIAssistant` on the right.
+- [x] **2.1.3 AI Assistant Integration:** Integrated a dedicated AI assistant (`CanvasAIAssistant`) into the right panel of the canvas. The AI assistant receives the content from the `WritingCanvas` as context for its responses.
 
 ### 2.2 Interactivity
 - [ ] **2.2.1 Save to Canvas:** Implement functionality to transfer content from Chat to Canvas.

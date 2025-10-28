@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -19,20 +20,26 @@ interface ChatMessage {
 
 const ChatPage = () => {
   const { supabase, session } = useSession();
+  const { conversationId } = useParams<{ conversationId?: string }>();
+  const navigate = useNavigate();
+
   const [inputMessage, setInputMessage] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to bottom
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [messages]);
 
+  // Effect to handle conversation ID changes and fetch history
   useEffect(() => {
-    const fetchChatHistory = async () => {
+    const fetchChatHistory = async (convId: string) => {
       if (!session?.user?.id) {
         setLoadingHistory(false);
         return;
@@ -43,18 +50,49 @@ const ChatPage = () => {
         .from('chats')
         .select('id, role, content, created_at')
         .eq('user_id', session.user.id)
+        .eq('conversation_id', convId)
         .order('created_at', { ascending: true });
 
       if (error) {
         console.error("Error fetching chat history:", error);
         showError("Failed to load chat history.");
+        setMessages([]);
       } else if (data) {
         setMessages(data as ChatMessage[]);
       }
       setLoadingHistory(false);
     };
 
-    fetchChatHistory();
+    if (conversationId === 'new') {
+      setMessages([]);
+      setCurrentConversationId(null); // Indicate no conversation is active yet
+      setLoadingHistory(false);
+    } else if (conversationId) {
+      setCurrentConversationId(conversationId);
+      fetchChatHistory(conversationId);
+    } else {
+      // Default to new chat if no conversationId is in URL
+      navigate('/app/chat/new', { replace: true });
+    }
+  }, [conversationId, session?.user?.id, supabase, navigate]);
+
+  const createNewConversation = useCallback(async () => {
+    if (!session?.user?.id) {
+      showError("You must be logged in to create a new chat.");
+      return null;
+    }
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({ user_id: session.user.id, title: 'New Chat' })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error("Error creating new conversation:", error);
+      showError("Failed to start a new chat.");
+      return null;
+    }
+    return data.id;
   }, [session?.user?.id, supabase]);
 
   const handleSendMessage = async () => {
@@ -69,8 +107,18 @@ const ChatPage = () => {
 
     if (inputMessage.trim()) {
       const userMessageContent = inputMessage.trim();
+      let activeConversationId = currentConversationId;
+
+      // If it's a new chat, create the conversation first
+      if (!activeConversationId) {
+        activeConversationId = await createNewConversation();
+        if (!activeConversationId) return; // Failed to create conversation
+        setCurrentConversationId(activeConversationId);
+        navigate(`/app/chat/${activeConversationId}`, { replace: true }); // Update URL
+      }
+
       const newUserMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: Date.now().toString(), // Temporary ID
         role: 'user',
         content: userMessageContent,
         created_at: new Date().toISOString(),
@@ -79,10 +127,12 @@ const ChatPage = () => {
       setInputMessage('');
       setLoadingAIResponse(true);
 
+      // Save user message to Supabase
       const { data: userMessageData, error: userMessageError } = await supabase
         .from('chats')
         .insert({
           user_id: session.user.id,
+          conversation_id: activeConversationId,
           role: newUserMessage.role,
           content: newUserMessage.content,
         })
@@ -101,6 +151,15 @@ const ChatPage = () => {
             msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at } : msg
           )
         );
+        // If this is the first message in a new chat, update conversation title
+        if (messages.length === 0 && userMessageContent.length > 0) {
+          const newTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
+          await supabase
+            .from('conversations')
+            .update({ title: newTitle, updated_at: new Date().toISOString() })
+            .eq('id', activeConversationId)
+            .eq('user_id', session.user.id);
+        }
       }
 
       const messagesForAI = messages.map(msg => ({ role: msg.role, content: msg.content }));
@@ -114,17 +173,19 @@ const ChatPage = () => {
         });
 
         const newAIMessage: ChatMessage = {
-          id: Date.now().toString() + '-ai',
+          id: Date.now().toString() + '-ai', // Temporary ID
           role: 'assistant',
           content: aiResponseContent,
           created_at: new Date().toISOString(),
         };
         setMessages((prevMessages) => [...prevMessages, newAIMessage]);
 
+        // Save AI message to Supabase
         const { data: aiMessageData, error: aiMessageError } = await supabase
           .from('chats')
           .insert({
             user_id: session.user.id,
+            conversation_id: activeConversationId,
             role: newAIMessage.role,
             content: newAIMessage.content,
           })
@@ -167,14 +228,19 @@ const ChatPage = () => {
   }
 
   return (
-    <Card className="flex flex-col h-full"> {/* Card is a flex column, takes full height */}
-      <CardContent className="flex-1 flex flex-col"> {/* CardContent takes remaining space, is also a flex column */}
-        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}> {/* ScrollArea takes remaining space within CardContent */}
-          <div className="space-y-4 p-4"> {/* This div contains the messages and has padding */}
-            {messages.length === 0 ? (
+    <Card className="flex flex-col h-full">
+      <CardContent className="flex-1 flex flex-col">
+        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+          <div className="space-y-4 p-4">
+            {messages.length === 0 && conversationId === 'new' ? (
               <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
                 <h3 className="text-xl font-semibold mb-2">Start a new conversation!</h3>
                 <p>Ask JudgiAI a legal question to get started.</p>
+              </div>
+            ) : messages.length === 0 && conversationId !== 'new' ? (
+              <div className="flex flex-col items-center justify-center text-muted-foreground text-center py-10">
+                <h3 className="text-xl font-semibold mb-2">This conversation is empty.</h3>
+                <p>Start typing to continue.</p>
               </div>
             ) : (
               messages.map((message) => (
@@ -205,7 +271,7 @@ const ChatPage = () => {
           </div>
         </ScrollArea>
       </CardContent>
-      <CardFooter className="p-4 border-t flex items-center gap-2"> {/* CardFooter is fixed height */}
+      <CardFooter className="p-4 border-t flex items-center gap-2">
         <Input
           placeholder="Type your message..."
           className="flex-1"

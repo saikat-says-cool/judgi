@@ -6,7 +6,7 @@ import ChatPage from './ChatPage';
 import CanvasPage from './CanvasPage';
 import { useSession } from '@/contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '@/components/Sidebar'; // Import the new Sidebar component
+import Sidebar from '@/components/Sidebar';
 
 const Index = () => {
   const { session, isLoading } = useSession();
@@ -18,13 +18,14 @@ const Index = () => {
   }
 
   return (
-    <div className="flex h-screen"> {/* Main container for sidebar and content */}
-      <Sidebar /> {/* Render the Sidebar */}
-      <div className="flex-1 flex flex-col overflow-hidden"> {/* Content area */}
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Routes>
-          <Route path="chat" element={<ChatPage />} />
+          <Route path="chat/:conversationId" element={<ChatPage />} /> {/* Dynamic conversation ID */}
+          <Route path="chat" element={<Navigate to="chat/new" replace />} /> {/* Default to new chat */}
           <Route path="canvas" element={<CanvasPage />} />
-          <Route path="/" element={<Navigate to="chat" replace />} /> {/* Default to chat */}
+          <Route path="/" element={<Navigate to="chat/new" replace />} /> {/* Default to new chat */}
         </Routes>
       </div>
     </div>

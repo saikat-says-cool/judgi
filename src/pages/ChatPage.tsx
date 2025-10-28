@@ -160,16 +160,16 @@ const ChatPage = () => {
 
   if (loadingHistory) {
     return (
-      <Card className="flex flex-col h-full items-center justify-center"> {/* Changed max-h to h-full */}
+      <Card className="flex flex-col h-full items-center justify-center">
         <p className="text-muted-foreground">Loading chat history...</p>
       </Card>
     );
   }
 
   return (
-    <Card className="flex flex-col h-full"> {/* Changed max-h to h-full */}
-      <CardContent className="flex-1 p-4 overflow-hidden">
-        <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
+    <Card className="flex flex-col h-full">
+      <CardContent className="flex-1 flex flex-col p-4"> {/* Added flex flex-col, removed overflow-hidden */}
+        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}> {/* Changed h-full to flex-1 */}
           <div className="space-y-4">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center py-10">

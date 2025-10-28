@@ -5,13 +5,14 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, CornerDownLeft } from 'lucide-react'; // Added CornerDownLeft icon
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 
 interface CanvasAIAssistantProps {
   writingContent: string;
+  onInsertContent: (content: string) => void; // New prop for inserting content
 }
 
 interface ChatMessage {
@@ -21,7 +22,7 @@ interface ChatMessage {
   created_at?: string;
 }
 
-const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({ writingContent }) => {
+const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({ writingContent, onInsertContent }) => {
   const { session } = useSession();
   const [inputMessage, setInputMessage] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -112,9 +113,19 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({ writingContent })
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-muted-foreground'
-                    }`}
+                    } ${message.role === 'assistant' ? 'flex flex-col' : ''}`}
                   >
                     {message.content}
+                    {message.role === 'assistant' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2 self-end text-xs h-auto px-2 py-1"
+                        onClick={() => onInsertContent(message.content)}
+                      >
+                        <CornerDownLeft className="h-3 w-3 mr-1" /> Insert
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

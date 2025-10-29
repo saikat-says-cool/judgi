@@ -68,4 +68,19 @@
     @apply bg-background text-foreground;
     font-family: 'Comfortaa', 'Inter', sans-serif;
   }
+
+  /* Explicitly override heading colors within prose-invert */
+  .prose.dark\:prose-invert h1,
+  .prose.dark\:prose-invert h2,
+  .prose.dark\:prose-invert h3,
+  .prose.dark\:prose-invert h4,
+  .prose.dark\:prose-invert h5,
+  .prose.dark\:prose-invert h6 {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Also ensure strong/bold text is foreground color */
+  .prose.dark\:prose-invert strong {
+    color: hsl(var(--foreground)) !important;
+  }
 }

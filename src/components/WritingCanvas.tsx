@@ -38,10 +38,10 @@ const WritingCanvas: React.FC<WritingCanvasProps> = ({
 
   if (isEditing && !readOnly) {
     return (
-      // Changed background and text color
+      {/* Changed background and text color */}
       <div className="flex flex-col h-full p-4 bg-white text-black">
         <Textarea
-          // Changed background and text color
+          {/* Changed background and text color */}
           className="flex-1 resize-none border-none focus-visible:ring-0 text-lg leading-relaxed p-0 bg-white text-black"
           placeholder={placeholder}
           value={content}
@@ -54,10 +54,10 @@ const WritingCanvas: React.FC<WritingCanvasProps> = ({
   }
 
   return (
-    // Changed background and text color
+    {/* Changed background and text color */}
     <div className="flex flex-col h-full p-4 overflow-auto bg-white text-black">
       <div
-        className="flex-1 text-lg leading-relaxed p-0 bg-white text-black prose prose-lg" // Removed dark:prose-invert as background is white
+        className="flex-1 text-lg leading-relaxed p-0 bg-white text-black prose prose-lg" {/* Removed dark:prose-invert as background is white */}
         onClick={handleEditClick}
       >
         {content.trim() === "" && !readOnly ? (

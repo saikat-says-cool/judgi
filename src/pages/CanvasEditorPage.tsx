@@ -229,8 +229,8 @@ const CanvasEditorPage = () => {
     setAiWritingToCanvas(true); // Set AI writing state
     const htmlContent = await markdownToHtml(update.content); // Convert AI's Markdown to HTML
     
-    // Wrap AI's content with the selected font family
-    const styledHtmlContent = `<div style="font-family: ${aiOutputFontFamily}, sans-serif;">${htmlContent}</div>`;
+    // Wrap AI's content with the selected font family using a span
+    const styledHtmlContent = `<span style="font-family: ${aiOutputFontFamily}, sans-serif;">${htmlContent}</span>`;
 
     setWritingContent((prevContent) => {
       if (update.type === 'replace') {

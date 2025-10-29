@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import Highlight from '@tiptap/extension-highlight';
-import { TextStyle } from '@tiptap/extension-text-style'; // Corrected import
+import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +38,8 @@ const fonts = [
 ];
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChange, readOnly = false }) => {
+  const [activeFontFamily, setActiveFontFamily] = useState('Inter'); // Local state for active font
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -63,6 +65,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
     content: content,
     onUpdate: ({ editor }) => {
       onContentChange(editor.getHTML());
+      setActiveFontFamily(editor.getAttributes('textStyle').fontFamily || 'Inter'); // Update on content change
+    },
+    onSelectionUpdate: ({ editor }) => {
+      setActiveFontFamily(editor.getAttributes('textStyle').fontFamily || 'Inter'); // Update on selection change
     },
     editable: !readOnly,
     editorProps: {
@@ -81,15 +87,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
   useEffect(() => {
     if (editor) {
       editor.setOptions({ editable: !readOnly });
+      // Set initial font family when editor is ready or readOnly state changes
+      setActiveFontFamily(editor.getAttributes('textStyle').fontFamily || 'Inter');
     }
   }, [readOnly, editor]);
 
   const setFontFamily = useCallback((fontFamily: string) => {
     editor?.chain().focus().setFontFamily(fontFamily).run();
+    setActiveFontFamily(fontFamily); // Explicitly update local state immediately
   }, [editor]);
-
-  // Get the currently active font family for the Select component
-  const activeFontFamily = editor?.getAttributes('textStyle').fontFamily || 'Inter';
 
   if (!editor) {
     return null;
@@ -136,7 +142,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleCode().run()}
             variant={editor.isActive('code') ? 'secondary' : 'ghost'}
             size="icon"
-            title="Toggle Inline Code" // Added title for clarity
+            title="Toggle Inline Code"
           >
             <Code className="h-4 w-4" />
           </Button>

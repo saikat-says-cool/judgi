@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
 import remarkGfm from 'remark-gfm'; // Import remarkGfm for GitHub Flavored Markdown
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ChatMessage {
   id: string;
@@ -26,7 +27,19 @@ interface CanvasAIAssistantProps {
   onAIChatHistoryChange: (history: ChatMessage[]) => void;
   documentId: string | null;
   isAIWritingToCanvas: boolean;
+  aiOutputFontFamily: string; // New prop for AI output font
+  setAiOutputFontFamily: (font: string) => void; // New prop for setting AI output font
 }
+
+const fonts = [
+  { name: 'Inter', style: 'font-inter' },
+  { name: 'Comfortaa', style: 'font-comfortaa' },
+  { name: 'Arial', style: 'font-arial' },
+  { name: 'Times New Roman', style: 'font-times' },
+  { name: 'Courier New', style: 'font-courier' },
+  { name: 'Georgia', style: 'font-georgia' },
+  { name: 'Verdana', style: 'font-verdana' },
+];
 
 const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   writingContent,
@@ -35,6 +48,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   onAIChatHistoryChange,
   documentId,
   isAIWritingToCanvas,
+  aiOutputFontFamily,
+  setAiOutputFontFamily,
 }) => {
   const { session } = useSession();
   const [inputMessage, setInputMessage] = useState<string>('');
@@ -109,8 +124,20 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
 
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
-      <CardHeader className="border-b p-4">
+      <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
         <CardTitle className="text-lg">AI Assistant</CardTitle>
+        <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily}>
+          <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectValue placeholder="AI Output Font" />
+          </SelectTrigger>
+          <SelectContent>
+            {fonts.map((font) => (
+              <SelectItem key={font.name} value={font.name} className={font.style}>
+                {font.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
         <div className="flex-1 overflow-hidden">
@@ -132,7 +159,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                     className={`max-w-[80%] p-3 rounded-lg ${
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert' // Added prose classes
+                        : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert'
                     }`}
                   >
                     {message.role === 'assistant' ? (

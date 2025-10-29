@@ -49,6 +49,7 @@ const CanvasEditorPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);
+  const [aiOutputFontFamily, setAiOutputFontFamily] = useState('Inter'); // New state for AI output font
 
   // New states to store the initial loaded/created content for comparison
   const [initialWritingContent, setInitialWritingContent] = useState<string>(""); // Now stores HTML
@@ -227,16 +228,20 @@ const CanvasEditorPage = () => {
   const handleAIDocumentUpdate = useCallback(async (update: { type: 'append' | 'replace'; content: string }) => {
     setAiWritingToCanvas(true); // Set AI writing state
     const htmlContent = await markdownToHtml(update.content); // Convert AI's Markdown to HTML
+    
+    // Wrap AI's content with the selected font family
+    const styledHtmlContent = `<div style="font-family: ${aiOutputFontFamily}, sans-serif;">${htmlContent}</div>`;
+
     setWritingContent((prevContent) => {
       if (update.type === 'replace') {
-        return htmlContent;
+        return styledHtmlContent;
       } else { // 'append'
-        return prevContent.length > 0 ? `${prevContent}<p></p>${htmlContent}` : htmlContent; // Add a paragraph break
+        return prevContent.length > 0 ? `${prevContent}<p></p>${styledHtmlContent}` : styledHtmlContent; // Add a paragraph break
       }
     });
     // hasUnsavedChanges is now derived, no need to set it here
     setAiWritingToCanvas(false); // Reset AI writing state after content is added
-  }, []);
+  }, [aiOutputFontFamily]); // Dependency on aiOutputFontFamily
 
   const handleDocumentTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setDocumentTitle(e.target.value);
@@ -385,6 +390,8 @@ const CanvasEditorPage = () => {
             onAIChatHistoryChange={handleAIChatHistoryChange}
             documentId={currentDocumentId}
             isAIWritingToCanvas={aiWritingToCanvas}
+            aiOutputFontFamily={aiOutputFontFamily} // Pass AI font state
+            setAiOutputFontFamily={setAiOutputFontFamily} // Pass AI font setter
           />
         </ResizablePanel>
       </ResizablePanelGroup>

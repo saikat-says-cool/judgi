@@ -7,25 +7,25 @@
 @layer base {
   :root { /* This will now be the default dark theme */
     --background: 220 10% 3%;
-    --foreground: 180 20% 90%;
+    --foreground: 180 20% 98%; /* Made foreground brighter, closer to pure white */
 
     --card: 180 10% 10%;
-    --card-foreground: 180 20% 90%;
+    --card-foreground: 180 20% 98%; /* Using brighter foreground */
 
     --popover: 180 10% 10%;
-    --popover-foreground: 180 20% 90%;
+    --popover-foreground: 180 20% 98%; /* Using brighter foreground */
 
     --primary: 180 60% 40%;
-    --primary-foreground: 180 20% 90%;
+    --primary-foreground: 180 20% 98%; /* Using brighter foreground */
 
     --secondary: 180 10% 15%;
-    --secondary-foreground: 180 20% 90%;
+    --secondary-foreground: 180 20% 98%; /* Using brighter foreground */
 
     --muted: 180 10% 12%;
     --muted-foreground: 180 20% 70%;
 
     --accent: 180 10% 15%;
-    --accent-foreground: 180 20% 90%;
+    --accent-foreground: 180 20% 98%; /* Using brighter foreground */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -38,10 +38,10 @@
 
     /* Custom prose-invert variables for dark mode */
     --tw-prose-invert-body: hsl(var(--foreground));
-    --tw-prose-invert-headings: hsl(var(--foreground));
+    --tw-prose-invert-headings: hsl(var(--foreground)); /* Explicitly set to foreground */
     --tw-prose-invert-lead: hsl(var(--muted-foreground));
     --tw-prose-invert-links: hsl(var(--primary));
-    --tw-prose-invert-bold: hsl(var(--foreground));
+    --tw-prose-invert-bold: hsl(var(--foreground)); /* Explicitly set to foreground */
     --tw-prose-invert-counters: hsl(var(--muted-foreground));
     --tw-prose-invert-bullets: hsl(var(--muted-foreground));
     --tw-prose-invert-hr: hsl(var(--border));

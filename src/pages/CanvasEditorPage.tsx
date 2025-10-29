@@ -206,8 +206,10 @@ const CanvasEditorPage = () => {
     setAiWritingToCanvas(true); // Set AI writing state
     setWritingContent((prevContent) => {
       if (update.type === 'replace') {
+        showSuccess("AI replaced document content.");
         return update.content;
       } else { // 'append'
+        showSuccess("AI appended content to document.");
         return prevContent.length > 0 ? `${prevContent}\n\n${update.content}` : update.content;
       }
     });

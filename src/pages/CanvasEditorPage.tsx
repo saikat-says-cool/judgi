@@ -8,7 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '@/contexts/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Button } from '@/components/ui/button';
-import { X, Save, Loader2 } from 'lucide-react';
+import { X, Save, Loader2, FileDown } from 'lucide-react'; // Added FileDown icon
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -20,6 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Import DropdownMenu components
+import { exportAsDocx, exportAsPdf } from '@/utils/documentExport'; // Import export functions
 
 interface ChatMessage {
   id: string;
@@ -252,6 +259,24 @@ const CanvasEditorPage = () => {
     }
   };
 
+  const handleExportDocx = async () => {
+    try {
+      await exportAsDocx(documentTitle, writingContent);
+      showSuccess("Document exported as DOCX!");
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "Failed to export DOCX.");
+    }
+  };
+
+  const handleExportPdf = () => {
+    try {
+      exportAsPdf(documentTitle, writingContent);
+      showSuccess("Document exported as PDF!");
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "Failed to export PDF.");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
@@ -281,6 +306,23 @@ const CanvasEditorPage = () => {
         >
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <FileDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleExportDocx}>
+              Download as DOCX
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportPdf}>
+              Download as PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button variant="ghost" size="icon" onClick={handleCloseEditor}>
           <X className="h-4 w-4" />
         </Button>

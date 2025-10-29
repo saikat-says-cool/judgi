@@ -11,7 +11,7 @@ import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import ConversationItem from './ConversationItem';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from './ThemeToggle'; // Import ThemeToggle
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavLinkProps {
   to: string;
@@ -58,13 +58,13 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
-  const { documentId } = useParams<{ documentId?: string }>(); // New param for documents
+  const { documentId } = useParams<{ documentId?: string }>();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]); // State for documents
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
-  const [loadingDocuments, setLoadingDocuments] = useState(true); // Loading state for documents
+  const [loadingDocuments, setLoadingDocuments] = useState(true);
   const { supabase, session } = useSession();
 
   const isChatMode = location.pathname.startsWith('/app/chat');
@@ -121,7 +121,7 @@ const Sidebar: React.FC = () => {
   // Fetch Documents
   useEffect(() => {
     const fetchDocuments = async () => {
-      if (!session?.user?.id || !isCanvasHomePage) { // Only fetch if on canvas home page
+      if (!session?.user?.id || !isCanvasHomePage) {
         setLoadingDocuments(false);
         setDocuments([]);
         return;
@@ -229,17 +229,17 @@ const Sidebar: React.FC = () => {
         <NavLink
           to="/app/chat/new"
           icon={<MessageSquare className="h-4 w-4" />}
-          label="Chat"
+          label="New Chat" // Renamed from "Chat" to "New Chat"
           isActive={isChatMode}
           isMobile={isMobile}
           onClick={closeSheet}
           isSidebarExpanded={isSidebarExpanded}
         />
         <NavLink
-          to="/app/canvas" // Link to the Canvas home page
+          to="/app/canvas"
           icon={<LayoutDashboard className="h-4 w-4" />}
           label="Canvas"
-          isActive={isCanvasMode} // Active if any canvas route is active
+          isActive={isCanvasMode}
           isMobile={isMobile}
           onClick={closeSheet}
           isSidebarExpanded={isSidebarExpanded}
@@ -274,7 +274,7 @@ const Sidebar: React.FC = () => {
         </>
       )}
 
-      {isCanvasHomePage && isSidebarExpanded && ( // Only show recent documents on Canvas home page and when expanded
+      {isCanvasHomePage && isSidebarExpanded && (
         <>
           <div className="mb-2 text-sm font-medium text-muted-foreground mt-4">Recent Documents</div>
           {loadingDocuments ? (

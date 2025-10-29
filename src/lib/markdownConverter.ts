@@ -1,7 +1,7 @@
 import { remark } from 'remark';
 import remarkHtml from 'remark-html';
-import gfm from 'remark-gfm'; // Corrected import
-import { htmlToMarkdown } from 'html-to-markdown'; // Using the installed package
+import gfm from 'remark-gfm';
+import htmlToMarkdown from 'html-to-markdown'; // Corrected import to default
 
 /**
  * Converts Markdown string to HTML string.

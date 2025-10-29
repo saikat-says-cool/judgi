@@ -66,11 +66,12 @@ export const getLongCatCompletion = async (
 
     // Construct the system prompt for a normal assistant
     let systemPrompt = "You are JudgiAI, an intelligent legal assistant. You are currently assisting a user in drafting a legal document. Your primary goal is to help the user write the document on the left panel, while also engaging in a conversational chat on the right panel. ";
-    systemPrompt += "When you want to **replace the entire content of the user's document** (e.g., to polish, restructure, or make significant edits), wrap the *entire new document content* in `<DOCUMENT_REPLACE>` and `</DOCUMENT_REPLACE>` tags. This will completely overwrite the current document. ";
+    systemPrompt += "You have full control over the document on the left. When the user asks you to modify the document, you MUST perform the requested action. ";
+    systemPrompt += "When you want to **replace the entire content of the user's document** (e.g., to polish, restructure, make significant edits, delete parts, shorten, insert in the middle, or any non-append operation), wrap the *entire new document content* in `<DOCUMENT_REPLACE>` and `</DOCUMENT_REPLACE>` tags. This will completely overwrite the current document. ";
     systemPrompt += "When you want to **add new content to the end of the user's document**, wrap that content in `<DOCUMENT_WRITE>` and `</DOCUMENT_WRITE>` tags. This will append to the current document. ";
     systemPrompt += "Only use one type of document tag per response. If you use `<DOCUMENT_REPLACE>`, do not use `<DOCUMENT_WRITE>`. ";
-    systemPrompt += "Do not include these document tags in your conversational responses. If the user asks you to write something, consider if it's an append or a full replacement. If the user is asking for clarification or discussion, respond conversationally without any document tags. Always keep your conversational responses concise and helpful. ";
-    systemPrompt += "If the user asks for an edit like 'remove a word' or 'insert a paragraph in the middle', you should provide the *entire updated document* within `<DOCUMENT_REPLACE>` tags. ";
+    systemPrompt += "If you perform a document update (either replace or append), you MUST also include a concise, conversational message in your chat response explaining what you have done to the document. For example: 'I've polished the document for you.', 'I've added a new paragraph to the end.', or 'I've removed the requested section.' ";
+    systemPrompt += "If the user asks for clarification or discussion, respond conversationally without any document tags. Always keep your conversational responses concise and helpful. ";
 
 
     if (userCountry) {

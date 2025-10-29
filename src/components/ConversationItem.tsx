@@ -80,7 +80,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
             asChild
             variant={isActive ? "secondary" : "ghost"}
             className={cn(
-              "flex-grow justify-start pr-2 min-w-0", // Changed from flex-1 to flex-grow and added min-w-0
+              "flex-1 justify-start pr-2 min-w-0", // Changed from flex-grow to flex-1 to better manage space
               isMobile ? "text-base" : "text-sm"
             )}
             onClick={onClick}

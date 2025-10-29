@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import WritingCanvas from '@/components/WritingCanvas';
+import RichTextEditor from '@/components/RichTextEditor'; // Import the new RichTextEditor
 import CanvasAIAssistant from '@/components/CanvasAIAssistant';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '@/contexts/SessionContext';
@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { exportAsDocx, exportAsPdf } from '@/utils/documentExport';
+import { markdownToHtml, htmlToMarkdownConverter } from '@/lib/markdownConverter'; // Import converters
 
 interface ChatMessage {
   id: string;
@@ -40,7 +41,7 @@ const CanvasEditorPage = () => {
   const navigate = useNavigate();
   const { supabase, session } = useSession();
 
-  const [writingContent, setWritingContent] = useState<string>("");
+  const [writingContent, setWritingContent] = useState<string>(""); // Now stores HTML
   const [aiChatHistory, setAiChatHistory] = useState<ChatMessage[]>([]);
   const [documentTitle, setDocumentTitle] = useState<string>("Untitled Document");
   const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
@@ -50,7 +51,7 @@ const CanvasEditorPage = () => {
   const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);
 
   // New states to store the initial loaded/created content for comparison
-  const [initialWritingContent, setInitialWritingContent] = useState<string>("");
+  const [initialWritingContent, setInitialWritingContent] = useState<string>(""); // Now stores HTML
   const [initialAiChatHistory, setInitialAiChatHistory] = useState<ChatMessage[]>([]);
   const [initialDocumentTitle, setInitialDocumentTitle] = useState<string>("Untitled Document");
 
@@ -159,7 +160,7 @@ const CanvasEditorPage = () => {
         navigate('/app/canvas', { replace: true }); // Redirect to home if document not found or error
       } else if (data) {
         setDocumentTitle(data.title);
-        setWritingContent(data.content);
+        setWritingContent(data.content); // Content is now HTML
         setAiChatHistory(data.chat_history as ChatMessage[]);
         setCurrentDocumentId(data.id);
         
@@ -174,7 +175,7 @@ const CanvasEditorPage = () => {
     if (documentId === 'new') {
       // Start with a blank canvas, will be saved on first content change or explicit save
       setDocumentTitle("Untitled Document");
-      setWritingContent("");
+      setWritingContent(""); // Empty HTML
       setAiChatHistory([]);
       setCurrentDocumentId(null); // No ID until saved
       
@@ -210,7 +211,7 @@ const CanvasEditorPage = () => {
 
 
   const handleContentChange = useCallback((content: string) => {
-    setWritingContent(content);
+    setWritingContent(content); // Content is now HTML
     // hasUnsavedChanges is now derived, no need to set it here
     // If it's a new document and content is added, prompt for initial save/title
     if (!currentDocumentId && content.trim().length > 0) {
@@ -223,15 +224,14 @@ const CanvasEditorPage = () => {
     // hasUnsavedChanges is now derived, no need to set it here
   }, []);
 
-  const handleAIDocumentUpdate = useCallback((update: { type: 'append' | 'replace'; content: string }) => {
+  const handleAIDocumentUpdate = useCallback(async (update: { type: 'append' | 'replace'; content: string }) => {
     setAiWritingToCanvas(true); // Set AI writing state
+    const htmlContent = await markdownToHtml(update.content); // Convert AI's Markdown to HTML
     setWritingContent((prevContent) => {
       if (update.type === 'replace') {
-        // Removed showSuccess("AI replaced document content.");
-        return update.content;
+        return htmlContent;
       } else { // 'append'
-        // Removed showSuccess("AI appended content to document.");
-        return prevContent.length > 0 ? `${prevContent}\n\n${update.content}` : update.content;
+        return prevContent.length > 0 ? `${prevContent}<p></p>${htmlContent}` : htmlContent; // Add a paragraph break
       }
     });
     // hasUnsavedChanges is now derived, no need to set it here
@@ -291,6 +291,8 @@ const CanvasEditorPage = () => {
 
   const handleExportDocx = async () => {
     try {
+      // DOCX export expects plain text or simple HTML, so we'll pass the HTML content directly
+      // The docx library might need further processing of HTML to DOCX
       await exportAsDocx(documentTitle, writingContent);
       showSuccess("Document exported as DOCX!");
     } catch (error) {
@@ -300,7 +302,9 @@ const CanvasEditorPage = () => {
 
   const handleExportPdf = () => {
     try {
-      exportAsPdf(documentTitle, writingContent);
+      // PDF export expects plain text, so we'll convert HTML to Markdown then to plain text
+      const plainTextContent = htmlToMarkdownConverter(writingContent);
+      exportAsPdf(documentTitle, plainTextContent);
       showSuccess("Document exported as PDF!");
     } catch (error) {
       showError(error instanceof Error ? error.message : "Failed to export PDF.");
@@ -360,10 +364,10 @@ const CanvasEditorPage = () => {
 
       <ResizablePanelGroup direction="horizontal" className="flex-1 pt-16">
         <ResizablePanel defaultSize={60} minSize={30}>
-          <WritingCanvas
+          <RichTextEditor
             content={writingContent}
             onContentChange={handleContentChange}
-            readOnly={aiWritingToCanvas} // Make canvas read-only when AI is writing
+            readOnly={aiWritingToCanvas}
           />
           {aiWritingToCanvas && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-muted text-muted-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
@@ -375,7 +379,7 @@ const CanvasEditorPage = () => {
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={40} minSize={20}>
           <CanvasAIAssistant
-            writingContent={writingContent}
+            writingContent={htmlToMarkdownConverter(writingContent)} // Convert HTML to Markdown for AI context
             onAIDocumentUpdate={handleAIDocumentUpdate}
             aiChatHistory={aiChatHistory}
             onAIChatHistoryChange={handleAIChatHistoryChange}

@@ -20,14 +20,14 @@ interface GetLongCatCompletionOptions {
   researchMode: 'none' | 'medium' | 'max';
   deepthinkMode: boolean;
   userId: string; // Pass userId to fetch country
-  currentDocumentContent?: string; // New: Pass current document content for AI context
+  currentDocumentContent?: string; // New: Pass current document content for AI context (now Markdown)
 }
 
 interface LongCatCompletionResponse {
   chatResponse: string;
   documentUpdate: {
     type: 'append' | 'replace';
-    content: string;
+    content: string; // This content is expected to be Markdown
   } | null;
 }
 
@@ -72,7 +72,7 @@ export const getLongCatCompletion = async (
     systemPrompt += "Only use one type of document tag per response. If you use `<DOCUMENT_REPLACE>`, do not use `<DOCUMENT_WRITE>`. ";
     systemPrompt += "If you perform a document update (either replace or append), you MUST also include a concise, conversational message in your chat response explaining what you have done to the document. For example: 'I've polished the document for you.', 'I've added a new paragraph to the end.', or 'I've removed the requested section.' ";
     systemPrompt += "If the user asks for clarification or discussion, respond conversationally without any document tags. Always keep your conversational responses concise and helpful. ";
-
+    systemPrompt += "All document updates (within <DOCUMENT_REPLACE> or <DOCUMENT_WRITE>) and chat responses should be in Markdown format. "; // Explicitly tell AI to use Markdown
 
     if (userCountry) {
       systemPrompt += `Consider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;
@@ -80,7 +80,7 @@ export const getLongCatCompletion = async (
 
     // Add current document content to the system prompt for context
     if (currentDocumentContent) {
-      systemPrompt += `\n\nHere is the current content of the document you are helping to write:\n<CURRENT_DOCUMENT_CONTENT>\n${currentDocumentContent}\n</CURRENT_DOCUMENT_CONTENT>\n`;
+      systemPrompt += `\n\nHere is the current content of the document you are helping to write (in Markdown format):\n<CURRENT_DOCUMENT_CONTENT>\n${currentDocumentContent}\n</CURRENT_DOCUMENT_CONTENT>\n`;
     }
 
     const messagesForAI: LongCatMessage[] = [{ role: "system", content: systemPrompt }];

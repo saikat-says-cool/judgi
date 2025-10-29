@@ -11,6 +11,7 @@ import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import ConversationItem from './ConversationItem';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from './ThemeToggle'; // Import ThemeToggle
 
 interface NavLinkProps {
   to: string;
@@ -301,6 +302,12 @@ const Sidebar: React.FC = () => {
             </ScrollArea>
           )}
         </>
+      )}
+
+      {isSidebarExpanded && (
+        <div className="mt-auto pt-4 border-t">
+          <ThemeToggle />
+        </div>
       )}
     </div>
   );

@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2, CornerDownLeft } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react'; // Removed CornerDownLeft icon
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
@@ -19,42 +19,39 @@ interface ChatMessage {
 
 interface CanvasAIAssistantProps {
   writingContent: string;
-  onInsertContent: (content: string) => void;
-  aiChatHistory: ChatMessage[]; // New prop for AI chat history
-  onAIChatHistoryChange: (history: ChatMessage[]) => void; // Callback to update AI chat history
-  documentId: string | null; // New prop for current document ID
+  onAIDocumentWrite: (content: string) => void; // New prop for AI to write to canvas
+  aiChatHistory: ChatMessage[];
+  onAIChatHistoryChange: (history: ChatMessage[]) => void;
+  documentId: string | null;
+  isAIWritingToCanvas: boolean; // New prop to indicate if AI is writing to canvas
 }
 
 const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   writingContent,
-  onInsertContent,
+  onAIDocumentWrite, // Destructure new prop
   aiChatHistory,
   onAIChatHistoryChange,
   documentId,
+  isAIWritingToCanvas, // Destructure new prop
 }) => {
   const { session } = useSession();
   const [inputMessage, setInputMessage] = useState<string>('');
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const lastMessageRef = useRef<HTMLDivElement>(null);
 
-  // Sync internal messages state with prop
-  useEffect(() => {
-    onAIChatHistoryChange(aiChatHistory); // Ensure parent's state is the source of truth
-  }, [aiChatHistory, onAIChatHistoryChange]);
-
   useEffect(() => {
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [aiChatHistory]); // Changed dependency to aiChatHistory prop
+  }, [aiChatHistory]);
 
   const handleSendMessage = async () => {
     if (!session?.user?.id) {
       showError("You must be logged in to send messages.");
       return;
     }
-    if (loadingAIResponse) {
-      showError("Please wait for the current AI response to complete.");
+    if (loadingAIResponse || isAIWritingToCanvas) { // Disable if AI is writing to canvas
+      showError("Please wait for the current AI operation to complete.");
       return;
     }
 
@@ -68,29 +65,39 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       };
 
       const updatedChatHistory = [...aiChatHistory, newUserMessage];
-      onAIChatHistoryChange(updatedChatHistory); // Update parent's state
+      onAIChatHistoryChange(updatedChatHistory);
       setInputMessage('');
       setLoadingAIResponse(true);
 
       try {
-        const messagesForAI = [
-          { role: 'system', content: `The user is currently working on a document. Here is the current content of their writing space:\n\n${writingContent}\n\nBased on this context and our conversation, please provide your response.` },
-          ...updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content }))
-        ];
+        const messagesForAI = updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content }));
 
-        const aiResponseContent = await getLongCatCompletion(messagesForAI, {
+        const { chatResponse, documentWriteContent } = await getLongCatCompletion(messagesForAI, {
           researchMode: 'none',
           deepthinkMode: false,
           userId: session.user.id,
+          currentDocumentContent: writingContent, // Pass current document content
         });
 
-        const newAIMessage: ChatMessage = {
-          id: Date.now().toString() + '-ai',
-          role: 'assistant',
-          content: aiResponseContent,
-          created_at: new Date().toISOString(),
-        };
-        onAIChatHistoryChange([...updatedChatHistory, newAIMessage]); // Update parent's state with AI response
+        // Update chat history with the conversational part of the response
+        if (chatResponse) {
+          const newAIMessage: ChatMessage = {
+            id: Date.now().toString() + '-ai',
+            role: 'assistant',
+            content: chatResponse,
+            created_at: new Date().toISOString(),
+          };
+          onAIChatHistoryChange([...updatedChatHistory, newAIMessage]);
+        } else {
+          // If no chat response, just update with user message
+          onAIChatHistoryChange(updatedChatHistory);
+        }
+
+        // If AI provided content for the document, trigger the parent callback
+        if (documentWriteContent) {
+          onAIDocumentWrite(documentWriteContent);
+        }
+
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
@@ -128,19 +135,10 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-muted-foreground'
-                    } ${message.role === 'assistant' ? 'flex flex-col' : ''}`}
+                    }`}
                   >
                     {message.content}
-                    {message.role === 'assistant' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-2 self-end text-xs h-auto px-2 py-1"
-                        onClick={() => onInsertContent(message.content)}
-                      >
-                        <CornerDownLeft className="h-3 w-3 mr-1" /> Insert
-                      </Button>
-                    )}
+                    {/* Removed Insert button */}
                   </div>
                 </div>
               ))}
@@ -163,14 +161,14 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !loadingAIResponse) {
+            if (e.key === 'Enter' && !loadingAIResponse && !isAIWritingToCanvas) { // Disable if AI is writing to canvas
               handleSendMessage();
             }
           }}
-          disabled={loadingAIResponse}
+          disabled={loadingAIResponse || isAIWritingToCanvas} // Disable if AI is writing to canvas
         />
-        <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
-          {loadingAIResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas}>
+          {loadingAIResponse || isAIWritingToCanvas ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </CardFooter>
     </Card>

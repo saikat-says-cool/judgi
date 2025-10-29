@@ -8,7 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '@/contexts/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Button } from '@/components/ui/button';
-import { X, Save, Loader2, FileDown } from 'lucide-react'; // Added FileDown icon
+import { X, Save, Loader2, FileDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -25,8 +25,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"; // Import DropdownMenu components
-import { exportAsDocx, exportAsPdf } from '@/utils/documentExport'; // Import export functions
+} from "@/components/ui/dropdown-menu";
+import { exportAsDocx, exportAsPdf } from '@/utils/documentExport';
 
 interface ChatMessage {
   id: string;
@@ -48,6 +48,7 @@ const CanvasEditorPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
+  const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false); // New state for AI writing to canvas
 
   // Ref to store the latest content and chat history for beforeunload event
   const latestContentRef = useRef(writingContent);
@@ -201,15 +202,18 @@ const CanvasEditorPage = () => {
     setHasUnsavedChanges(true);
   }, []);
 
-  const handleDocumentTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setDocumentTitle(e.target.value);
+  const handleAIDocumentWrite = useCallback((contentToAppend: string) => {
+    setAiWritingToCanvas(true); // Set AI writing state
+    setWritingContent((prevContent) => {
+      // Append content with a new line if existing content is not empty
+      return prevContent.length > 0 ? `${prevContent}\n\n${contentToAppend}` : contentToAppend;
+    });
     setHasUnsavedChanges(true);
+    setAiWritingToCanvas(false); // Reset AI writing state after content is added
   }, []);
 
-  const handleInsertContent = useCallback((contentToInsert: string) => {
-    setWritingContent((prevContent) => {
-      return prevContent.length > 0 ? `${prevContent}\n\n${contentToInsert}` : contentToInsert;
-    });
+  const handleDocumentTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDocumentTitle(e.target.value);
     setHasUnsavedChanges(true);
   }, []);
 
@@ -328,21 +332,29 @@ const CanvasEditorPage = () => {
         </Button>
       </div>
 
-      <ResizablePanelGroup direction="horizontal" className="flex-1 pt-16"> {/* Add padding-top to avoid header overlap */}
+      <ResizablePanelGroup direction="horizontal" className="flex-1 pt-16">
         <ResizablePanel defaultSize={60} minSize={30}>
           <WritingCanvas
             content={writingContent}
             onContentChange={handleContentChange}
+            readOnly={aiWritingToCanvas} // Make canvas read-only when AI is writing
           />
+          {aiWritingToCanvas && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-muted text-muted-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>JudgiAI is writing...</span>
+            </div>
+          )}
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={40} minSize={20}>
           <CanvasAIAssistant
             writingContent={writingContent}
-            onInsertContent={handleInsertContent}
-            aiChatHistory={aiChatHistory} // Pass AI chat history
-            onAIChatHistoryChange={handleAIChatHistoryChange} // Callback to update AI chat history
-            documentId={currentDocumentId} // Pass document ID for saving
+            onAIDocumentWrite={handleAIDocumentWrite} // New prop for AI to write to canvas
+            aiChatHistory={aiChatHistory}
+            onAIChatHistoryChange={handleAIChatHistoryChange}
+            documentId={currentDocumentId}
+            isAIWritingToCanvas={aiWritingToCanvas} // Pass AI writing state to assistant
           />
         </ResizablePanel>
       </ResizablePanelGroup>

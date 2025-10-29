@@ -12,7 +12,7 @@ const longcatClient = new OpenAI({
 });
 
 interface LongCatMessage {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
@@ -20,13 +20,19 @@ interface GetLongCatCompletionOptions {
   researchMode: 'none' | 'medium' | 'max';
   deepthinkMode: boolean;
   userId: string; // Pass userId to fetch country
+  currentDocumentContent?: string; // New: Pass current document content for AI context
+}
+
+interface LongCatCompletionResponse {
+  chatResponse: string;
+  documentWriteContent: string | null;
 }
 
 export const getLongCatCompletion = async (
   messages: LongCatMessage[],
   options: GetLongCatCompletionOptions
-): Promise<string> => {
-  const { researchMode, deepthinkMode, userId } = options;
+): Promise<LongCatCompletionResponse> => {
+  const { researchMode, deepthinkMode, userId, currentDocumentContent } = options;
 
   if (!import.meta.env.VITE_LONGCAT_API_KEY) {
     console.error("LongCat API Key is not set. Please add VITE_LONGCAT_API_KEY to your .env.local file.");
@@ -34,7 +40,6 @@ export const getLongCatCompletion = async (
   }
 
   try {
-    // Fetch user's country from profiles table (still useful for general context if needed, but not for legal focus)
     let userCountry: string | null = null;
     if (userId) {
       const { data, error } = await supabase
@@ -50,78 +55,59 @@ export const getLongCatCompletion = async (
       }
     }
 
-    // const latestUserMessage = messages.findLast(msg => msg.role === "user")?.content || "";
     let context = "";
-    // let legalDocuments: any[] = [];
-    // let newsDocuments: any[] = [];
-
-    // // Temporarily detaching Langsearch calls
-    // if (latestUserMessage) {
-    //   if (researchMode === 'none') {
-    //     // Only current news, fewer articles
-    //     newsDocuments = await searchCurrentNews(latestUserMessage, 3, userCountry);
-    //   } else {
-    //     // Fetch both legal documents and current news for 'medium' and 'max' modes
-    //     const legalDocCount = researchMode === 'medium' ? 10 : 20; // More retrievals
-    //     const newsDocCount = researchMode === 'medium' ? 3 : 5; // More news articles
-
-    //     legalDocuments = await searchLegalDocuments(latestUserMessage, legalDocCount, userCountry);
-    //     newsDocuments = await searchCurrentNews(latestUserMessage, newsDocCount, userCountry);
-    //   }
-
-    //   if (legalDocuments.length > 0) {
-    //     context += "Based on the following documents:\n\n";
-    //     legalDocuments.forEach((doc, index) => {
-    //       // Increased content length for more detail
-    //       context += `Document ${index + 1}:\nTitle: ${doc.title}\nCitation: ${doc.citation || 'N/A'}\nContent: ${doc.content.substring(0, 1500)}...\n\n`;
-    //     });
-    //   }
-
-    //   if (newsDocuments.length > 0) {
-    //     if (legalDocuments.length > 0) context += "\n"; // Add a separator if both are present
-    //     context += "Based on the following current news articles:\n\n";
-    //     newsDocuments.forEach((doc, index) => {
-    //       context += `News Article ${index + 1}:\nTitle: ${doc.title}\nURL: ${doc.citation || 'N/A'}\nSnippet: ${doc.content}\n\n`;
-    //     });
-    //   }
-
-    //   if (context) {
-    //     context += "Please answer the user's question, incorporating this information.\n\n";
-    //   }
-    // }
+    // Temporarily detaching Langsearch calls as per MVP_PROGRESS.md
+    // if (latestUserMessage) { ... }
 
     const model = deepthinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Construct the system prompt for a normal assistant
-    let systemPrompt = "You are a helpful and friendly AI assistant. Provide clear, concise, and accurate information. ";
-    // User country can still be used for general context if desired by the AI.
+    let systemPrompt = "You are JudgiAI, an intelligent legal assistant. You are currently assisting a user in drafting a legal document. ";
+    systemPrompt += "Your primary goal is to help the user write the document on the left panel, while also engaging in a conversational chat on the right panel. ";
+    systemPrompt += "When you want to add content directly to the user's document, wrap that content in <DOCUMENT_WRITE> and </DOCUMENT_WRITE> tags. ";
+    systemPrompt += "Only write to the document when it makes sense to progress the drafting, otherwise, respond conversationally. ";
+    systemPrompt += "Do not include the <DOCUMENT_WRITE> tags in your conversational responses. ";
+    systemPrompt += "If the user asks you to write something, put that content inside the <DOCUMENT_WRITE> tags. ";
+    systemPrompt += "If the user is asking for clarification or discussion, respond conversationally. ";
+    systemPrompt += "Always keep your conversational responses concise and helpful. ";
+
     if (userCountry) {
       systemPrompt += `Consider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;
     }
 
-
-    const messagesWithContext = [...messages];
-    if (context) { // This block will now likely not be entered as context is empty
-      // Prepend context to the system message if it exists, otherwise create one
-      const existingSystemMessageIndex = messagesWithContext.findIndex(msg => msg.role === "system");
-      if (existingSystemMessageIndex !== -1) {
-        messagesWithContext[existingSystemMessageIndex].content = `${systemPrompt}\n${context}\n${messagesWithContext[existingSystemMessageIndex].content}`;
-      } else {
-        messagesWithContext.unshift({ role: "system", content: `${systemPrompt}\n${context}` });
-      }
-    } else {
-      // If no search context, just add the system prompt
-      messagesWithContext.unshift({ role: "system", content: systemPrompt });
+    // Add current document content to the system prompt for context
+    if (currentDocumentContent) {
+      systemPrompt += `\n\nHere is the current content of the document you are helping to write:\n<CURRENT_DOCUMENT_CONTENT>\n${currentDocumentContent}\n</CURRENT_DOCUMENT_CONTENT>\n`;
     }
+
+    const messagesForAI: LongCatMessage[] = [{ role: "system", content: systemPrompt }];
+    messagesForAI.push(...messages); // Add existing chat messages
 
     const response = await longcatClient.chat.completions.create({
       model: model,
-      messages: messagesWithContext,
-      max_tokens: 4096, // Max tokens remains high for long responses
+      messages: messagesForAI,
+      max_tokens: 4096,
       temperature: 0.7,
-      top_p: 1.0, // Explicitly setting top_p for normal-like behavior
+      top_p: 1.0,
     });
-    return response.choices[0].message?.content || "No response from AI.";
+
+    const fullAIResponse = response.choices[0].message?.content || "No response from AI.";
+
+    // Parse the AI's response for document content
+    const documentWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
+    const match = fullAIResponse.match(documentWriteRegex);
+
+    let documentWriteContent: string | null = null;
+    let chatResponse = fullAIResponse;
+
+    if (match && match[1]) {
+      documentWriteContent = match[1].trim();
+      // Remove the document write tags and content from the chat response
+      chatResponse = fullAIResponse.replace(documentWriteRegex, '').trim();
+    }
+
+    return { chatResponse, documentWriteContent };
+
   } catch (error) {
     console.error("Error calling LongCat API:", error);
     throw new Error("Failed to get AI response. Please check your API key and network connection.");

@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import remarkGfm from 'remark-gfm'; // Import remarkGfm for GitHub Flavored Markdown
 
 interface WritingCanvasProps {
   content: string;
@@ -16,6 +18,20 @@ const WritingCanvas: React.FC<WritingCanvasProps> = ({
   placeholder = "Start writing your legal document here...",
   readOnly = false,
 }) => {
+  if (readOnly) {
+    // When AI is writing, display content as formatted Markdown
+    return (
+      <div className="flex flex-col h-full p-4 overflow-auto">
+        <div className="flex-1 text-lg leading-relaxed p-0 bg-background text-foreground prose prose-lg dark:prose-invert">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {content}
+          </ReactMarkdown>
+        </div>
+      </div>
+    );
+  }
+
+  // Otherwise, display as an editable textarea
   return (
     <div className="flex flex-col h-full p-4">
       <Textarea

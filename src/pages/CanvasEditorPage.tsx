@@ -46,9 +46,19 @@ const CanvasEditorPage = () => {
   const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
-  const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false); // New state for AI writing to canvas
+  const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);
+
+  // New states to store the initial loaded/created content for comparison
+  const [initialWritingContent, setInitialWritingContent] = useState<string>("");
+  const [initialAiChatHistory, setInitialAiChatHistory] = useState<ChatMessage[]>([]);
+  const [initialDocumentTitle, setInitialDocumentTitle] = useState<string>("Untitled Document");
+
+  // Derived state for unsaved changes
+  const hasUnsavedChanges =
+    writingContent !== initialWritingContent ||
+    JSON.stringify(aiChatHistory) !== JSON.stringify(initialAiChatHistory) || // Deep compare chat history
+    documentTitle !== initialDocumentTitle;
 
   // Ref to store the latest content and chat history for beforeunload event
   const latestContentRef = useRef(writingContent);
@@ -119,7 +129,10 @@ const CanvasEditorPage = () => {
       showError("Failed to save document.");
       return false;
     }
-    setHasUnsavedChanges(false);
+    // Update initial states after successful save
+    setInitialWritingContent(content);
+    setInitialAiChatHistory(chatHistory);
+    setInitialDocumentTitle(title);
     showSuccess("Document saved!");
     return true;
   }, [session?.user?.id, supabase]);
@@ -149,7 +162,11 @@ const CanvasEditorPage = () => {
         setWritingContent(data.content);
         setAiChatHistory(data.chat_history as ChatMessage[]);
         setCurrentDocumentId(data.id);
-        setHasUnsavedChanges(false);
+        
+        // Set initial states upon loading
+        setInitialDocumentTitle(data.title);
+        setInitialWritingContent(data.content);
+        setInitialAiChatHistory(data.chat_history as ChatMessage[]);
       }
       setIsLoading(false);
     };
@@ -160,7 +177,11 @@ const CanvasEditorPage = () => {
       setWritingContent("");
       setAiChatHistory([]);
       setCurrentDocumentId(null); // No ID until saved
-      setHasUnsavedChanges(false);
+      
+      // Set initial states for a new document
+      setInitialDocumentTitle("Untitled Document");
+      setInitialWritingContent("");
+      setInitialAiChatHistory([]);
       setIsLoading(false);
     } else if (documentId && documentId !== currentDocumentId) {
       loadDocument(documentId);
@@ -190,7 +211,7 @@ const CanvasEditorPage = () => {
 
   const handleContentChange = useCallback((content: string) => {
     setWritingContent(content);
-    setHasUnsavedChanges(true);
+    // hasUnsavedChanges is now derived, no need to set it here
     // If it's a new document and content is added, prompt for initial save/title
     if (!currentDocumentId && content.trim().length > 0) {
       // This will be handled by the explicit save button or auto-save
@@ -199,7 +220,7 @@ const CanvasEditorPage = () => {
 
   const handleAIChatHistoryChange = useCallback((history: ChatMessage[]) => {
     setAiChatHistory(history);
-    setHasUnsavedChanges(true);
+    // hasUnsavedChanges is now derived, no need to set it here
   }, []);
 
   const handleAIDocumentUpdate = useCallback((update: { type: 'append' | 'replace'; content: string }) => {
@@ -213,13 +234,13 @@ const CanvasEditorPage = () => {
         return prevContent.length > 0 ? `${prevContent}\n\n${update.content}` : update.content;
       }
     });
-    setHasUnsavedChanges(true);
+    // hasUnsavedChanges is now derived, no need to set it here
     setAiWritingToCanvas(false); // Reset AI writing state after content is added
   }, []);
 
   const handleDocumentTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setDocumentTitle(e.target.value);
-    setHasUnsavedChanges(true);
+    // hasUnsavedChanges is now derived, no need to set it here
   }, []);
 
   const handleCloseEditor = () => {
@@ -355,11 +376,11 @@ const CanvasEditorPage = () => {
         <ResizablePanel defaultSize={40} minSize={20}>
           <CanvasAIAssistant
             writingContent={writingContent}
-            onAIDocumentUpdate={handleAIDocumentUpdate} // New prop for AI to update canvas
+            onAIDocumentUpdate={handleAIDocumentUpdate}
             aiChatHistory={aiChatHistory}
             onAIChatHistoryChange={handleAIChatHistoryChange}
             documentId={currentDocumentId}
-            isAIWritingToCanvas={aiWritingToCanvas} // Pass AI writing state to assistant
+            isAIWritingToCanvas={aiWritingToCanvas}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

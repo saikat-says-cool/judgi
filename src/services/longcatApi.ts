@@ -25,7 +25,10 @@ interface GetLongCatCompletionOptions {
 
 interface LongCatCompletionResponse {
   chatResponse: string;
-  documentWriteContent: string | null;
+  documentUpdate: {
+    type: 'append' | 'replace';
+    content: string;
+  } | null;
 }
 
 export const getLongCatCompletion = async (
@@ -62,14 +65,13 @@ export const getLongCatCompletion = async (
     const model = deepthinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Construct the system prompt for a normal assistant
-    let systemPrompt = "You are JudgiAI, an intelligent legal assistant. You are currently assisting a user in drafting a legal document. ";
-    systemPrompt += "Your primary goal is to help the user write the document on the left panel, while also engaging in a conversational chat on the right panel. ";
-    systemPrompt += "When you want to add content directly to the user's document, wrap that content in <DOCUMENT_WRITE> and </DOCUMENT_WRITE> tags. ";
-    systemPrompt += "Only write to the document when it makes sense to progress the drafting, otherwise, respond conversationally. ";
-    systemPrompt += "Do not include the <DOCUMENT_WRITE> tags in your conversational responses. ";
-    systemPrompt += "If the user asks you to write something, put that content inside the <DOCUMENT_WRITE> tags. ";
-    systemPrompt += "If the user is asking for clarification or discussion, respond conversationally. ";
-    systemPrompt += "Always keep your conversational responses concise and helpful. ";
+    let systemPrompt = "You are JudgiAI, an intelligent legal assistant. You are currently assisting a user in drafting a legal document. Your primary goal is to help the user write the document on the left panel, while also engaging in a conversational chat on the right panel. ";
+    systemPrompt += "When you want to **replace the entire content of the user's document** (e.g., to polish, restructure, or make significant edits), wrap the *entire new document content* in `<DOCUMENT_REPLACE>` and `</DOCUMENT_REPLACE>` tags. This will completely overwrite the current document. ";
+    systemPrompt += "When you want to **add new content to the end of the user's document**, wrap that content in `<DOCUMENT_WRITE>` and `</DOCUMENT_WRITE>` tags. This will append to the current document. ";
+    systemPrompt += "Only use one type of document tag per response. If you use `<DOCUMENT_REPLACE>`, do not use `<DOCUMENT_WRITE>`. ";
+    systemPrompt += "Do not include these document tags in your conversational responses. If the user asks you to write something, consider if it's an append or a full replacement. If the user is asking for clarification or discussion, respond conversationally without any document tags. Always keep your conversational responses concise and helpful. ";
+    systemPrompt += "If the user asks for an edit like 'remove a word' or 'insert a paragraph in the middle', you should provide the *entire updated document* within `<DOCUMENT_REPLACE>` tags. ";
+
 
     if (userCountry) {
       systemPrompt += `Consider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;
@@ -93,20 +95,27 @@ export const getLongCatCompletion = async (
 
     const fullAIResponse = response.choices[0].message?.content || "No response from AI.";
 
-    // Parse the AI's response for document content
-    const documentWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
-    const match = fullAIResponse.match(documentWriteRegex);
-
-    let documentWriteContent: string | null = null;
+    let documentUpdate: LongCatCompletionResponse['documentUpdate'] = null;
     let chatResponse = fullAIResponse;
 
-    if (match && match[1]) {
-      documentWriteContent = match[1].trim();
-      // Remove the document write tags and content from the chat response
-      chatResponse = fullAIResponse.replace(documentWriteRegex, '').trim();
+    // Parse for DOCUMENT_REPLACE first
+    const documentReplaceRegex = /<DOCUMENT_REPLACE>(.*?)<\/DOCUMENT_REPLACE>/s;
+    const replaceMatch = fullAIResponse.match(documentReplaceRegex);
+
+    if (replaceMatch && replaceMatch[1]) {
+      documentUpdate = { type: 'replace', content: replaceMatch[1].trim() };
+      chatResponse = fullAIResponse.replace(documentReplaceRegex, '').trim();
+    } else {
+      // If no DOCUMENT_REPLACE, then parse for DOCUMENT_WRITE
+      const documentWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
+      const writeMatch = fullAIResponse.match(documentWriteRegex);
+      if (writeMatch && writeMatch[1]) {
+        documentUpdate = { type: 'append', content: writeMatch[1].trim() };
+        chatResponse = fullAIResponse.replace(documentWriteRegex, '').trim();
+      }
     }
 
-    return { chatResponse, documentWriteContent };
+    return { chatResponse, documentUpdate };
 
   } catch (error) {
     console.error("Error calling LongCat API:", error);

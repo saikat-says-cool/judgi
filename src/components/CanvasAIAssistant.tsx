@@ -19,7 +19,7 @@ interface ChatMessage {
 
 interface CanvasAIAssistantProps {
   writingContent: string;
-  onAIDocumentWrite: (content: string) => void; // New prop for AI to write to canvas
+  onAIDocumentUpdate: (update: { type: 'append' | 'replace'; content: string }) => void; // New prop for AI to update canvas
   aiChatHistory: ChatMessage[];
   onAIChatHistoryChange: (history: ChatMessage[]) => void;
   documentId: string | null;
@@ -28,7 +28,7 @@ interface CanvasAIAssistantProps {
 
 const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   writingContent,
-  onAIDocumentWrite, // Destructure new prop
+  onAIDocumentUpdate, // Destructure new prop
   aiChatHistory,
   onAIChatHistoryChange,
   documentId,
@@ -72,7 +72,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       try {
         const messagesForAI = updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content }));
 
-        const { chatResponse, documentWriteContent } = await getLongCatCompletion(messagesForAI, {
+        const { chatResponse, documentUpdate } = await getLongCatCompletion(messagesForAI, {
           researchMode: 'none',
           deepthinkMode: false,
           userId: session.user.id,
@@ -94,8 +94,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         }
 
         // If AI provided content for the document, trigger the parent callback
-        if (documentWriteContent) {
-          onAIDocumentWrite(documentWriteContent);
+        if (documentUpdate) {
+          onAIDocumentUpdate(documentUpdate);
         }
 
       } catch (error) {

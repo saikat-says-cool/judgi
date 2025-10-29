@@ -202,11 +202,14 @@ const CanvasEditorPage = () => {
     setHasUnsavedChanges(true);
   }, []);
 
-  const handleAIDocumentWrite = useCallback((contentToAppend: string) => {
+  const handleAIDocumentUpdate = useCallback((update: { type: 'append' | 'replace'; content: string }) => {
     setAiWritingToCanvas(true); // Set AI writing state
     setWritingContent((prevContent) => {
-      // Append content with a new line if existing content is not empty
-      return prevContent.length > 0 ? `${prevContent}\n\n${contentToAppend}` : contentToAppend;
+      if (update.type === 'replace') {
+        return update.content;
+      } else { // 'append'
+        return prevContent.length > 0 ? `${prevContent}\n\n${update.content}` : update.content;
+      }
     });
     setHasUnsavedChanges(true);
     setAiWritingToCanvas(false); // Reset AI writing state after content is added
@@ -350,7 +353,7 @@ const CanvasEditorPage = () => {
         <ResizablePanel defaultSize={40} minSize={20}>
           <CanvasAIAssistant
             writingContent={writingContent}
-            onAIDocumentWrite={handleAIDocumentWrite} // New prop for AI to write to canvas
+            onAIDocumentUpdate={handleAIDocumentUpdate} // New prop for AI to update canvas
             aiChatHistory={aiChatHistory}
             onAIChatHistoryChange={handleAIChatHistoryChange}
             documentId={currentDocumentId}

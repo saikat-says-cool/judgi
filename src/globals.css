@@ -83,4 +83,34 @@
   .prose.dark\:prose-invert strong {
     color: hsl(var(--foreground)) !important;
   }
+
+  /* Ensure normal paragraph text is white and reduce line spacing */
+  .prose.dark\:prose-invert p {
+    color: hsl(var(--foreground)) !important;
+    margin-top: 0;
+    margin-bottom: 0.5em; /* Adjust this value for desired line spacing */
+  }
+
+  /* Font family definitions */
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+  .font-comfortaa {
+    font-family: 'Comfortaa', sans-serif;
+  }
+  .font-arial {
+    font-family: 'Arial', sans-serif;
+  }
+  .font-times {
+    font-family: 'Times New Roman', serif;
+  }
+  .font-courier {
+    font-family: 'Courier New', monospace;
+  }
+  .font-georgia {
+    font-family: 'Georgia', serif;
+  }
+  .font-verdana {
+    font-family: 'Verdana', sans-serif;
+  }
 }

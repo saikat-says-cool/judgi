@@ -44,6 +44,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
         heading: {
           levels: [1, 2, 3],
         },
+        paragraph: {
+          // You can configure paragraph here if needed, but CSS is often better for spacing
+        }
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -84,6 +87,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
   const setFontFamily = useCallback((fontFamily: string) => {
     editor?.chain().focus().setFontFamily(fontFamily).run();
   }, [editor]);
+
+  // Get the currently active font family for the Select component
+  const activeFontFamily = editor?.getAttributes('textStyle').fontFamily || 'Inter';
 
   if (!editor) {
     return null;
@@ -130,13 +136,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleCode().run()}
             variant={editor.isActive('code') ? 'secondary' : 'ghost'}
             size="icon"
+            title="Toggle Inline Code" // Added title for clarity
           >
             <Code className="h-4 w-4" />
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" title="Change Block Type">
                 <Type className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -181,7 +188,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             <Quote className="h-4 w-4" />
           </Button>
 
-          <Select onValueChange={setFontFamily} value={editor.getAttributes('textStyle').fontFamily || 'Inter'}>
+          <Select onValueChange={setFontFamily} value={activeFontFamily}>
             <SelectTrigger className="w-[180px] h-9 text-sm">
               <SelectValue placeholder="Select Font" />
             </SelectTrigger>

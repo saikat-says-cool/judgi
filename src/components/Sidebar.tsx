@@ -11,7 +11,7 @@ import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import ConversationItem from './ConversationItem';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from './ThemeToggle';
+// Removed ThemeToggle import
 
 interface NavLinkProps {
   to: string;
@@ -229,7 +229,7 @@ const Sidebar: React.FC = () => {
         <NavLink
           to="/app/chat/new"
           icon={<MessageSquare className="h-4 w-4" />}
-          label="New Chat" // Renamed from "Chat" to "New Chat"
+          label="New Chat"
           isActive={isChatMode}
           isMobile={isMobile}
           onClick={closeSheet}
@@ -304,11 +304,7 @@ const Sidebar: React.FC = () => {
         </>
       )}
 
-      {isSidebarExpanded && (
-        <div className="mt-auto pt-4 border-t">
-          <ThemeToggle />
-        </div>
-      )}
+      {/* Removed ThemeToggle component */}
     </div>
   );
 

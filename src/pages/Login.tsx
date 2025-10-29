@@ -4,11 +4,11 @@ import React from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useSession } from '@/contexts/SessionContext';
-import { useTheme } from 'next-themes'; // Import useTheme
+// Removed useTheme import
 
 const Login = () => {
   const { supabase, isLoading } = useSession();
-  const { theme } = useTheme(); // Get current theme
+  // Removed theme variable
 
   if (isLoading) {
     return (
@@ -28,9 +28,8 @@ const Login = () => {
             providers={[]}
             appearance={{
               theme: ThemeSupa,
-              // Removed custom variables to allow ThemeSupa's default light/dark modes to apply
             }}
-            theme={theme === 'dark' ? 'dark' : 'light'} // Dynamically set theme
+            theme="dark" // Hardcoded to dark theme
           />
         </div>
       </div>

@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** Canvas UI with integrated AI assistant is now functional, with document persistence, a dedicated editor view, and AI content insertion.
+**Current Status:** AI copilot now offers highly native document editing capabilities with robust Markdown rendering and improved user feedback.
 
 ---
 
@@ -43,17 +43,19 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **2.2.1 Canvas Home Page:** Implemented a landing page (`CanvasHomePage`) for the Canvas tab, allowing users to create new documents or open recent ones.
 - [x] **2.2.2 Document Persistence:** Implemented saving and loading of writing content and AI chat history to/from the Supabase `documents` table.
 - [x] **2.2.3 Document Management:** Added functionality to rename and delete documents from the `CanvasHomePage`.
-- [x] **2.2.4 Unsaved Changes Warning:** Implemented a dialog to warn users about unsaved changes when attempting to close the `CanvasEditorPage`.
+- [x] **2.2.4 Unsaved Changes Warning (Refined):** Implemented a dialog to warn users about unsaved changes when attempting to close the `CanvasEditorPage`, with refined logic to only trigger if actual changes have occurred.
 - [x] **2.2.5 Floating Close Button:** Added a floating close button to the `CanvasEditorPage` to return to the `CanvasHomePage`.
-- [x] **2.2.6 AI Content Insertion:** Enabled the AI assistant to insert its responses directly into the `WritingCanvas` with a dedicated button.
+- [x] **2.2.6 AI Content Insertion (Enhanced):** Enabled the AI assistant to directly modify (replace, append, delete, shorten, etc.) the `WritingCanvas` content using structured responses, with the AI communicating its actions in the copilot chat.
 - [ ] **2.2.7 Export Functionality:** Implement "Export as .docx" button.
 
 ## Phase 3: Enhancements & Refinements
 
 ### 3.1 User Experience (DONE)
 - [x] **3.1.1 User Profile Management:** Allow users to update their profile (e.g., country). (Implicitly handled by `getLongCatCompletion` fetching country from profiles, but no direct UI for user to update it yet.)
-- [x] **3.1.2 UI/UX Improvements:** Styling, loading states, error handling. (Implemented chat auto-scrolling, improved empty chat state, optimized tab bar size and position, enabled independent scrolling for the chat window, replaced top tabs with a responsive sidebar for navigation, added conversation management features to the sidebar, fixed sidebar overflow for chat items, and conditionally hide sidebar in Canvas editor view.)
+- [x] **3.1.2 UI/UX Improvements:** Styling, loading states, error handling. (Implemented chat auto-scrolling, improved empty chat state, optimized tab bar size and position, enabled independent scrolling for the chat window, replaced top tabs with a responsive sidebar for navigation, added conversation management features to the sidebar, fixed sidebar overflow for chat items, conditionally hide sidebar in Canvas editor view, and ensured Markdown rendering for AI responses in both chat and canvas assistant.)
 - [x] **3.1.3 Responsiveness:** Ensure the application is responsive across devices.
 - [x] **3.1.4 Global Font Update:** Changed the application's global font to 'Comfortaa'.
+- [x] **3.1.5 Markdown Rendering in Writing Canvas:** Implemented Markdown rendering in the `WritingCanvas` by default, with a click-to-edit functionality to switch to a raw text editor.
+- [x] **3.1.6 Markdown Heading Visibility Fix:** Applied direct CSS overrides to ensure Markdown headings and bold text are clearly visible (white) against the dark background in all Markdown rendered areas.
 
 ---

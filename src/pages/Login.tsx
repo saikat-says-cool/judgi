@@ -28,22 +28,7 @@ const Login = () => {
             providers={[]}
             appearance={{
               theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: 'hsl(var(--primary))',
-                    brandAccent: 'hsl(var(--primary-foreground))',
-                  },
-                },
-                dark: {
-                  colors: {
-                    inputBackground: 'hsl(var(--input))',
-                    inputBorder: 'hsl(var(--border))',
-                    inputForeground: 'hsl(var(--foreground))',
-                    inputText: 'hsl(var(--foreground))',
-                  },
-                },
-              },
+              // Removed custom variables to allow ThemeSupa's default light/dark modes to apply
             }}
             theme={theme === 'dark' ? 'dark' : 'light'} // Dynamically set theme
           />

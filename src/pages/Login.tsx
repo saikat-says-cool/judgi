@@ -4,9 +4,11 @@ import React from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useSession } from '@/contexts/SessionContext';
+import { useTheme } from 'next-themes'; // Import useTheme
 
 const Login = () => {
   const { supabase, isLoading } = useSession();
+  const { theme } = useTheme(); // Get current theme
 
   if (isLoading) {
     return (
@@ -43,7 +45,7 @@ const Login = () => {
                 },
               },
             }}
-            theme="dark"
+            theme={theme === 'dark' ? 'dark' : 'light'} // Dynamically set theme
           />
         </div>
       </div>

@@ -10,7 +10,9 @@ import { Send, Loader2 } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
-import NewChatWelcome from '@/components/NewChatWelcome'; // Import the new component
+import NewChatWelcome from '@/components/NewChatWelcome';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import remarkGfm from 'remark-gfm'; // Import remarkGfm for GitHub Flavored Markdown
 
 interface ChatMessage {
   id: string;
@@ -204,7 +206,7 @@ const ChatPage = () => {
         const newAIMessage: ChatMessage = {
           id: Date.now().toString() + '-ai', // Temporary ID
           role: 'assistant',
-          content: aiResponseContent,
+          content: aiResponseContent.chatResponse, // Use chatResponse
           created_at: new Date().toISOString(),
         };
         setMessages((prevMessages) => [...prevMessages, newAIMessage]);
@@ -279,10 +281,16 @@ const ChatPage = () => {
                         className={`max-w-[70%] p-3 rounded-lg ${
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
+                            : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert' // Added prose classes
                         }`}
                       >
-                        {message.content}
+                        {message.role === 'assistant' ? (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {message.content}
+                          </ReactMarkdown>
+                        ) : (
+                          message.content
+                        )}
                       </div>
                     </div>
                   ))}

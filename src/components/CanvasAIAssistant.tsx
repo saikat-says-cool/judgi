@@ -5,10 +5,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2 } from 'lucide-react'; // Removed CornerDownLeft icon
+import { Send, Loader2 } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import remarkGfm from 'remark-gfm'; // Import remarkGfm for GitHub Flavored Markdown
 
 interface ChatMessage {
   id: string;
@@ -19,20 +21,20 @@ interface ChatMessage {
 
 interface CanvasAIAssistantProps {
   writingContent: string;
-  onAIDocumentUpdate: (update: { type: 'append' | 'replace'; content: string }) => void; // New prop for AI to update canvas
+  onAIDocumentUpdate: (update: { type: 'append' | 'replace'; content: string }) => void;
   aiChatHistory: ChatMessage[];
   onAIChatHistoryChange: (history: ChatMessage[]) => void;
   documentId: string | null;
-  isAIWritingToCanvas: boolean; // New prop to indicate if AI is writing to canvas
+  isAIWritingToCanvas: boolean;
 }
 
 const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   writingContent,
-  onAIDocumentUpdate, // Destructure new prop
+  onAIDocumentUpdate,
   aiChatHistory,
   onAIChatHistoryChange,
   documentId,
-  isAIWritingToCanvas, // Destructure new prop
+  isAIWritingToCanvas,
 }) => {
   const { session } = useSession();
   const [inputMessage, setInputMessage] = useState<string>('');
@@ -50,7 +52,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       showError("You must be logged in to send messages.");
       return;
     }
-    if (loadingAIResponse || isAIWritingToCanvas) { // Disable if AI is writing to canvas
+    if (loadingAIResponse || isAIWritingToCanvas) {
       showError("Please wait for the current AI operation to complete.");
       return;
     }
@@ -76,10 +78,9 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           researchMode: 'none',
           deepthinkMode: false,
           userId: session.user.id,
-          currentDocumentContent: writingContent, // Pass current document content
+          currentDocumentContent: writingContent,
         });
 
-        // Update chat history with the conversational part of the response
         if (chatResponse) {
           const newAIMessage: ChatMessage = {
             id: Date.now().toString() + '-ai',
@@ -89,11 +90,9 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           };
           onAIChatHistoryChange([...updatedChatHistory, newAIMessage]);
         } else {
-          // If no chat response, just update with user message
           onAIChatHistoryChange(updatedChatHistory);
         }
 
-        // If AI provided content for the document, trigger the parent callback
         if (documentUpdate) {
           onAIDocumentUpdate(documentUpdate);
         }
@@ -101,7 +100,6 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
-        // Optionally, revert the user message if AI fails
         onAIChatHistoryChange(aiChatHistory);
       } finally {
         setLoadingAIResponse(false);
@@ -134,11 +132,16 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                     className={`max-w-[80%] p-3 rounded-lg ${
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert' // Added prose classes
                     }`}
                   >
-                    {message.content}
-                    {/* Removed Insert button */}
+                    {message.role === 'assistant' ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.content}
+                      </ReactMarkdown>
+                    ) : (
+                      message.content
+                    )}
                   </div>
                 </div>
               ))}
@@ -161,11 +164,11 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !loadingAIResponse && !isAIWritingToCanvas) { // Disable if AI is writing to canvas
+            if (e.key === 'Enter' && !loadingAIResponse && !isAIWritingToCanvas) {
               handleSendMessage();
             }
           }}
-          disabled={loadingAIResponse || isAIWritingToCanvas} // Disable if AI is writing to canvas
+          disabled={loadingAIResponse || isAIWritingToCanvas}
         />
         <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas}>
           {loadingAIResponse || isAIWritingToCanvas ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

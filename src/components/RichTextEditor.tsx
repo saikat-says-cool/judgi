@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import Highlight from '@tiptap/extension-highlight';
-import TextStyle from '@tiptap/extension-text-style';
+import { TextStyle } from '@tiptap/extension-text-style'; // Corrected import
 import { FontFamily } from '@tiptap/extension-font-family';
 import { Button } from '@/components/ui/button';
 import {

@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** AI copilot now offers highly native document editing capabilities with robust Markdown rendering and improved user feedback.
+**Current Status:** The Canvas now features a full-fledged rich text editor with extensive formatting tools and precise font control for both user and AI content.
 
 ---
 
@@ -57,5 +57,12 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.1.4 Global Font Update:** Changed the application's global font to 'Comfortaa'.
 - [x] **3.1.5 Markdown Rendering in Writing Canvas:** Implemented Markdown rendering in the `WritingCanvas` by default, with a click-to-edit functionality to switch to a raw text editor.
 - [x] **3.1.6 Markdown Heading Visibility Fix:** Applied direct CSS overrides to ensure Markdown headings and bold text are clearly visible (white) against the dark background in all Markdown rendered areas.
+- [x] **3.1.7 Rich Text Editor Integration:** Replaced the basic `WritingCanvas` with a full-featured `RichTextEditor` using TipTap, providing continuous formatted display while editing.
+- [x] **3.1.8 Comprehensive Formatting Toolbar:** Added a toolbar to the `RichTextEditor` with options for bold, italic, underline, strikethrough, inline code, headings (H1, H2, H3), bullet lists, ordered lists, blockquotes, text alignment (left, center, right, justify), undo, and redo.
+- [x] **3.1.9 User Font Family Selection:** Implemented a font family dropdown in the `RichTextEditor` that allows users to change the font of selected text, with the dropdown accurately reflecting the active font.
+- [x] **3.1.10 AI Output Font Control:** Added a separate font family dropdown to the `CanvasAIAssistant` to control the font of AI-generated content inserted into the writing canvas.
+- [x] **3.1.11 Markdown/HTML Conversion Utilities:** Created `src/lib/markdownConverter.ts` to handle seamless conversion between HTML (for the editor) and Markdown (for the AI).
+- [x] **3.1.12 Normal Text Visibility Fix (Editor):** Ensured normal paragraph text within the `RichTextEditor` is clearly visible (white) against the dark background.
+- [x] **3.1.13 Reduced Line Spacing (Editor):** Adjusted paragraph margins in `src/globals.css` to provide smaller line jumps when pressing Enter in the editor.
 
 ---

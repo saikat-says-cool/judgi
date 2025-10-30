@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The Canvas now features a full-fledged rich text editor with extensive formatting tools and precise font control for both user and AI content.
+**Current Status:** The application now features refined chat message styling, with AI responses spanning the full width for improved readability, and a smaller, consistent font size across all chat interactions. Persistent build errors have also been resolved.
 
 ---
 
@@ -64,5 +64,11 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.1.11 Markdown/HTML Conversion Utilities:** Created `src/lib/markdownConverter.ts` to handle seamless conversion between HTML (for the editor) and Markdown (for the AI).
 - [x] **3.1.12 Normal Text Visibility Fix (Editor):** Ensured normal paragraph text within the `RichTextEditor` is clearly visible (white) against the dark background.
 - [x] **3.1.13 Reduced Line Spacing (Editor):** Adjusted paragraph margins in `src/globals.css` to provide smaller line jumps when pressing Enter in the editor.
+- [x] **3.1.14 AI Response Full Width:** Ensured AI responses in both the main chat and canvas assistant chat span the entire horizontal width for improved readability.
+- [x] **3.1.15 Smaller Chat Font Size:** Reduced the font size for all chat messages and AI responses in both the main chat and canvas assistant chat to `text-sm`.
+
+### 3.2 Bug Fixes (DONE)
+- [x] **3.2.1 Persistent JSX Parsing Errors:** Resolved recurring `Unexpected token Card` errors in `src/components/CanvasAIAssistant.tsx` and `src/pages/ChatPage.tsx` through comprehensive rewrites and rebuilds.
+- [x] **3.2.2 Import Syntax Error:** Fixed `Expected 'from', got '=>'` syntax error in `src/pages/ChatPage.tsx`.
 
 ---

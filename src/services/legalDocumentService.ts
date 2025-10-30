@@ -31,7 +31,12 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
   try {
     const { LANGSEARCH_API_KEY, LANGSEARCH_API_URL } = getLangsearchCredentials();
 
-    const fullQuery = country ? `${query} in ${country} law` : query; // Append country to query
+    let fullQuery = query;
+    if (country === 'India') {
+      fullQuery = `Indian legal cases and statutes about ${query}`;
+    } else if (country) {
+      fullQuery = `${query} in ${country} law`;
+    }
 
     const response = await fetch(LANGSEARCH_API_URL, {
       method: 'POST',
@@ -81,7 +86,12 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
   try {
     const { LANGSEARCH_API_KEY, LANGSEARCH_API_URL } = getLangsearchCredentials();
 
-    const fullQuery = country ? `current news about ${query} in ${country}` : `current news about ${query}`;
+    let fullQuery = `current news about ${query}`;
+    if (country === 'India') {
+      fullQuery = `current Indian legal news about ${query}`;
+    } else if (country) {
+      fullQuery = `current news about ${query} in ${country}`;
+    }
 
     const response = await fetch(LANGSEARCH_API_URL, {
       method: 'POST',

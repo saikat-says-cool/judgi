@@ -177,7 +177,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           <ScrollArea className="h-full p-4">
             <div className="space-y-4">
               {aiChatHistory.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
+                <div className="text-center text-muted-foreground py-8 text-sm"> {/* Added text-sm here */}
                   <p>Your AI writing partner is ready!</p>
                   <p>Ask questions or get suggestions based on your document.</p>
                 </div>
@@ -189,7 +189,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                   className={`flex ${message.role === 'user' ? 'justify-end px-4' : 'justify-start w-full'}`}
                 >
                   <div
-                    className={`p-3 rounded-lg ${
+                    className={`p-3 rounded-lg text-sm ${ // Added text-sm here
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground max-w-[80%]'
                         : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full'
@@ -207,7 +207,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               ))}
               {loadingAIResponse && aiChatHistory.some(msg => msg.isStreaming) && (
                 <div className="flex justify-start w-full">
-                  <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 w-full">
+                  <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full"> {/* Added text-sm here */}
                     <Square className="h-4 w-4 animate-spin" />
                     <span>JudgiAI is thinking...</span>
                   </div>

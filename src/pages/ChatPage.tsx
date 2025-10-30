@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Corrected this line
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -304,7 +304,7 @@ const ChatPage = () => {
                       className={`flex ${message.role === 'user' ? 'justify-end px-4' : 'justify-start w-full'}`}
                     >
                       <div
-                        className={`p-3 rounded-lg ${
+                        className={`p-3 rounded-lg text-sm ${ // Added text-sm here
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground max-w-[70%]'
                             : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full'
@@ -322,7 +322,7 @@ const ChatPage = () => {
                   ))}
                   {loadingAIResponse && messages.some(msg => msg.isStreaming) && (
                     <div className="flex justify-start w-full">
-                      <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 w-full">
+                      <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full"> {/* Added text-sm here */}
                         <Square className="h-4 w-4 animate-spin" />
                         <span>JudgiAI is thinking...</span>
                       </div>

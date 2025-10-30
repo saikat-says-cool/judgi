@@ -23,18 +23,11 @@ interface GetLongCatCompletionOptions {
   currentDocumentContent?: string; // New: Pass current document content for AI context (now Markdown)
 }
 
-interface LongCatCompletionResponse {
-  chatResponse: string;
-  documentUpdate: {
-    type: 'append' | 'replace';
-    content: string; // This content is expected to be Markdown
-  } | null;
-}
-
-export const getLongCatCompletion = async (
+// The streaming function will now yield raw string chunks
+export const getLongCatCompletion = async function* (
   messages: LongCatMessage[],
   options: GetLongCatCompletionOptions
-): Promise<LongCatCompletionResponse> => {
+): AsyncGenerator<string, void, unknown> { // Changed return type to AsyncGenerator<string>
   const { researchMode, deepthinkMode, userId, currentDocumentContent } = options;
 
   if (!import.meta.env.VITE_LONGCAT_API_KEY) {
@@ -58,10 +51,6 @@ export const getLongCatCompletion = async (
       }
     }
 
-    let context = "";
-    // Temporarily detaching Langsearch calls as per MVP_PROGRESS.md
-    // if (latestUserMessage) { ... }
-
     const model = deepthinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Construct the system prompt for a normal assistant
@@ -75,7 +64,7 @@ export const getLongCatCompletion = async (
     systemPrompt += "All document updates (within <DOCUMENT_REPLACE> or <DOCUMENT_WRITE>) and chat responses should be in Markdown format. "; // Explicitly tell AI to use Markdown
 
     if (userCountry) {
-      systemPrompt += `Consider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;
+      systemPrompt += `\nConsider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;
     }
 
     // Add current document content to the system prompt for context
@@ -92,31 +81,15 @@ export const getLongCatCompletion = async (
       max_tokens: 4096,
       temperature: 0.7,
       top_p: 1.0,
+      stream: true, // Enable streaming
     });
 
-    const fullAIResponse = response.choices[0].message?.content || "No response from AI.";
-
-    let documentUpdate: LongCatCompletionResponse['documentUpdate'] = null;
-    let chatResponse = fullAIResponse;
-
-    // Parse for DOCUMENT_REPLACE first
-    const documentReplaceRegex = /<DOCUMENT_REPLACE>(.*?)<\/DOCUMENT_REPLACE>/s;
-    const replaceMatch = fullAIResponse.match(documentReplaceRegex);
-
-    if (replaceMatch && replaceMatch[1]) {
-      documentUpdate = { type: 'replace', content: replaceMatch[1].trim() };
-      chatResponse = fullAIResponse.replace(documentReplaceRegex, '').trim();
-    } else {
-      // If no DOCUMENT_REPLACE, then parse for DOCUMENT_WRITE
-      const documentWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
-      const writeMatch = fullAIResponse.match(documentWriteRegex);
-      if (writeMatch && writeMatch[1]) {
-        documentUpdate = { type: 'append', content: writeMatch[1].trim() };
-        chatResponse = fullAIResponse.replace(documentWriteRegex, '').trim();
+    for await (const chunk of response) {
+      const deltaContent = chunk.choices[0]?.delta?.content || '';
+      if (deltaContent) {
+        yield deltaContent; // Yield raw content chunks
       }
     }
-
-    return { chatResponse, documentUpdate };
 
   } catch (error) {
     console.error("Error calling LongCat API:", error);

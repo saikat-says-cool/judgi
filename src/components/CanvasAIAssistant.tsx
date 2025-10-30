@@ -18,6 +18,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   created_at?: string;
+  isStreaming?: boolean; // New property to indicate if message is currently streaming
 }
 
 interface CanvasAIAssistantProps {
@@ -40,6 +41,28 @@ const fonts = [
   { name: 'Georgia', style: 'font-georgia' },
   { name: 'Verdana', style: 'font-verdana' },
 ];
+
+// Helper function to parse AI response for document tags
+const parseAIResponse = (fullAIResponse: string) => {
+  let chatResponse = fullAIResponse;
+  let documentUpdate: { type: 'append' | 'replace'; content: string } | null = null;
+
+  const documentReplaceRegex = /<DOCUMENT_REPLACE>(.*?)<\/DOCUMENT_REPLACE>/s;
+  const replaceMatch = fullAIResponse.match(documentReplaceRegex);
+
+  if (replaceMatch && replaceMatch[1]) {
+    documentUpdate = { type: 'replace', content: replaceMatch[1].trim() };
+    chatResponse = fullAIResponse.replace(documentReplaceRegex, '').trim();
+  } else {
+    const documentWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
+    const writeMatch = fullAIResponse.match(documentWriteRegex);
+    if (writeMatch && writeMatch[1]) {
+      documentUpdate = { type: 'append', content: writeMatch[1].trim() };
+      chatResponse = fullAIResponse.replace(documentWriteRegex, '').trim();
+    }
+  }
+  return { chatResponse, documentUpdate };
+};
 
 const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   writingContent,
@@ -81,32 +104,43 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         created_at: new Date().toISOString(),
       };
 
-      const updatedChatHistory = [...aiChatHistory, newUserMessage];
+      const updatedChatHistory = [...aiChatHistory.filter(msg => !msg.isStreaming), newUserMessage];
       onAIChatHistoryChange(updatedChatHistory);
       setInputMessage('');
       setLoadingAIResponse(true);
 
-      try {
-        const messagesForAI = updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content }));
+      // Add a temporary AI message for streaming
+      const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
+      onAIChatHistoryChange([
+        ...updatedChatHistory,
+        { id: streamingAIMessageId, role: 'assistant', content: '', isStreaming: true, created_at: new Date().toISOString() },
+      ]);
 
-        const { chatResponse, documentUpdate } = await getLongCatCompletion(messagesForAI, {
+      let fullAIResponseContent = '';
+      try {
+        for await (const chunk of getLongCatCompletion(updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content })), {
           researchMode: 'none',
           deepthinkMode: false,
           userId: session.user.id,
           currentDocumentContent: writingContent,
-        });
-
-        if (chatResponse) {
-          const newAIMessage: ChatMessage = {
-            id: Date.now().toString() + '-ai',
-            role: 'assistant',
-            content: chatResponse,
-            created_at: new Date().toISOString(),
-          };
-          onAIChatHistoryChange([...updatedChatHistory, newAIMessage]);
-        } else {
-          onAIChatHistoryChange(updatedChatHistory);
+        })) {
+          fullAIResponseContent += chunk;
+          onAIChatHistoryChange((prevHistory) =>
+            prevHistory.map((msg) =>
+              msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
+            )
+          );
         }
+
+        // After streaming, parse the full response for chat and document parts
+        const { chatResponse, documentUpdate } = parseAIResponse(fullAIResponseContent);
+
+        // Update the streaming message with final content and mark as not streaming
+        onAIChatHistoryChange((prevHistory) =>
+          prevHistory.map((msg) =>
+            msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
+          )
+        );
 
         if (documentUpdate) {
           onAIDocumentUpdate(documentUpdate);
@@ -115,7 +149,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
-        onAIChatHistoryChange(aiChatHistory);
+        // Remove the streaming message if an error occurs
+        onAIChatHistoryChange((prevHistory) => prevHistory.filter(msg => msg.id !== streamingAIMessageId));
       } finally {
         setLoadingAIResponse(false);
       }
@@ -172,7 +207,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                   </div>
                 </div>
               ))}
-              {loadingAIResponse && (
+              {loadingAIResponse && aiChatHistory.some(msg => msg.isStreaming) && (
                 <div className="flex justify-start">
                   <div className="max-w-[80%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />

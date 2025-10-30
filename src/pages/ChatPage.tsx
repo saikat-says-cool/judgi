@@ -19,7 +19,30 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   created_at?: string;
+  isStreaming?: boolean; // New property to indicate if message is currently streaming
 }
+
+// Helper function to parse AI response for document tags
+const parseAIResponse = (fullAIResponse: string) => {
+  let chatResponse = fullAIResponse;
+  let documentUpdate: { type: 'append' | 'replace'; content: string } | null = null;
+
+  const documentReplaceRegex = /<DOCUMENT_REPLACE>(.*?)<\/DOCUMENT_REPLACE>/s;
+  const replaceMatch = fullAIResponse.match(documentReplaceRegex);
+
+  if (replaceMatch && replaceMatch[1]) {
+    documentUpdate = { type: 'replace', content: replaceMatch[1].trim() };
+    chatResponse = fullAIResponse.replace(documentReplaceRegex, '').trim();
+  } else {
+    const documentWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
+    const writeMatch = fullAIResponse.match(documentWriteRegex);
+    if (writeMatch && writeMatch[1]) {
+      documentUpdate = { type: 'append', content: writeMatch[1].trim() };
+      chatResponse = fullAIResponse.replace(documentWriteRegex, '').trim();
+    }
+  }
+  return { chatResponse, documentUpdate };
+};
 
 const ChatPage = () => {
   const { supabase, session } = useSession();
@@ -117,11 +140,26 @@ const ChatPage = () => {
       const userMessageContent = inputMessage.trim();
       let activeConversationId = currentConversationId;
 
+      // Add user message to local state immediately
+      const newUserMessage: ChatMessage = {
+        id: Date.now().toString(), // Temporary ID for immediate display
+        role: 'user',
+        content: userMessageContent,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+      setInputMessage('');
+      setLoadingAIResponse(true);
+
       // If it's a new chat, create the conversation and save the first message
       if (!activeConversationId) {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
         activeConversationId = await createNewConversation(initialTitle);
-        if (!activeConversationId) return; // Failed to create conversation
+        if (!activeConversationId) {
+          setLoadingAIResponse(false);
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id)); // Remove user message if conversation creation fails
+          return;
+        }
 
         // Save the first user message to the newly created conversation
         const { data: userMessageData, error: userMessageError } = await supabase
@@ -139,6 +177,7 @@ const ChatPage = () => {
           console.error("Error saving first user message to Supabase:", userMessageError);
           showError("Failed to save your message. Please try again.");
           setLoadingAIResponse(false);
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id)); // Remove user message if save fails
           return;
         }
 
@@ -146,24 +185,15 @@ const ChatPage = () => {
         setCurrentConversationId(activeConversationId);
         navigate(`/app/chat/${activeConversationId}`, { replace: true });
 
-        // Add the message to local state after successful save and navigation
-        setMessages([{
-          id: userMessageData.id,
-          role: 'user',
-          content: userMessageContent,
-          created_at: userMessageData.created_at,
-        }]);
+        // Update the temporary user message with real ID
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at } : msg
+          )
+        );
 
       } else {
-        // For existing chats, add to local state immediately, then save
-        const newUserMessage: ChatMessage = {
-          id: Date.now().toString(), // Temporary ID for immediate display
-          role: 'user',
-          content: userMessageContent,
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prevMessages) => [...prevMessages, newUserMessage]);
-
+        // For existing chats, save user message
         const { data: userMessageData, error: userMessageError } = await supabase
           .from('chats')
           .insert({
@@ -190,35 +220,49 @@ const ChatPage = () => {
         }
       }
 
-      setInputMessage('');
-      setLoadingAIResponse(true);
-
       // Prepare messages for AI, including the latest user message
-      const messagesForAI = [...messages, { role: 'user', content: userMessageContent }];
+      const messagesForAI = [...messages.filter(msg => !msg.isStreaming), { role: 'user', content: userMessageContent }];
 
+      // Add a temporary AI message for streaming
+      const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { id: streamingAIMessageId, role: 'assistant', content: '', isStreaming: true, created_at: new Date().toISOString() },
+      ]);
+
+      let fullAIResponseContent = '';
       try {
-        const aiResponseContent = await getLongCatCompletion(messagesForAI, {
+        for await (const chunk of getLongCatCompletion(messagesForAI, {
           researchMode: 'none',
           deepthinkMode: false,
           userId: session.user.id,
-        });
+        })) {
+          fullAIResponseContent += chunk;
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
+            )
+          );
+        }
 
-        const newAIMessage: ChatMessage = {
-          id: Date.now().toString() + '-ai', // Temporary ID
-          role: 'assistant',
-          content: aiResponseContent.chatResponse, // Use chatResponse
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prevMessages) => [...prevMessages, newAIMessage]);
+        // After streaming, parse the full response for chat and document parts
+        const { chatResponse } = parseAIResponse(fullAIResponseContent);
 
-        // Save AI message to Supabase
+        // Update the streaming message with final content and mark as not streaming
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
+          )
+        );
+
+        // Save final AI message to Supabase
         const { data: aiMessageData, error: aiMessageError } = await supabase
           .from('chats')
           .insert({
             user_id: session.user.id,
             conversation_id: activeConversationId,
-            role: newAIMessage.role,
-            content: newAIMessage.content,
+            role: 'assistant',
+            content: chatResponse,
           })
           .select('id, created_at')
           .single();
@@ -226,22 +270,21 @@ const ChatPage = () => {
         if (aiMessageError) {
           console.error("Error saving AI message to Supabase:", aiMessageError);
           showError("Failed to save AI response.");
-          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newAIMessage.id)); // Remove temp message
+          // Optionally remove the message from local state if saving fails
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== streamingAIMessageId));
         } else if (aiMessageData) {
           setMessages((prevMessages) =>
             prevMessages.map((msg) =>
-              msg.id === newAIMessage.id ? { ...msg, id: aiMessageData.id, created_at: aiMessageData.created_at } : msg
+              msg.id === streamingAIMessageId ? { ...msg, id: aiMessageData.id, created_at: aiMessageData.created_at } : msg
             )
           );
         }
+
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
-        // If AI fails, remove the user message that was just sent if it was the first message in a new chat
-        if (messages.length === 0 && !currentConversationId) { // This condition needs careful thought
-             // If it was a new chat and AI failed, we might want to revert the conversation creation or mark it as failed.
-             // For now, we'll just show an error. The user message is already saved.
-        }
+        // Remove the streaming message if an error occurs
+        setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== streamingAIMessageId));
       } finally {
         setLoadingAIResponse(false);
       }
@@ -294,7 +337,7 @@ const ChatPage = () => {
                       </div>
                     </div>
                   ))}
-                  {loadingAIResponse && (
+                  {loadingAIResponse && messages.some(msg => msg.isStreaming) && (
                     <div className="flex justify-start">
                       <div className="max-w-[70%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />

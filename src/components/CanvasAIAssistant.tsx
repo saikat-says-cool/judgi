@@ -124,12 +124,16 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           userId: session.user.id,
           currentDocumentContent: writingContent,
         })) {
-          fullAIResponseContent += chunk;
-          onAIChatHistoryChange((prevHistory) =>
-            prevHistory.map((msg) =>
-              msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
-            )
-          );
+          // Stream character by character with a small delay
+          for (const char of chunk) {
+            fullAIResponseContent += char;
+            onAIChatHistoryChange((prevHistory) =>
+              prevHistory.map((msg) =>
+                msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
+              )
+            );
+            await new Promise(resolve => setTimeout(resolve, 10)); // 10ms delay per character
+          }
         }
 
         // After streaming, parse the full response for chat and document parts

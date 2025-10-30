@@ -237,12 +237,16 @@ const ChatPage = () => {
           deepthinkMode: false,
           userId: session.user.id,
         })) {
-          fullAIResponseContent += chunk;
-          setMessages((prevMessages) =>
-            prevMessages.map((msg) =>
-              msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
-            )
-          );
+          // Stream character by character with a small delay
+          for (const char of chunk) {
+            fullAIResponseContent += char;
+            setMessages((prevMessages) =>
+              prevMessages.map((msg) =>
+                msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
+              )
+            );
+            await new Promise(resolve => setTimeout(resolve, 10)); // 10ms delay per character
+          }
         }
 
         // After streaming, parse the full response for chat and document parts

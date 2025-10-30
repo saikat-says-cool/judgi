@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Added this import
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Ensure this import is present
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square } from 'lucide-react'; // Import Square
+import { Send, Square } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
-import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
-import remarkGfm from 'remark-gfm'; // Import remarkGfm for GitHub Flavored Markdown
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ChatMessage {
@@ -18,7 +18,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   created_at?: string;
-  isStreaming?: boolean; // New property to indicate if message is currently streaming
+  isStreaming?: boolean;
 }
 
 interface CanvasAIAssistantProps {
@@ -28,8 +28,8 @@ interface CanvasAIAssistantProps {
   onAIChatHistoryChange: (history: ChatMessage[]) => void;
   documentId: string | null;
   isAIWritingToCanvas: boolean;
-  aiOutputFontFamily: string; // New prop for AI output font
-  setAiOutputFontFamily: (font: string) => void; // New prop for setting AI output font
+  aiOutputFontFamily: string;
+  setAiOutputFontFamily: (font: string) => void;
 }
 
 const fonts = [
@@ -42,7 +42,6 @@ const fonts = [
   { name: 'Verdana', style: 'font-verdana' },
 ];
 
-// Helper function to parse AI response for document tags
 const parseAIResponse = (fullAIResponse: string) => {
   let chatResponse = fullAIResponse;
   let documentUpdate: { type: 'append' | 'replace'; content: string } | null = null;
@@ -109,7 +108,6 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       setInputMessage('');
       setLoadingAIResponse(true);
 
-      // Add a temporary AI message for streaming
       const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
       onAIChatHistoryChange([
         ...updatedChatHistory,
@@ -124,7 +122,6 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           userId: session.user.id,
           currentDocumentContent: writingContent,
         })) {
-          // Stream character by character with a small delay
           for (const char of chunk) {
             fullAIResponseContent += char;
             onAIChatHistoryChange((prevHistory) =>
@@ -132,14 +129,12 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                 msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
               )
             );
-            await new Promise(resolve => setTimeout(resolve, 10)); // 10ms delay per character
+            await new Promise(resolve => setTimeout(resolve, 10));
           }
         }
 
-        // After streaming, parse the full response for chat and document parts
         const { chatResponse, documentUpdate } = parseAIResponse(fullAIResponseContent);
 
-        // Update the streaming message with final content and mark as not streaming
         onAIChatHistoryChange((prevHistory) =>
           prevHistory.map((msg) =>
             msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
@@ -153,7 +148,6 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
-        // Remove the streaming message if an error occurs
         onAIChatHistoryChange((prevHistory) => prevHistory.filter(msg => msg.id !== streamingAIMessageId));
       } finally {
         setLoadingAIResponse(false);
@@ -214,7 +208,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               {loadingAIResponse && aiChatHistory.some(msg => msg.isStreaming) && (
                 <div className="flex justify-start">
                   <div className="max-w-[80%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
-                    <Square className="h-4 w-4 animate-spin" /> {/* Changed to Square */}
+                    <Square className="h-4 w-4 animate-spin" />
                     <span>JudgiAI is thinking...</span>
                   </div>
                 </div>
@@ -225,7 +219,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       </CardContent>
       <CardFooter className="p-4 border-t flex items-center gap-2">
         <Input
-          placeholder="Ask Judgi" {/* Changed placeholder */}
+          placeholder="Ask Judgi"
           className="flex-1"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
@@ -237,7 +231,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           disabled={loadingAIResponse || isAIWritingToCanvas}
         />
         <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas}>
-          {loadingAIResponse || isAIWritingToCanvas ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {/* Changed to Square */}
+          {loadingAIResponse || isAIWritingToCanvas ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </CardFooter>
     </Card>

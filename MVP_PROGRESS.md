@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The application now features refined chat message styling, with AI responses spanning the full width for improved readability, and a smaller, consistent font size across all chat interactions. Persistent build errors have also been resolved.
+**Current Status:** The application now features refined AI chat streaming, including improved scrolling behavior, a more dynamic "thinking" indicator, and the prevention of raw document update tags from appearing in the chat during streaming in the canvas co-pilot.
 
 ---
 
@@ -66,6 +66,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.1.13 Reduced Line Spacing (Editor):** Adjusted paragraph margins in `src/globals.css` to provide smaller line jumps when pressing Enter in the editor.
 - [x] **3.1.14 AI Response Full Width:** Ensured AI responses in both the main chat and canvas assistant chat span the entire horizontal width for improved readability.
 - [x] **3.1.15 Smaller Chat Font Size:** Reduced the font size for all chat messages and AI responses in both the main chat and canvas assistant chat to `text-sm`.
+- [x] **3.1.16 Refined AI Streaming Display:** Implemented more robust parsing during AI streaming to prevent partial document update tags (like `<DOCUMENT_REPLACE>` or `<DOCUMENT_WRITE>`) and their content from appearing in the chat. The "JudgiAI is thinking..." indicator now disappears as soon as the first character of the AI's response is streamed.
 
 ### 3.2 Bug Fixes (DONE)
 - [x] **3.2.1 Persistent JSX Parsing Errors:** Resolved recurring `Unexpected token Card` errors in `src/components/CanvasAIAssistant.tsx` and `src/pages/ChatPage.tsx` through comprehensive rewrites and rebuilds.

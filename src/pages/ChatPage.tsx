@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } => from 'react-router-dom';
-import { Card, CardContent, CardFooter } from '@/components/ui/card'; // This import is crucial and is present
+import { useParams, useNavigate } from 'react-router-dom'; // Corrected this line
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

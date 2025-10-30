@@ -174,8 +174,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full pr-4">
-            <div className="space-y-4"> {/* Removed p-4 from here */}
+          <ScrollArea className="h-full p-4">
+            <div className="space-y-4">
               {aiChatHistory.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">
                   <p>Your AI writing partner is ready!</p>
@@ -186,7 +186,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                 <div
                   key={message.id}
                   ref={index === aiChatHistory.length - 1 ? lastMessageRef : null}
-                  className={`flex ${message.role === 'user' ? 'justify-end px-4' : 'justify-start w-full'}`} {/* Added px-4 for user, w-full for AI */}
+                  className={`flex ${message.role === 'user' ? 'justify-end px-4' : 'justify-start w-full'}`}
                 >
                   <div
                     className={`p-3 rounded-lg ${
@@ -206,7 +206,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                 </div>
               ))}
               {loadingAIResponse && aiChatHistory.some(msg => msg.isStreaming) && (
-                <div className="flex justify-start w-full"> {/* w-full for AI thinking container */}
+                <div className="flex justify-start w-full">
                   <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 w-full">
                     <Square className="h-4 w-4 animate-spin" />
                     <span>JudgiAI is thinking...</span>

@@ -32,6 +32,8 @@ interface CanvasAIAssistantProps {
   setAiOutputFontFamily: (font: string) => void;
 }
 
+type ResearchMode = 'none' | 'medium' | 'max'; // Define ResearchMode type
+
 const fonts = [
   { name: 'Inter', style: 'font-inter' },
   { name: 'Comfortaa', style: 'font-comfortaa' },
@@ -87,6 +89,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const [inputMessage, setInputMessage] = useState<string>('');
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false); // New state for dynamic thinking indicator
+  const [researchMode, setResearchMode] = useState<ResearchMode>('none'); // New state for research mode
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for ScrollArea viewport
 
@@ -135,7 +138,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       let fullAIResponseContent = '';
       try {
         for await (const chunk of getLongCatCompletion(updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content })), {
-          researchMode: 'none',
+          researchMode: researchMode, // Pass the selected research mode
           deepthinkMode: false,
           userId: session.user.id,
           currentDocumentContent: writingContent,
@@ -186,18 +189,30 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     <Card className="flex flex-col h-full border-none shadow-none">
       <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
         <CardTitle className="text-lg">AI Assistant</CardTitle>
-        <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily}>
-          <SelectTrigger className="w-[180px] h-9 text-sm">
-            <SelectValue placeholder="AI Output Font" />
-          </SelectTrigger>
-          <SelectContent>
-            {fonts.map((font) => (
-              <SelectItem key={font.name} value={font.name} className={font.style}>
-                {font.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center space-x-2">
+          <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
+            <SelectTrigger className="w-[180px] h-9 text-sm">
+              <SelectValue placeholder="Research Mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Quick Lookup</SelectItem>
+              <SelectItem value="medium">Deep Think</SelectItem>
+              <SelectItem value="max">Deeper Research</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily}>
+            <SelectTrigger className="w-[180px] h-9 text-sm">
+              <SelectValue placeholder="AI Output Font" />
+            </SelectTrigger>
+            <SelectContent>
+              {fonts.map((font) => (
+                <SelectItem key={font.name} value={font.name} className={font.style}>
+                  {font.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
         <div className="flex-1 overflow-hidden">

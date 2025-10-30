@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The application now features refined AI chat streaming, including improved scrolling behavior, a more dynamic "thinking" indicator, and the prevention of raw document update tags from appearing in the chat during streaming in the canvas co-pilot.
+**Current Status:** The application now features refined AI chat streaming, including improved scrolling behavior, a more dynamic "thinking" indicator, and the prevention of raw document update tags from appearing in the chat during streaming in the canvas co-pilot. Export functionality for DOCX and PDF is also implemented. Research modes have been added to both the main chat and the canvas AI assistant, integrating with the LongCat API for contextual legal research.
 
 ---
 
@@ -27,8 +27,8 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ### 1.3 AI Integration (LongCat API)
 - [x] **1.3.1 Integrate LongCat API:** Set up the client-side integration for `getLongCatCompletion`.
-- [ ] **1.3.2 Research Modes:** Implement "Quick Lookup", "Deep Think", "Deeper Research" selection. (The underlying functionality is there, but the UI for selecting modes is not yet built.)
-- [ ] **1.3.3 Contextual Search:** Integrate `searchLegalDocuments` and `searchCurrentNews` based on research mode and user country. (Temporarily dormant for future engineering.)
+- [x] **1.3.2 Research Modes:** Implemented "Quick Lookup", "Deep Think", "Deeper Research" selection UI in both the main chat and canvas AI assistant.
+- [x] **1.3.3 Contextual Search:** Integrated `searchLegalDocuments` and `searchCurrentNews` based on research mode and user country, injecting results into the AI's system prompt.
 - [x] **1.3.4 Display AI Response:** Render AI's response, including citations.
 - [x] **1.3.5 AI Persona & Parameters:** Adjusted AI persona to a general assistant (like ChatGPT) and set parameters (temperature, top_p, max_tokens) to normal-like values. This change is foundational for future, more refined prompt engineering.
 
@@ -46,7 +46,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **2.2.4 Unsaved Changes Warning (Refined):** Implemented a dialog to warn users about unsaved changes when attempting to close the `CanvasEditorPage`, with refined logic to only trigger if actual changes have occurred.
 - [x] **2.2.5 Floating Close Button:** Added a floating close button to the `CanvasEditorPage` to return to the `CanvasHomePage`.
 - [x] **2.2.6 AI Content Insertion (Enhanced):** Enabled the AI assistant to directly modify (replace, append, delete, shorten, etc.) the `WritingCanvas` content using structured responses, with the AI communicating its actions in the copilot chat.
-- [ ] **2.2.7 Export Functionality:** Implement "Export as .docx" button.
+- [x] **2.2.7 Export Functionality:** Implemented "Export as .docx" and "Export as .pdf" buttons.
 
 ## Phase 3: Enhancements & Refinements
 

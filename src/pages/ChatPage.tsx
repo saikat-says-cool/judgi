@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Import CardHeader and CardTitle
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { getLongCatCompletion } from '@/services/longcatApi';
 import NewChatWelcome from '@/components/NewChatWelcome';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
 
 interface ChatMessage {
   id: string;
@@ -21,6 +22,8 @@ interface ChatMessage {
   created_at?: string;
   isStreaming?: boolean;
 }
+
+type ResearchMode = 'none' | 'medium' | 'max'; // Define ResearchMode type
 
 const parseAIResponse = (fullAIResponse: string) => {
   let chatResponse = fullAIResponse;
@@ -64,6 +67,7 @@ const ChatPage = () => {
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false); // New state for dynamic thinking indicator
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [researchMode, setResearchMode] = useState<ResearchMode>('none'); // New state for research mode
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for ScrollArea viewport
 
@@ -235,8 +239,8 @@ const ChatPage = () => {
       let fullAIResponseContent = '';
       try {
         for await (const chunk of getLongCatCompletion(messagesForAI, {
-          researchMode: 'none',
-          deepthinkMode: false,
+          researchMode: researchMode, // Pass the selected research mode
+          deepthinkMode: false, // Deepthink mode is separate for now
           userId: session.user.id,
         })) {
           if (chunk) {
@@ -316,6 +320,19 @@ const ChatPage = () => {
         />
       ) : (
         <>
+          <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Chat</CardTitle>
+            <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
+              <SelectTrigger className="w-[180px] h-9 text-sm">
+                <SelectValue placeholder="Research Mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Quick Lookup</SelectItem>
+                <SelectItem value="medium">Deep Think</SelectItem>
+                <SelectItem value="max">Deeper Research</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardHeader>
           <CardContent className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-hidden">
               <ScrollArea className="h-full pr-4" viewportRef={scrollAreaRef}>

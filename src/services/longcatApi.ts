@@ -72,6 +72,47 @@ export const getLongCatCompletion = async function* (
       systemPrompt += `\n\nHere is the current content of the document you are helping to write (in Markdown format):\n<CURRENT_DOCUMENT_CONTENT>\n${currentDocumentContent}\n</CURRENT_DOCUMENT_CONTENT>\n`;
     }
 
+    // --- Research Mode Integration ---
+    let researchResults = '';
+    const lastUserMessage = messages.findLast(msg => msg.role === 'user')?.content || '';
+
+    if (researchMode === 'medium' || researchMode === 'max') {
+      try {
+        const legalDocs = await searchLegalDocuments(lastUserMessage, researchMode === 'max' ? 5 : 2, userCountry);
+        if (legalDocs.length > 0) {
+          researchResults += "\n\n<LEGAL_RESEARCH_RESULTS>\n";
+          legalDocs.forEach(doc => {
+            researchResults += `Title: ${doc.title}\nContent: ${doc.content}\nCitation: ${doc.citation || 'N/A'}\n---\n`;
+          });
+          researchResults += "</LEGAL_RESEARCH_RESULTS>\n";
+        }
+      } catch (error) {
+        console.error("Error during legal document search:", error);
+        // Optionally, inform the AI that research failed or provide a fallback
+      }
+    }
+
+    if (researchMode === 'max') {
+      try {
+        const newsDocs = await searchCurrentNews(lastUserMessage, 2, userCountry);
+        if (newsDocs.length > 0) {
+          researchResults += "\n\n<CURRENT_NEWS_RESULTS>\n";
+          newsDocs.forEach(doc => {
+            researchResults += `Title: ${doc.title}\nContent: ${doc.content}\nCitation: ${doc.citation || 'N/A'}\n---\n`;
+          });
+          researchResults += "</CURRENT_NEWS_RESULTS>\n";
+        }
+      } catch (error) {
+        console.error("Error during current news search:", error);
+        // Optionally, inform the AI that news search failed
+      }
+    }
+
+    if (researchResults) {
+      systemPrompt += `\n\nHere are some relevant research results to consider when formulating your response:\n${researchResults}`;
+    }
+    // --- End Research Mode Integration ---
+
     const messagesForAI: LongCatMessage[] = [{ role: "system", content: systemPrompt }];
     messagesForAI.push(...messages); // Add existing chat messages
 

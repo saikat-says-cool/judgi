@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { useParams, useNavigate } => from 'react-router-dom';
+import { Card, CardContent, CardFooter } from '@/components/ui/card'; // This import is crucial and is present
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,18 +11,17 @@ import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import NewChatWelcome from '@/components/NewChatWelcome';
-import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
-import remarkGfm from 'remark-gfm'; // Import remarkGfm for GitHub Flavored Markdown
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   created_at?: string;
-  isStreaming?: boolean; // New property to indicate if message is currently streaming
+  isStreaming?: boolean;
 }
 
-// Helper function to parse AI response for document tags
 const parseAIResponse = (fullAIResponse: string) => {
   let chatResponse = fullAIResponse;
   let documentUpdate: { type: 'append' | 'replace'; content: string } | null = null;
@@ -54,16 +53,14 @@ const ChatPage = () => {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const lastMessageRef = useRef<HTMLDivElement>(null); // Ref to the last message for smooth scrolling
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom smoothly
   useEffect(() => {
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]); // This effect runs every time the 'messages' array changes.
+  }, [messages]);
 
-  // Effect to handle conversation ID changes and fetch history
   useEffect(() => {
     const fetchChatHistory = async (convId: string) => {
       if (!session?.user?.id) {
@@ -89,20 +86,16 @@ const ChatPage = () => {
       setLoadingHistory(false);
     };
 
-    // Logic to prevent flickering when navigating from 'new' to a real ID
     if (conversationId === 'new') {
-      // Only clear messages if we are truly starting fresh, not if we just navigated from 'new' to a real ID
-      if (currentConversationId !== null) { // If we had an active conversation (even a temp one)
-         setMessages([]); // Clear messages only if we are transitioning from an existing chat to a new blank one
+      if (currentConversationId !== null) {
+         setMessages([]);
       }
-      setCurrentConversationId(null); // No active conversation yet
+      setCurrentConversationId(null);
       setLoadingHistory(false);
     } else if (conversationId && conversationId !== currentConversationId) {
-      // Only fetch if the conversationId in the URL has actually changed
       setCurrentConversationId(conversationId);
       fetchChatHistory(conversationId);
     } else if (!conversationId) {
-      // If no conversationId in URL, default to new chat
       navigate('/app/chat/new', { replace: true });
     }
   }, [conversationId, session?.user?.id, supabase, navigate, currentConversationId]);
@@ -140,9 +133,8 @@ const ChatPage = () => {
       const userMessageContent = inputMessage.trim();
       let activeConversationId = currentConversationId;
 
-      // Add user message to local state immediately
       const newUserMessage: ChatMessage = {
-        id: Date.now().toString(), // Temporary ID for immediate display
+        id: Date.now().toString(),
         role: 'user',
         content: userMessageContent,
         created_at: new Date().toISOString(),
@@ -151,17 +143,15 @@ const ChatPage = () => {
       setInputMessage('');
       setLoadingAIResponse(true);
 
-      // If it's a new chat, create the conversation and save the first message
       if (!activeConversationId) {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
         activeConversationId = await createNewConversation(initialTitle);
         if (!activeConversationId) {
           setLoadingAIResponse(false);
-          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id)); // Remove user message if conversation creation fails
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
           return;
         }
 
-        // Save the first user message to the newly created conversation
         const { data: userMessageData, error: userMessageError } = await supabase
           .from('chats')
           .insert({
@@ -177,15 +167,13 @@ const ChatPage = () => {
           console.error("Error saving first user message to Supabase:", userMessageError);
           showError("Failed to save your message. Please try again.");
           setLoadingAIResponse(false);
-          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id)); // Remove user message if save fails
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
           return;
         }
 
-        // Now navigate to the new conversation ID
         setCurrentConversationId(activeConversationId);
         navigate(`/app/chat/${activeConversationId}`, { replace: true });
 
-        // Update the temporary user message with real ID
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at } : msg
@@ -193,7 +181,6 @@ const ChatPage = () => {
         );
 
       } else {
-        // For existing chats, save user message
         const { data: userMessageData, error: userMessageError } = await supabase
           .from('chats')
           .insert({
@@ -208,7 +195,7 @@ const ChatPage = () => {
         if (userMessageError) {
           console.error("Error saving user message to Supabase:", userMessageError);
           showError("Failed to save your message. Please try again.");
-          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id)); // Remove temp message
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
           setLoadingAIResponse(false);
           return;
         } else if (userMessageData) {
@@ -220,10 +207,8 @@ const ChatPage = () => {
         }
       }
 
-      // Prepare messages for AI, including the latest user message
       const messagesForAI = [...messages.filter(msg => !msg.isStreaming), { role: 'user', content: userMessageContent }];
 
-      // Add a temporary AI message for streaming
       const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
       setMessages((prevMessages) => [
         ...prevMessages,
@@ -237,7 +222,6 @@ const ChatPage = () => {
           deepthinkMode: false,
           userId: session.user.id,
         })) {
-          // Stream character by character with a small delay
           for (const char of chunk) {
             fullAIResponseContent += char;
             setMessages((prevMessages) =>
@@ -245,21 +229,18 @@ const ChatPage = () => {
                 msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
               )
             );
-            await new Promise(resolve => setTimeout(resolve, 10)); // 10ms delay per character
+            await new Promise(resolve => setTimeout(resolve, 10));
           }
         }
 
-        // After streaming, parse the full response for chat and document parts
         const { chatResponse } = parseAIResponse(fullAIResponseContent);
 
-        // Update the streaming message with final content and mark as not streaming
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
           )
         );
 
-        // Save final AI message to Supabase
         const { data: aiMessageData, error: aiMessageError } = await supabase
           .from('chats')
           .insert({
@@ -274,7 +255,6 @@ const ChatPage = () => {
         if (aiMessageError) {
           console.error("Error saving AI message to Supabase:", aiMessageError);
           showError("Failed to save AI response.");
-          // Optionally remove the message from local state if saving fails
           setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== streamingAIMessageId));
         } else if (aiMessageData) {
           setMessages((prevMessages) =>
@@ -287,7 +267,6 @@ const ChatPage = () => {
       } catch (error) {
         console.error("Error getting AI response:", error);
         showError("Failed to get AI response. Please check your API key and network connection.");
-        // Remove the streaming message if an error occurs
         setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== streamingAIMessageId));
       } finally {
         setLoadingAIResponse(false);
@@ -317,12 +296,12 @@ const ChatPage = () => {
           <CardContent className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-hidden">
               <ScrollArea className="h-full pr-4">
-                <div className="space-y-4"> {/* Removed p-4 from here */}
+                <div className="space-y-4">
                   {messages.map((message, index) => (
                     <div
                       key={message.id}
                       ref={index === messages.length - 1 ? lastMessageRef : null}
-                      className={`flex ${message.role === 'user' ? 'justify-end px-4' : 'justify-start w-full'}`} {/* Added px-4 for user, w-full for AI */}
+                      className={`flex ${message.role === 'user' ? 'justify-end px-4' : 'justify-start w-full'}`}
                     >
                       <div
                         className={`p-3 rounded-lg ${
@@ -342,7 +321,7 @@ const ChatPage = () => {
                     </div>
                   ))}
                   {loadingAIResponse && messages.some(msg => msg.isStreaming) && (
-                    <div className="flex justify-start w-full"> {/* w-full for AI thinking container */}
+                    <div className="flex justify-start w-full">
                       <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 w-full">
                         <Square className="h-4 w-4 animate-spin" />
                         <span>JudgiAI is thinking...</span>

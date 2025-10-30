@@ -8,7 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '@/contexts/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Button } from '@/components/ui/button';
-import { X, Save, Loader2, FileDown } from 'lucide-react';
+import { X, Save, Square, FileDown } from 'lucide-react'; // Import Square
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -319,7 +319,7 @@ const CanvasEditorPage = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Square className="h-8 w-8 animate-spin text-primary" /> {/* Changed to Square */}
         <p className="text-muted-foreground mt-2">Loading canvas...</p>
       </div>
     );
@@ -343,7 +343,7 @@ const CanvasEditorPage = () => {
           disabled={isSaving || !hasUnsavedChanges}
           className={hasUnsavedChanges ? "text-primary" : "text-muted-foreground"}
         >
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {isSaving ? <Square className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} {/* Changed to Square */}
         </Button>
 
         <DropdownMenu>
@@ -376,7 +376,7 @@ const CanvasEditorPage = () => {
           />
           {aiWritingToCanvas && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-muted text-muted-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Square className="h-4 w-4 animate-spin" /> {/* Changed to Square */}
               <span>JudgiAI is writing...</span>
             </div>
           )}

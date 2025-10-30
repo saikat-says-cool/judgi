@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Square } from 'lucide-react'; // Import Square
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
@@ -344,7 +344,7 @@ const ChatPage = () => {
                   {loadingAIResponse && messages.some(msg => msg.isStreaming) && (
                     <div className="flex justify-start">
                       <div className="max-w-[70%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Square className="h-4 w-4 animate-spin" /> {/* Changed to Square */}
                         <span>JudgiAI is thinking...</span>
                       </div>
                     </div>
@@ -355,7 +355,7 @@ const ChatPage = () => {
           </CardContent>
           <CardFooter className="p-4 border-t flex items-center gap-2">
             <Input
-              placeholder="Type your message..."
+              placeholder="Ask Judgi" {/* Changed placeholder */}
               className="flex-1"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
@@ -367,7 +367,7 @@ const ChatPage = () => {
               disabled={loadingAIResponse}
             />
             <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
-              {loadingAIResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {/* Changed to Square */}
             </Button>
           </CardFooter>
         </>

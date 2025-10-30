@@ -4,7 +4,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Square } from 'lucide-react'; // Import Square
 
 interface NewChatWelcomeProps {
   inputMessage: string;
@@ -32,7 +32,7 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
         <p className="text-muted-foreground mb-6">Ask JudgiAI a question to get started.</p>
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Type your message..."
+            placeholder="Ask Judgi" // Changed placeholder
             className="flex-1"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
@@ -41,7 +41,7 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
             autoFocus
           />
           <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
-            {loadingAIResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {/* Changed to Square */}
           </Button>
         </div>
       </Card>

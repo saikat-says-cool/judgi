@@ -52,12 +52,18 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
+  const [isAITyping, setIsAITyping] = useState(false); // New state for dynamic thinking indicator
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for ScrollArea viewport
 
   useEffect(() => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (lastMessageRef.current && scrollAreaRef.current) {
+      const { scrollHeight, scrollTop, clientHeight } = scrollAreaRef.current;
+      // Only auto-scroll if user is at or near the bottom (within 100px)
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   }, [messages]);
 
@@ -142,6 +148,7 @@ const ChatPage = () => {
       setMessages((prevMessages) => [...prevMessages, newUserMessage]);
       setInputMessage('');
       setLoadingAIResponse(true);
+      setIsAITyping(false); // Reset isAITyping before AI starts thinking
 
       if (!activeConversationId) {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
@@ -222,8 +229,9 @@ const ChatPage = () => {
           deepthinkMode: false,
           userId: session.user.id,
         })) {
-          for (const char of chunk) {
-            fullAIResponseContent += char;
+          if (chunk) {
+            fullAIResponseContent += chunk;
+            setIsAITyping(true); // Set to true as soon as first chunk arrives
             setMessages((prevMessages) =>
               prevMessages.map((msg) =>
                 msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
@@ -270,6 +278,7 @@ const ChatPage = () => {
         setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== streamingAIMessageId));
       } finally {
         setLoadingAIResponse(false);
+        setIsAITyping(false); // Reset isAITyping when AI response completes
       }
     }
   };
@@ -295,7 +304,7 @@ const ChatPage = () => {
         <>
           <CardContent className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-hidden">
-              <ScrollArea className="h-full pr-4">
+              <ScrollArea className="h-full pr-4" viewportRef={scrollAreaRef}>
                 <div className="space-y-4">
                   {messages.map((message, index) => (
                     <div
@@ -304,7 +313,7 @@ const ChatPage = () => {
                       className={`flex ${message.role === 'user' ? 'justify-end px-4' : 'justify-start w-full'}`}
                     >
                       <div
-                        className={`p-3 rounded-lg text-sm ${ // Added text-sm here
+                        className={`p-3 rounded-lg text-sm ${
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground max-w-[70%]'
                             : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full'
@@ -320,9 +329,9 @@ const ChatPage = () => {
                       </div>
                     </div>
                   ))}
-                  {loadingAIResponse && messages.some(msg => msg.isStreaming) && (
+                  {loadingAIResponse && !isAITyping && ( // Only show "thinking" if loading but not yet typing
                     <div className="flex justify-start w-full">
-                      <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full"> {/* Added text-sm here */}
+                      <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full">
                         <Square className="h-4 w-4 animate-spin" />
                         <span>JudgiAI is thinking...</span>
                       </div>

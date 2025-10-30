@@ -76,11 +76,17 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const { session } = useSession();
   const [inputMessage, setInputMessage] = useState<string>('');
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
+  const [isAITyping, setIsAITyping] = useState(false); // New state for dynamic thinking indicator
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for ScrollArea viewport
 
   useEffect(() => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (lastMessageRef.current && scrollAreaRef.current) {
+      const { scrollHeight, scrollTop, clientHeight } = scrollAreaRef.current;
+      // Only auto-scroll if user is at or near the bottom (within 100px)
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   }, [aiChatHistory]);
 
@@ -107,10 +113,12 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       onAIChatHistoryChange(updatedChatHistory);
       setInputMessage('');
       setLoadingAIResponse(true);
+      setIsAITyping(false); // Reset isAITyping before AI starts thinking
 
       const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
-      onAIChatHistoryChange([
-        ...updatedChatHistory,
+      // Add a placeholder AI message for streaming
+      onAIChatHistoryChange((prevHistory) => [
+        ...prevHistory.filter(msg => msg.id !== streamingAIMessageId), // Remove any previous streaming message
         { id: streamingAIMessageId, role: 'assistant', content: '', isStreaming: true, created_at: new Date().toISOString() },
       ]);
 
@@ -122,25 +130,33 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           userId: session.user.id,
           currentDocumentContent: writingContent,
         })) {
-          for (const char of chunk) {
-            fullAIResponseContent += char;
+          if (chunk) {
+            fullAIResponseContent += chunk;
+            setIsAITyping(true); // Set to true as soon as first chunk arrives
+
+            // Parse the current accumulated content to get the chat part
+            const { chatResponse: currentChatResponse } = parseAIResponse(fullAIResponseContent);
+
             onAIChatHistoryChange((prevHistory) =>
               prevHistory.map((msg) =>
-                msg.id === streamingAIMessageId ? { ...msg, content: fullAIResponseContent } : msg
+                msg.id === streamingAIMessageId ? { ...msg, content: currentChatResponse } : msg
               )
             );
             await new Promise(resolve => setTimeout(resolve, 10));
           }
         }
 
+        // After streaming is complete, parse the final full response
         const { chatResponse, documentUpdate } = parseAIResponse(fullAIResponseContent);
 
+        // Update the final AI chat message
         onAIChatHistoryChange((prevHistory) =>
           prevHistory.map((msg) =>
             msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
           )
         );
 
+        // Apply document update if present
         if (documentUpdate) {
           onAIDocumentUpdate(documentUpdate);
         }
@@ -151,6 +167,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         onAIChatHistoryChange((prevHistory) => prevHistory.filter(msg => msg.id !== streamingAIMessageId));
       } finally {
         setLoadingAIResponse(false);
+        setIsAITyping(false); // Reset isAITyping when AI response completes
       }
     }
   };
@@ -174,10 +191,10 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full p-4">
+          <ScrollArea className="h-full p-4" viewportRef={scrollAreaRef}>
             <div className="space-y-4">
               {aiChatHistory.length === 0 && (
-                <div className="text-center text-muted-foreground py-8 text-sm"> {/* Added text-sm here */}
+                <div className="text-center text-muted-foreground py-8 text-sm">
                   <p>Your AI writing partner is ready!</p>
                   <p>Ask questions or get suggestions based on your document.</p>
                 </div>
@@ -189,7 +206,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                   className={`flex ${message.role === 'user' ? 'justify-end px-4' : 'justify-start w-full'}`}
                 >
                   <div
-                    className={`p-3 rounded-lg text-sm ${ // Added text-sm here
+                    className={`p-3 rounded-lg text-sm ${
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground max-w-[80%]'
                         : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full'
@@ -205,9 +222,9 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                   </div>
                 </div>
               ))}
-              {loadingAIResponse && aiChatHistory.some(msg => msg.isStreaming) && (
+              {loadingAIResponse && !isAITyping && ( // Only show "thinking" if loading but not yet typing
                 <div className="flex justify-start w-full">
-                  <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full"> {/* Added text-sm here */}
+                  <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full">
                     <Square className="h-4 w-4 animate-spin" />
                     <span>JudgiAI is thinking...</span>
                   </div>

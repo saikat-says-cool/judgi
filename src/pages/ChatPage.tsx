@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter } from '@/components/ui/card'; // Added this import
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square } from 'lucide-react'; // Import Square
+import { Send, Square } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
@@ -325,10 +325,10 @@ const ChatPage = () => {
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[70%] p-3 rounded-lg ${
+                        className={`p-3 rounded-lg ${
                           message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert' // Added prose classes
+                            ? 'bg-primary text-primary-foreground max-w-[70%]' // User message retains max-width
+                            : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full' // AI message takes full width
                         }`}
                       >
                         {message.role === 'assistant' ? (
@@ -343,7 +343,7 @@ const ChatPage = () => {
                   ))}
                   {loadingAIResponse && messages.some(msg => msg.isStreaming) && (
                     <div className="flex justify-start">
-                      <div className="max-w-[70%] p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
+                      <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 w-full"> {/* AI thinking takes full width */}
                         <Square className="h-4 w-4 animate-spin" />
                         <span>JudgiAI is thinking...</span>
                       </div>

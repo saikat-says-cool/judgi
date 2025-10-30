@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/ui/card'; // Added this import
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Square } from 'lucide-react'; // Import Square
@@ -32,7 +32,7 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
         <p className="text-muted-foreground mb-6">Ask JudgiAI a question to get started.</p>
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Ask Judgi" // Changed placeholder
+            placeholder="Ask Judgi"
             className="flex-1"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
@@ -41,7 +41,7 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
             autoFocus
           />
           <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
-            {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {/* Changed to Square */}
+            {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
       </Card>

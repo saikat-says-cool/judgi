@@ -186,13 +186,13 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                 <div
                   key={message.id}
                   ref={index === aiChatHistory.length - 1 ? lastMessageRef : null}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} ${message.role === 'assistant' ? 'w-full' : ''}`} {/* Added w-full for AI messages */}
                 >
                   <div
                     className={`p-3 rounded-lg ${
                       message.role === 'user'
-                        ? 'bg-primary text-primary-foreground max-w-[80%]' // User message retains max-width
-                        : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full' // AI message takes full width
+                        ? 'bg-primary text-primary-foreground max-w-[80%]'
+                        : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full'
                     }`}
                   >
                     {message.role === 'assistant' ? (
@@ -206,8 +206,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                 </div>
               ))}
               {loadingAIResponse && aiChatHistory.some(msg => msg.isStreaming) && (
-                <div className="flex justify-start">
-                  <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 w-full"> {/* AI thinking takes full width */}
+                <div className="flex justify-start w-full"> {/* Added w-full here */}
+                  <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 w-full">
                     <Square className="h-4 w-4 animate-spin" />
                     <span>JudgiAI is thinking...</span>
                   </div>

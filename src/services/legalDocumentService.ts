@@ -1,5 +1,7 @@
 "use client";
 
+import { getLangsearchApiKey, rotateLangsearchApiKey, getLangsearchApiKeyCount } from "@/utils/langsearchApiKeys";
+
 interface LegalDocument {
   id: string;
   title: string;
@@ -12,44 +14,56 @@ interface LegalDocument {
   keywords: string[] | null;
 }
 
-const getLangsearchCredentials = () => {
-  const LANGSEARCH_API_KEY = import.meta.env.VITE_LANGSEARCH_API_KEY;
-  const LANGSEARCH_SEARCH_API_URL = "https://api.langsearch.com/v1/web-search"; // Hardcoded as per documentation
-  const LANGSEARCH_RERANK_ENDPOINT = "https://api.langsearch.com/v1/rerank";
+const LANGSEARCH_SEARCH_API_URL = "https://api.langsearch.com/v1/web-search"; // Hardcoded as per documentation
+const LANGSEARCH_RERANK_ENDPOINT = "https://api.langsearch.com/v1/rerank"; // Specific Rerank API endpoint
 
-  if (!LANGSEARCH_API_KEY) {
-    console.error("Langsearch API Key is not set. Please add VITE_LANGSEARCH_API_KEY to your .env.local file.");
-    throw new Error("Langsearch API credentials are missing.");
+const makeLangsearchRequest = async (
+  url: string,
+  body: any,
+  maxRetries: number = getLangsearchApiKeyCount()
+): Promise<Response> => {
+  for (let i = 0; i < maxRetries; i++) {
+    const apiKey = getLangsearchApiKey();
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (response.status === 429) {
+      console.warn(`Langsearch API rate limit hit for key. Retrying with next key... (Attempt ${i + 1}/${maxRetries})`);
+      rotateLangsearchApiKey();
+      // Add a small delay before retrying to respect rate limits
+      await new Promise(resolve => setTimeout(resolve, 1000)); 
+      continue;
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(`Error from Langsearch API (${url}):`, errorData);
+      throw new Error(`Langsearch API error: ${response.statusText} - ${errorData.message || 'Unknown error'}`);
+    }
+
+    return response;
   }
-  return { LANGSEARCH_API_KEY, LANGSEARCH_SEARCH_API_URL, LANGSEARCH_RERANK_ENDPOINT };
+  throw new Error("All Langsearch API keys exhausted or persistent rate limits encountered.");
 };
 
-const performRerank = async (query: string, documents: string[], top_n: number, apiKey: string): Promise<{ index: number; document: { text: string }; relevance_score: number }[]> => {
-  const { LANGSEARCH_RERANK_ENDPOINT } = getLangsearchCredentials();
-  
+const performRerank = async (query: string, documents: string[], top_n: number): Promise<{ index: number; document: { text: string }; relevance_score: number }[]> => {
   if (documents.length === 0) return [];
 
-  const response = await fetch(LANGSEARCH_RERANK_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "langsearch-reranker-v1",
-      query: query,
-      documents: documents,
-      top_n: top_n,
-      return_documents: true,
-    }),
-  });
+  const body = {
+    model: "langsearch-reranker-v1",
+    query: query,
+    documents: documents,
+    top_n: top_n,
+    return_documents: true,
+  };
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error("Error from Langsearch ReRank API:", errorData);
-    throw new Error(`Langsearch ReRank API error: ${response.statusText}`);
-  }
-
+  const response = await makeLangsearchRequest(LANGSEARCH_RERANK_ENDPOINT, body);
   const data = await response.json();
   return data.results;
 };
@@ -60,8 +74,6 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
   }
 
   try {
-    const { LANGSEARCH_API_KEY, LANGSEARCH_SEARCH_API_URL } = getLangsearchCredentials();
-
     let initialQuery = query;
     if (country === 'India') {
       initialQuery = `Indian legal cases and statutes about ${query}`;
@@ -70,26 +82,14 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
     }
 
     // Step 1: Perform initial broad search to get candidate documents
-    const initialResponse = await fetch(LANGSEARCH_SEARCH_API_URL, { // Using the dedicated search API URL
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LANGSEARCH_API_KEY}`,
-      },
-      body: JSON.stringify({ 
-        query: initialQuery,
-        count: 10, // Get more candidates for reranking (max 10 for web-search)
-        summary: true 
-      }),
-    });
-
-    if (!initialResponse.ok) {
-      const errorData = await initialResponse.json();
-      console.error("Error from Langsearch initial API:", errorData);
-      throw new Error(`Langsearch initial API error: ${initialResponse.statusText}`);
-    }
-
+    const initialBody = { 
+      query: initialQuery,
+      count: 10, // Get more candidates for reranking (max 10 for web-search)
+      summary: true 
+    };
+    const initialResponse = await makeLangsearchRequest(LANGSEARCH_SEARCH_API_URL, initialBody);
     const initialData = await initialResponse.json();
+    
     const candidateDocuments: LegalDocument[] = initialData.data.webPages.value.map((doc: any) => ({
       id: doc.id || Math.random().toString(36).substring(2, 15),
       title: doc.name || "Untitled Document",
@@ -110,7 +110,7 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
     const documentTexts = candidateDocuments.map(doc => doc.content);
 
     // Step 3: Perform semantic reranking
-    const rerankedResults = await performRerank(initialQuery, documentTexts, count, LANGSEARCH_API_KEY);
+    const rerankedResults = await performRerank(initialQuery, documentTexts, count);
 
     // Step 4: Reconstruct LegalDocument objects based on reranked order
     const finalLegalDocuments: LegalDocument[] = rerankedResults.map(rerankedDoc => {
@@ -131,8 +131,6 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
   }
 
   try {
-    const { LANGSEARCH_API_KEY, LANGSEARCH_SEARCH_API_URL } = getLangsearchCredentials();
-
     let initialQuery = `current news about ${query}`;
     if (country === 'India') {
       initialQuery = `current Indian legal news about ${query}`;
@@ -141,27 +139,15 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
     }
 
     // Step 1: Perform initial broad search for news
-    const initialResponse = await fetch(LANGSEARCH_SEARCH_API_URL, { // Using the dedicated search API URL
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LANGSEARCH_API_KEY}`,
-      },
-      body: JSON.stringify({ 
-        query: initialQuery,
-        freshness: "oneDay",
-        count: 5, // Get more candidates for reranking (max 10 for web-search)
-        summary: false
-      }),
-    });
-
-    if (!initialResponse.ok) {
-      const errorData = await initialResponse.json();
-      console.error("Error from Langsearch initial API (news search):", errorData);
-      throw new Error(`Langsearch initial API error (news search): ${initialResponse.statusText}`);
-    }
-
+    const initialBody = { 
+      query: initialQuery,
+      freshness: "oneDay",
+      count: 5, // Get more candidates for reranking (max 10 for web-search)
+      summary: false
+    };
+    const initialResponse = await makeLangsearchRequest(LANGSEARCH_SEARCH_API_URL, initialBody);
     const initialData = await initialResponse.json();
+    
     const candidateNews: LegalDocument[] = initialData.data.webPages.value.map((doc: any) => ({
       id: doc.id || Math.random().toString(36).substring(2, 15),
       title: doc.name || "Untitled News",
@@ -182,7 +168,7 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
     const documentTexts = candidateNews.map(doc => doc.content);
 
     // Step 3: Perform semantic reranking
-    const rerankedResults = await performRerank(initialQuery, documentTexts, count, LANGSEARCH_API_KEY);
+    const rerankedResults = await performRerank(initialQuery, documentTexts, count);
 
     // Step 4: Reconstruct LegalDocument objects based on reranked order
     const finalNewsDocuments: LegalDocument[] = rerankedResults.map(rerankedDoc => {

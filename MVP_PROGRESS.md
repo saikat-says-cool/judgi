@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The application now features refined AI chat streaming, including improved scrolling behavior, a more dynamic "thinking" indicator, and the prevention of raw document update tags from appearing in the chat during streaming in the canvas co-pilot. Export functionality for DOCX and PDF is also implemented. Research modes have been added to both the main chat and the canvas AI assistant, integrating with the LongCat API for contextual legal research, with enhanced query construction for Langsearch. The Langsearch integration has been further refined to use a two-step process: initial broad retrieval followed by semantic re-ranking for improved relevance, with the Web Search API URL now hardcoded.
+**Current Status:** The application now features refined AI chat streaming, including improved scrolling behavior, a more dynamic "thinking" indicator, and the prevention of raw document update tags from appearing in the chat during streaming in the canvas co-pilot. Export functionality for DOCX and PDF is also implemented. Research modes have been added to both the main chat and the canvas AI assistant, integrating with the LongCat API for contextual legal research, with enhanced query construction for Langsearch. The Langsearch integration has been further refined to use a two-step process: initial broad retrieval followed by semantic re-ranking for improved relevance, with the Web Search API URL now hardcoded. **Crucially, a rotating API key mechanism has been implemented for both Langsearch and LongCat APIs to handle rate limits, using hardcoded keys.**
 
 ---
 
@@ -31,6 +31,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **1.3.3 Contextual Search:** Integrated `searchLegalDocuments` and `searchCurrentNews` based on research mode and user country, injecting results into the AI's system prompt. **Enhanced Langsearch query construction for better legal relevance.**
 - [x] **1.3.4 Display AI Response:** Render AI's response, including citations.
 - [x] **1.3.5 AI Persona & Parameters:** Adjusted AI persona to a general assistant (like ChatGPT) and set parameters (temperature, top_p, max_tokens) to normal-like values. This change is foundational for future, more refined prompt engineering.
+- [x] **1.3.6 Rotating API Keys:** Implemented a system to manage multiple hardcoded API keys for both Langsearch and LongCat, automatically rotating to the next key upon encountering a rate limit (HTTP 429) error.
 
 ## Phase 2: Copilot Canvas Infrastructure
 
@@ -69,7 +70,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.1.16 Refined AI Streaming Display:** Implemented more robust parsing during AI streaming to prevent partial document update tags (like `<DOCUMENT_REPLACE>` or `<DOCUMENT_WRITE>`) and their content from appearing in the chat. The "JudgiAI is thinking..." indicator now disappears as soon as the first character of the AI's response is streamed.
 
 ### 3.2 Bug Fixes (DONE)
-- [x] **3.2.1 Persistent JSX Parsing Errors:** Resolved recurring `Unexpected token Card` errors in `src/components/CanvasAIAssistant.tsx` and `src/pages/ChatPage.tsx` through comprehensive rewrites and rebuilds.
+- [x] **3.2.1 Persistent JSX Parsing Errors:** Resolved recurring `Unexpected token Card` errors in `src/components/CanvasAIAssistant.tsx` through comprehensive rewrites and rebuilds.
 - [x] **3.2.2 Import Syntax Error:** Fixed `Expected 'from', got '=>'` syntax error in `src/pages/ChatPage.tsx`.
 
 ---

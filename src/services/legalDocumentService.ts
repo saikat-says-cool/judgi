@@ -14,11 +14,11 @@ interface LegalDocument {
 
 const getLangsearchCredentials = () => {
   const LANGSEARCH_API_KEY = import.meta.env.VITE_LANGSEARCH_API_KEY;
-  const LANGSEARCH_SEARCH_API_URL = import.meta.env.VITE_LANGSEARCH_SEARCH_API_URL; // Corrected: Use a dedicated search API URL
+  const LANGSEARCH_SEARCH_API_URL = "https://api.langsearch.com/v1/web-search"; // Hardcoded as per documentation
   const LANGSEARCH_RERANK_ENDPOINT = "https://api.langsearch.com/v1/rerank";
 
-  if (!LANGSEARCH_API_KEY || !LANGSEARCH_SEARCH_API_URL) {
-    console.error("Langsearch API Key or Search API URL is not set. Please add VITE_LANGSEARCH_API_KEY and VITE_LANGSEARCH_SEARCH_API_URL to your .env.local file.");
+  if (!LANGSEARCH_API_KEY) {
+    console.error("Langsearch API Key is not set. Please add VITE_LANGSEARCH_API_KEY to your .env.local file.");
     throw new Error("Langsearch API credentials are missing.");
   }
   return { LANGSEARCH_API_KEY, LANGSEARCH_SEARCH_API_URL, LANGSEARCH_RERANK_ENDPOINT };
@@ -78,7 +78,7 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
       },
       body: JSON.stringify({ 
         query: initialQuery,
-        count: 10, // Get more candidates for reranking
+        count: 10, // Get more candidates for reranking (max 10 for web-search)
         summary: true 
       }),
     });
@@ -150,7 +150,7 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
       body: JSON.stringify({ 
         query: initialQuery,
         freshness: "oneDay",
-        count: 5, // Get more candidates for reranking
+        count: 5, // Get more candidates for reranking (max 10 for web-search)
         summary: false
       }),
     });

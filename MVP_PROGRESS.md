@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The application now features refined AI chat streaming, including improved scrolling behavior, a more dynamic "thinking" indicator, and the prevention of raw document update tags from appearing in the chat during streaming in the canvas co-pilot. Export functionality for DOCX and PDF is also implemented. Research modes have been added to both the main chat and the canvas AI assistant, integrating with the LongCat API for contextual legal research, with enhanced query construction for Langsearch. The Langsearch integration has been further refined to use a two-step process: initial broad retrieval followed by semantic re-ranking for improved relevance.
+**Current Status:** The application now features refined AI chat streaming, including improved scrolling behavior, a more dynamic "thinking" indicator, and the prevention of raw document update tags from appearing in the chat during streaming in the canvas co-pilot. Export functionality for DOCX and PDF is also implemented. Research modes have been added to both the main chat and the canvas AI assistant, integrating with the LongCat API for contextual legal research, with enhanced query construction for Langsearch. The Langsearch integration has been further refined to use a two-step process: initial broad retrieval followed by semantic re-ranking for improved relevance, with the Web Search API URL now hardcoded.
 
 ---
 
@@ -57,7 +57,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.1.4 Global Font Update:** Changed the application's global font to 'Comfortaa'.
 - [x] **3.1.5 Markdown Rendering in Writing Canvas:** Implemented Markdown rendering in the `WritingCanvas` by default, with a click-to-edit functionality to switch to a raw text editor.
 - [x] **3.1.6 Markdown Heading Visibility Fix:** Applied direct CSS overrides to ensure Markdown headings and bold text are clearly visible (white) against the dark background in all Markdown rendered areas.
-- [x] **3.1.7 Rich TextEditor Integration:** Replaced the basic `WritingCanvas` with a full-featured `RichTextEditor` using TipTap, providing continuous formatted display while editing.
+- [x] **3.1.7 Rich Text Editor Integration:** Replaced the basic `WritingCanvas` with a full-featured `RichTextEditor` using TipTap, providing continuous formatted display while editing.
 - [x] **3.1.8 Comprehensive Formatting Toolbar:** Added a toolbar to the `RichTextEditor` with options for bold, italic, underline, strikethrough, inline code, headings (H1, H2, H3), bullet lists, ordered lists, blockquotes, text alignment (left, center, right, justify), undo, and redo.
 - [x] **3.1.9 User Font Family Selection:** Implemented a font family dropdown in the `RichTextEditor` that allows users to change the font of selected text, with the dropdown accurately reflecting the active font.
 - [x] **3.1.10 AI Output Font Control:** Added a separate font family dropdown to the `CanvasAIAssistant` to control the font of AI-generated content inserted into the writing canvas.

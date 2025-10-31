@@ -1,0 +1,105 @@
+# JudgiAI Technical Summary: APIs and Core Functionalities
+
+This document provides a technical overview of the JudgiAI application, focusing on its API integrations, particularly with Supabase, LongCat, and Langsearch, and how these components work together to deliver the core features.
+
+## 1. Overview of JudgiAI
+
+JudgiAI is an AI legal copilot designed for legal professionals and students. It offers two primary workspaces:
+*   **Research Chat Interface**: A conversational AI for legal research.
+*   **Copilot Canvas**: An AI-assisted writing environment for drafting legal documents.
+
+The application is built using React, TypeScript, and Tailwind CSS, leveraging `shadcn/ui` components for a modern and responsive user interface.
+
+## 2. Core API Integrations
+
+JudgiAI relies on three main API integrations:
+
+### 2.1. Supabase (Backend-as-a-Service)
+
+Supabase serves as the backend for JudgiAI, handling authentication, database management, and real-time updates.
+
+*   **Client Setup**: The Supabase client is initialized in `src/integrations/supabase/client.ts` using environment variables for the URL and public key.
+*   **Authentication**:
+    *   User authentication (sign-up, sign-in, session management) is handled by `@supabase/auth-ui-react` and `SessionContextProvider`.
+    *   User sessions are managed via `supabase.auth.onAuthStateChange`, redirecting users based on their authentication status.
+    *   User profiles are stored in the `public.profiles` table, automatically created and populated on new user sign-up via a PostgreSQL trigger (`handle_new_user` function).
+*   **Database**:
+    *   **`public.profiles`**: Stores user-specific profile data (first name, last name, avatar URL, country).
+    *   **`public.conversations`**: Stores metadata for chat conversations (ID, user ID, title, timestamps).
+    *   **`public.chats`**: Stores individual chat messages, linked to `conversations` (ID, user ID, conversation ID, role, content, timestamp).
+    *   **`public.documents`**: Stores legal documents created in the Canvas (ID, user ID, title, content (HTML), chat history (JSONB), timestamps).
+*   **Real-time Updates**: Supabase channels are used in `Sidebar.tsx` and `CanvasHomePage.tsx` to listen for `postgres_changes` on `conversations` and `documents` tables, ensuring the UI reflects updates in real-time (e.g., new chats, renamed documents).
+*   **Row Level Security (RLS)**: RLS is strictly enforced on all tables (`profiles`, `conversations`, `chats`, `documents`) to ensure users can only access, modify, or delete their own data. Policies are defined for `SELECT`, `INSERT`, `UPDATE`, and `DELETE` operations, typically restricting access to `auth.uid() = user_id` or `auth.uid() = id`.
+
+### 2.2. LongCat API (AI Chat and Document Co-pilot)
+
+The LongCat API powers the conversational AI capabilities in both the chat interface and the canvas assistant.
+
+*   **Client Initialization**: The `OpenAI` client is initialized in `src/services/longcatApi.ts` with a `baseURL` pointing to `https://api.longcat.chat/openai` and an API key.
+*   **API Key Rotation**:
+    *   A list of hardcoded LongCat API keys is maintained in `src/utils/longcatApiKeys.ts`.
+    *   The `getLongCatApiKey()` and `rotateLongCatApiKey()` functions manage the rotation of keys.
+    *   If a `429 (Too Many Requests)` error is encountered, the system automatically retries the request with the next available API key.
+*   **`getLongCatCompletion` Function**:
+    *   This asynchronous generator function handles streaming AI responses.
+    *   **Research Modes**: It accepts a `researchMode` parameter (`none`, `medium`, `max`) which influences the AI's behavior and context.
+    *   **Model Selection**:
+        *   For `none` (Quick Lookup), it uses `LongCat-Flash-Chat`.
+        *   For `medium` (Deep Think) and `max` (Deeper Research), it uses `LongCat-Flash-Thinking` with `enable_thinking: true` and `thinking_budget: 1024` for more in-depth processing.
+    *   **System Prompt Construction**:
+        *   The system prompt (`systemPrompt`) is dynamically constructed to define JudgiAI's persona as a legal assistant.
+        *   It includes instructions for document manipulation using `<DOCUMENT_REPLACE>` and `<DOCUMENT_WRITE>` tags.
+        *   It incorporates the user's country (fetched from Supabase `profiles`) for contextual awareness.
+        *   Crucially, it injects `researchResults` (from Langsearch) and `currentDocumentContent` (from the Canvas) into the prompt, providing the AI with relevant context.
+    *   **Streaming Responses**: The function yields chunks of the AI's response, allowing for real-time display in the UI.
+    *   **Document Update Tags**: The AI is instructed to use `<DOCUMENT_REPLACE>` to overwrite the entire document or `<DOCUMENT_WRITE>` to append content. These tags are parsed client-side to update the `RichTextEditor`.
+
+### 2.3. Langsearch API (Legal Research)
+
+The Langsearch API is used to perform legal document and current news searches, providing relevant context to the LongCat AI.
+
+*   **Endpoints**:
+    *   `https://api.langsearch.com/v1/web-search` for initial broad searches.
+    *   `https://api.langsearch.com/v1/rerank` for semantic reranking of search results.
+*   **API Key Rotation**:
+    *   Similar to LongCat, a list of hardcoded Langsearch API keys is managed in `src/utils/langsearchApiKeys.ts`.
+    *   `makeLangsearchRequest` handles automatic key rotation and retries on `429` errors.
+*   **`searchLegalDocuments` Function**:
+    *   Takes a `query`, `count`, and `country` as parameters.
+    *   **Two-Step Search Process**:
+        1.  **Initial Broad Search**: Uses `web-search` with an enhanced query (e.g., "Indian legal cases about...") to retrieve a larger set of candidate documents (e.g., 10).
+        2.  **Semantic Reranking**: The content of these candidate documents is then passed to the `rerank` endpoint along with the original query. This step semantically re-orders the documents by relevance and selects the `top_n` (e.g., 5) most relevant ones.
+    *   Results are formatted into `LegalDocument` objects, including title, content, and citation (URL).
+*   **`searchCurrentNews` Function**:
+    *   Similar two-step process for news articles, using `web-search` with `freshness: "oneDay"` and then `rerank` for relevance.
+    *   Query construction is adapted for news searches (e.g., "current Indian legal news about...").
+*   **Integration with LongCat**: The results from `searchLegalDocuments` and `searchCurrentNews` are injected into the LongCat AI's system prompt as `<LEGAL_RESEARCH_RESULTS>` and `<CURRENT_NEWS_RESULTS>`, providing the AI with up-to-date and relevant information.
+
+## 3. AI Interaction with the Canvas
+
+The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that integrates directly with the `CanvasAIAssistant`.
+
+*   **`RichTextEditor`**: The main writing area uses `@tiptap/react` to provide a rich text editing experience. It stores content as HTML.
+    *   Features include bold, italic, underline, strikethrough, code, headings, lists, blockquotes, text alignment, undo/redo, and user-selectable font families.
+*   **Markdown/HTML Conversion**:
+    *   `src/lib/markdownConverter.ts` provides utility functions (`markdownToHtml`, `htmlToMarkdownConverter`) to seamlessly convert between Markdown (for AI communication) and HTML (for the `RichTextEditor`).
+    *   When AI needs to read the document, the HTML content is converted to Markdown.
+    *   When AI generates content for the document, its Markdown output is converted to HTML before being inserted.
+*   **AI Document Updates**:
+    *   The `CanvasAIAssistant` listens for AI responses containing `<DOCUMENT_REPLACE>` or `<DOCUMENT_WRITE>` tags.
+    *   `onAIDocumentUpdate` callback in `CanvasEditorPage` handles these updates:
+        *   `DOCUMENT_REPLACE`: Overwrites the entire `writingContent` with the AI's output.
+        *   `DOCUMENT_WRITE`: Appends the AI's output to the existing `writingContent`.
+    *   AI-generated content is styled with a user-selected font family (`aiOutputFontFamily`) before insertion.
+*   **Unsaved Changes**: The `CanvasEditorPage` tracks changes to `writingContent`, `aiChatHistory`, and `documentTitle` to warn users about unsaved work before navigating away. An auto-save mechanism is also implemented.
+*   **Export Functionality**: Documents can be exported as `.docx` or `.pdf` using `docx` and `jspdf` libraries, respectively. The HTML content is converted to plain text (via Markdown) for these exports.
+
+## 4. User Interface and Experience
+
+*   **Responsive Sidebar**: A dynamic sidebar (`Sidebar.tsx`) provides navigation between Chat and Canvas, and displays recent conversations/documents. It's responsive, collapsing on desktop and becoming a sheet on mobile.
+*   **Theming**: The application uses a dark theme by default, with Tailwind CSS and custom CSS variables (`src/globals.css`) ensuring consistent styling.
+*   **Loading Indicators**: `Square` icons with `animate-spin` are used as visual loading indicators for AI responses and document loading.
+*   **Toast Notifications**: `sonner` is used for user feedback (success, error, loading messages).
+*   **Markdown Rendering**: `react-markdown` with `remark-gfm` is used to render Markdown content in chat messages and AI assistant responses, ensuring rich text display.
+
+This summary highlights the key technical components and their interactions, forming the foundation of the JudgiAI application.

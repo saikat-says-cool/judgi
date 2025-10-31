@@ -18,7 +18,7 @@ interface LongCatMessage {
 
 interface GetLongCatCompletionOptions {
   researchMode: 'none' | 'medium' | 'max';
-  deepthinkMode: boolean;
+  // deepthinkMode is now derived from researchMode, no longer a direct option
   userId: string; // Pass userId to fetch country
   currentDocumentContent?: string; // New: Pass current document content for AI context (now Markdown)
 }
@@ -28,7 +28,7 @@ export const getLongCatCompletion = async function* (
   messages: LongCatMessage[],
   options: GetLongCatCompletionOptions
 ): AsyncGenerator<string, void, unknown> { // Changed return type to AsyncGenerator<string>
-  const { researchMode, deepthinkMode, userId, currentDocumentContent } = options;
+  const { researchMode, userId, currentDocumentContent } = options;
 
   if (!import.meta.env.VITE_LONGCAT_API_KEY) {
     console.error("LongCat API Key is not set. Please add VITE_LONGCAT_API_KEY to your .env.local file.");
@@ -51,7 +51,11 @@ export const getLongCatCompletion = async function* (
       }
     }
 
-    const model = deepthinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+    // Determine model and thinking parameters based on researchMode
+    const useThinkingModel = researchMode === 'medium' || researchMode === 'max';
+    const model = useThinkingModel ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+    const enableThinking = useThinkingModel;
+    const thinkingBudget = 1024; // Default as per documentation
 
     // Construct the system prompt for a normal assistant
     let systemPrompt = "You are JudgiAI, an intelligent legal assistant. You are currently assisting a user in drafting a legal document. Your primary goal is to help the user write the document on the left panel, while also engaging in a conversational chat on the right panel. ";
@@ -116,14 +120,21 @@ export const getLongCatCompletion = async function* (
     const messagesForAI: LongCatMessage[] = [{ role: "system", content: systemPrompt }];
     messagesForAI.push(...messages); // Add existing chat messages
 
-    const response = await longcatClient.chat.completions.create({
+    const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
       model: model,
       messages: messagesForAI,
-      max_tokens: 4096,
+      max_tokens: 4096, // Ensure max_tokens is greater than thinking_budget if thinking is enabled
       temperature: 0.7,
       top_p: 1.0,
-      stream: true, // Enable streaming
-    });
+      stream: true,
+    };
+
+    if (enableThinking) {
+      (completionParams as any).enable_thinking = true;
+      (completionParams as any).thinking_budget = thinkingBudget;
+    }
+
+    const response = await longcatClient.chat.completions.create(completionParams);
 
     for await (const chunk of response) {
       const deltaContent = chunk.choices[0]?.delta?.content || '';

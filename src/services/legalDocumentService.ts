@@ -14,14 +14,14 @@ interface LegalDocument {
 
 const getLangsearchCredentials = () => {
   const LANGSEARCH_API_KEY = import.meta.env.VITE_LANGSEARCH_API_KEY;
-  const LANGSEARCH_API_URL = import.meta.env.VITE_SUPABASE_URL; // Assuming this is the base URL for initial search
-  const LANGSEARCH_RERANK_ENDPOINT = "https://api.langsearch.com/v1/rerank"; // Specific Rerank API endpoint
+  const LANGSEARCH_SEARCH_API_URL = import.meta.env.VITE_LANGSEARCH_SEARCH_API_URL; // Corrected: Use a dedicated search API URL
+  const LANGSEARCH_RERANK_ENDPOINT = "https://api.langsearch.com/v1/rerank";
 
-  if (!LANGSEARCH_API_KEY || !LANGSEARCH_API_URL) {
-    console.error("Langsearch API Key or URL is not set. Please add VITE_LANGSEARCH_API_KEY and VITE_SUPABASE_URL to your .env.local file.");
+  if (!LANGSEARCH_API_KEY || !LANGSEARCH_SEARCH_API_URL) {
+    console.error("Langsearch API Key or Search API URL is not set. Please add VITE_LANGSEARCH_API_KEY and VITE_LANGSEARCH_SEARCH_API_URL to your .env.local file.");
     throw new Error("Langsearch API credentials are missing.");
   }
-  return { LANGSEARCH_API_KEY, LANGSEARCH_API_URL, LANGSEARCH_RERANK_ENDPOINT };
+  return { LANGSEARCH_API_KEY, LANGSEARCH_SEARCH_API_URL, LANGSEARCH_RERANK_ENDPOINT };
 };
 
 const performRerank = async (query: string, documents: string[], top_n: number, apiKey: string): Promise<{ index: number; document: { text: string }; relevance_score: number }[]> => {
@@ -40,7 +40,7 @@ const performRerank = async (query: string, documents: string[], top_n: number, 
       query: query,
       documents: documents,
       top_n: top_n,
-      return_documents: true, // We need the document text back to re-associate
+      return_documents: true,
     }),
   });
 
@@ -60,7 +60,7 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
   }
 
   try {
-    const { LANGSEARCH_API_KEY, LANGSEARCH_API_URL } = getLangsearchCredentials();
+    const { LANGSEARCH_API_KEY, LANGSEARCH_SEARCH_API_URL } = getLangsearchCredentials();
 
     let initialQuery = query;
     if (country === 'India') {
@@ -70,7 +70,7 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
     }
 
     // Step 1: Perform initial broad search to get candidate documents
-    const initialResponse = await fetch(LANGSEARCH_API_URL, {
+    const initialResponse = await fetch(LANGSEARCH_SEARCH_API_URL, { // Using the dedicated search API URL
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -114,8 +114,6 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
 
     // Step 4: Reconstruct LegalDocument objects based on reranked order
     const finalLegalDocuments: LegalDocument[] = rerankedResults.map(rerankedDoc => {
-      // Find the original document using its text (assuming text is unique enough for this purpose)
-      // A more robust solution might involve passing original IDs through the reranker if supported
       const originalDoc = candidateDocuments.find(doc => doc.content === rerankedDoc.document.text);
       return originalDoc ? { ...originalDoc, relevance_score: rerankedDoc.relevance_score } : null;
     }).filter(doc => doc !== null) as LegalDocument[];
@@ -133,7 +131,7 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
   }
 
   try {
-    const { LANGSEARCH_API_KEY, LANGSEARCH_API_URL } = getLangsearchCredentials();
+    const { LANGSEARCH_API_KEY, LANGSEARCH_SEARCH_API_URL } = getLangsearchCredentials();
 
     let initialQuery = `current news about ${query}`;
     if (country === 'India') {
@@ -143,7 +141,7 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
     }
 
     // Step 1: Perform initial broad search for news
-    const initialResponse = await fetch(LANGSEARCH_API_URL, {
+    const initialResponse = await fetch(LANGSEARCH_SEARCH_API_URL, { // Using the dedicated search API URL
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

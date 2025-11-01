@@ -44,9 +44,9 @@ Beyond the remaining MVP features, several areas can be optimized or improved fo
 *   **Current Status**: The login page uses Supabase Auth UI, but currently only supports email/password. The MVP spec mentioned "email / Google".
 *   [x] **Action Needed**: Configure the Supabase Auth UI to include Google (or other desired OAuth providers) for easier sign-up and login.
 
-### 2.3 Performance for Large Documents
+### 2.3 Performance for Large Documents (DONE)
 *   **Current Status**: The `RichTextEditor` handles content as HTML. For very large legal documents, the performance of the editor and the state management for `writingContent` might become a concern.
-*   **Action Needed**: Monitor performance with large documents. Consider strategies like debouncing content updates, optimizing TipTap configurations, or exploring virtualized rendering for extremely long documents if performance issues arise.
+*   [x] **Action Needed**: Implemented debounced content updates for the `RichTextEditor` in `CanvasEditorPage.tsx` to reduce the frequency of state updates and auto-saves while typing, improving overall performance.
 
 ### 2.4 Enhanced AI Response Latency Feedback
 *   **Current Status**: We have "JudgiAI is thinking..." and specific document action messages.

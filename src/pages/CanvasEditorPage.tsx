@@ -199,12 +199,30 @@ const CanvasEditorPage = () => {
     };
   }, [writingContent, aiChatHistory, documentTitle, hasUnsavedChanges, currentDocumentId, saveDocument]);
 
+  // Debounce function
+  const debounce = <T extends (...args: any[]) => void>(func: T, delay: number) => {
+    let timeout: ReturnType<typeof setTimeout>;
+    return function(this: any, ...args: Parameters<T>) {
+      const context = this;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(context, args), delay);
+    } as T;
+  };
+
+  // Debounced content change handler
+  const debouncedSetWritingContent = useCallback(
+    debounce((content: string) => {
+      setWritingContent(content);
+    }, 500), // Debounce by 500ms
+    []
+  );
+
   const handleContentChange = useCallback((content: string) => {
-    setWritingContent(content);
+    debouncedSetWritingContent(content);
     if (!currentDocumentId && content.trim().length > 0) {
       // This will be handled by the explicit save button or auto-save
     }
-  }, [currentDocumentId]);
+  }, [currentDocumentId, debouncedSetWritingContent]);
 
   const handleAIChatHistoryChange = useCallback((history: ChatMessage[]) => {
     setAiChatHistory(history);

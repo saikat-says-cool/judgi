@@ -215,7 +215,9 @@ const CanvasEditorPage = () => {
     setAiDocumentAction(update.type);
     const htmlContent = await markdownToHtml(update.content);
     
-    const styledHtmlContent = `<span style="font-family: ${aiOutputFontFamily}, sans-serif;">${htmlContent}</span>`;
+    // Convert font family name to a valid Tailwind CSS class name
+    const fontClassName = `font-${aiOutputFontFamily.toLowerCase().replace(/\s/g, '-')}`;
+    const styledHtmlContent = `<span class="${fontClassName}">${htmlContent}</span>`;
 
     setWritingContent((prevContent) => {
       if (update.type === 'replace') {

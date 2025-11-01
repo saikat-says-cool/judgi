@@ -68,9 +68,9 @@ Beyond the remaining MVP features, several areas can be optimized or improved fo
 *   **Current Status**: The codebase is growing with new features.
 *   [x] **Action Needed**: Regularly review and refactor components, hooks, and services to ensure clear separation of concerns, reduce coupling, and improve overall maintainability as the application scales. Refactored the `parseAIResponse` function into a shared utility (`src/utils/aiResponseParser.ts`) to eliminate duplication and centralize AI response parsing logic.
 
-### 2.9 AI Output Styling Integration
+### 2.9 AI Output Styling Integration (DONE)
 *   **Current Status**: The AI output font family is applied as an inline style when content is inserted into the `RichTextEditor`.
-*   **Action Needed**: Explore if this styling can be managed more robustly through TipTap's schema or custom CSS classes rather than inline styles, for better consistency and easier modification.
+*   [x] **Action Needed**: Explore if this styling can be managed more robustly through TipTap's schema or custom CSS classes rather than inline styles, for better consistency and easier modification. Updated `CanvasEditorPage.tsx` to apply AI output font styling using Tailwind CSS classes instead of inline styles.
 
 ---
 

@@ -1,6 +1,6 @@
 # JudgiAI Technical Summary: APIs and Core Functionalities
 
-This document provides a technical overview of the JudgiAI application, focusing on its API integrations, particularly with Supabase, LongCat, and Langsearch, and how these components work together to deliver the core features.
+This document provides a technical overview of the JudgiAI application, focusing on its API integrations, particularly with Supabase, LongCat, Langsearch, and AssemblyAI, and how these components work together to deliver the core features.
 
 ## 1. Overview of JudgiAI
 
@@ -85,6 +85,21 @@ The Langsearch API is used to perform legal document and current news searches, 
 *   **Integration with LongCat**: The results from `searchLegalDocuments` and `searchCurrentNews` are injected into the LongCat AI's system prompt as `<LEGAL_RESEARCH_RESULTS>` and `<CURRENT_NEWS_RESULTS>`, providing the AI with up-to-date and relevant information.
 *   **Robust Error Handling**: Includes specific error messages for API errors (429, 401) and network issues, with detailed console logging.
 
+### 2.4. AssemblyAI API (Speech-to-Text)
+
+AssemblyAI is integrated to provide voice input capabilities, converting spoken audio into text.
+
+*   **API Key Rotation**:
+    *   A list of hardcoded AssemblyAI API keys is maintained in `src/utils/assemblyAiApiKeys.ts`.
+    *   The `transcribeAudio` function manages the rotation of keys, retrying with the next available key upon encountering a `429 (Too Many Requests)` error.
+*   **`transcribeAudio` Function**:
+    *   This function handles the full speech-to-text workflow using direct REST API calls, ensuring browser compatibility.
+    *   **Step 1: Upload Audio**: The recorded audio `Blob` is sent via a `POST` request to `https://api.assemblyai.com/v2/upload` with `Content-Type: application/octet-stream`. This returns an `upload_url`.
+    *   **Step 2: Submit Transcription Job**: The `upload_url` is then used in a `POST` request to `https://api.assemblyai.com/v2/transcript` to initiate the transcription process. This returns a `transcriptId`.
+    *   **Step 3: Poll for Completion**: The service continuously polls `GET https://api.assemblyai.com/v2/transcript/{transcript_id}` every 3 seconds until the `status` is `completed` or `error`.
+    *   Upon completion, the transcribed `text` is returned.
+    *   **Robust Error Handling**: Includes specific error messages for API errors (429, 401) and network issues, with detailed console logging and retry logic.
+
 ## 3. AI Interaction with the Canvas
 
 The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that integrates directly with the `CanvasAIAssistant`.
@@ -115,5 +130,6 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
 *   **Markdown Rendering**: `react-markdown` with `remark-gfm` is used to render Markdown content in chat messages and AI assistant responses, ensuring rich text display.
 *   **Accessibility**: `aria-label` attributes have been added to all icon-only buttons across the application for improved screen reader support.
 *   **Code Maintainability**: The `parseAIResponse` function has been refactored into a shared utility (`src/utils/aiResponseParser.ts`) to centralize AI response parsing logic, improving code maintainability and scalability.
+*   **Voice Input**: Integrated a `VoiceRecorder` component into chat input fields, allowing users to record audio, see a visual audio level, and transcribe it into the input box using AssemblyAI's REST API.
 
 This summary highlights the key technical components and their interactions, forming the foundation of the JudgiAI application.

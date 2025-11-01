@@ -52,19 +52,23 @@ Beyond the remaining MVP features, several areas can be optimized or improved fo
 *   **Current Status**: We have "JudgiAI is thinking..." and specific document action messages.
 *   [x] **Action Needed**: For "Deep Think" and "Deeper Research" modes, consider providing more granular feedback on what the AI is doing (e.g., "Searching legal databases...", "Analyzing cases...", "Synthesizing information...") to manage user expectations during longer processing times. Implemented `onStatusUpdate` callback in `getLongCatCompletion` and integrated into `CanvasAIAssistant` and `ChatPage` to display detailed messages.
 
-### 2.5 Accessibility Review
+### 2.5 AI Awareness of Current Date and Time (DONE)
+*   **Goal**: Ensure the AI is aware of the current date and time to provide more contextually relevant responses.
+*   [x] **Action Needed**: Injected the current date and time into the AI's system prompt in `src/services/longcatApi.ts`.
+
+### 2.6 Accessibility Review
 *   **Current Status**: `shadcn/ui` provides a good foundation, but custom components and interactions might have accessibility gaps.
 *   **Action Needed**: Conduct a thorough accessibility audit to ensure the application is usable by individuals with disabilities, covering keyboard navigation, screen reader compatibility, color contrast, and ARIA attributes.
 
-### 2.6 Robust Error Handling and User Feedback
+### 2.7 Robust Error Handling and User Feedback
 *   **Current Status**: `showError` toasts are used for basic error reporting.
 *   **Action Needed**: Implement more detailed and user-friendly error messages, potentially with options for users to report issues or retry actions. Enhance logging for better debugging of complex AI interactions.
 
-### 2.7 Code Maintainability and Scalability
+### 2.8 Code Maintainability and Scalability
 *   **Current Status**: The codebase is growing with new features.
 *   **Action Needed**: Regularly review and refactor components, hooks, and services to ensure clear separation of concerns, reduce coupling, and improve overall maintainability as the application scales.
 
-### 2.8 AI Output Styling Integration
+### 2.9 AI Output Styling Integration
 *   **Current Status**: The AI output font family is applied as an inline style when content is inserted into the `RichTextEditor`.
 *   **Action Needed**: Explore if this styling can be managed more robustly through TipTap's schema or custom CSS classes rather than inline styles, for better consistency and easier modification.
 

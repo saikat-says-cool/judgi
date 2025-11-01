@@ -404,6 +404,7 @@ const CanvasEditorPage = () => {
             isAIWritingToCanvas={aiWritingToCanvas}
             aiOutputFontFamily={aiOutputFontFamily} // Pass AI font state
             setAiOutputFontFamily={setAiOutputFontFamily} // Pass AI font setter
+            aiDocumentAction={aiDocumentAction} {/* NEW: Pass aiDocumentAction */}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

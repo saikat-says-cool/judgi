@@ -30,6 +30,7 @@ interface CanvasAIAssistantProps {
   isAIWritingToCanvas: boolean;
   aiOutputFontFamily: string;
   setAiOutputFontFamily: (font: string) => void;
+  aiDocumentAction: 'append' | 'replace' | null; // NEW: Prop for specific AI document action
 }
 
 type ResearchMode = 'none' | 'medium' | 'max'; // Define ResearchMode type
@@ -84,6 +85,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   isAIWritingToCanvas,
   aiOutputFontFamily,
   setAiOutputFontFamily,
+  aiDocumentAction, // NEW: Destructure aiDocumentAction
 }) => {
   const { session } = useSession();
   const [inputMessage, setInputMessage] = useState<string>('');
@@ -190,6 +192,15 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     }
   };
 
+  const getChatLoadingMessage = () => {
+    if (aiDocumentAction === 'append') {
+      return "JudgiAI is appending to document...";
+    } else if (aiDocumentAction === 'replace') {
+      return "JudgiAI is replacing document content...";
+    }
+    return "JudgiAI is thinking...";
+  };
+
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
       <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
@@ -256,7 +267,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                 <div className="flex justify-start w-full">
                   <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full">
                     <Square className="h-4 w-4 animate-spin" />
-                    <span>JudgiAI is thinking...</span>
+                    <span>{getChatLoadingMessage()}</span> {/* NEW: Use specific loading message */}
                   </div>
                 </div>
               )}

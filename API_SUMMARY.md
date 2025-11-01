@@ -22,8 +22,9 @@ Supabase serves as the backend for JudgiAI, handling authentication, database ma
 *   **Authentication**:
     *   User authentication (sign-up, sign-in, session management) is handled by `@supabase/auth-ui-react` and `SessionContextProvider`.
     *   The login page (`src/pages/Login.tsx`) is configured to support email/password and Google OAuth providers.
+    *   User sessions are managed via `supabase.auth.onAuthStateChange`, redirecting users based on their authentication status. The `LandingPage` now handles navigation within a `useEffect` to prevent React warnings about state updates during render.
     *   User profiles are stored in the `public.profiles` table, automatically created and populated on new user sign-up via a PostgreSQL trigger (`handle_new_user` function).
-    *   A dedicated `ProfileSettingsPage` allows users to view and update their profile information (first name, last name, country).
+    *   A dedicated `ProfileSettingsPage` allows users to view and update their profile information (first name, last name, country). This page is now a nested route under `/app/profile` for consistent routing.
 *   **Database**:
     *   **`public.profiles`**: Stores user-specific profile data (first name, last name, avatar URL, country).
     *   **`public.conversations`**: Stores metadata for chat conversations (ID, user ID, title, timestamps).

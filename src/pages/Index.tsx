@@ -5,6 +5,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ChatPage from './ChatPage';
 import CanvasHomePage from './CanvasHomePage'; // New Canvas Home Page
 import CanvasEditorPage from './CanvasEditorPage'; // Renamed Canvas Editor Page
+import ProfileSettingsPage from './ProfileSettingsPage'; // Import the new page
 import { useSession } from '@/contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -33,6 +34,8 @@ const Index = () => {
 
           <Route path="canvas" element={<CanvasHomePage />} /> {/* Canvas landing page */}
           <Route path="canvas/:documentId" element={<CanvasEditorPage />} /> {/* Canvas editor page */}
+          
+          <Route path="profile" element={<ProfileSettingsPage />} /> {/* Nested Profile Settings Route */}
 
           <Route path="/" element={<Navigate to="chat/new" replace />} />
         </Routes>

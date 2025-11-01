@@ -9,7 +9,7 @@ import Login from "./pages/Login";
 import LandingPage from "./pages/LandingPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { SessionContextProvider } from "./contexts/SessionContext";
-import ProfileSettingsPage from "./pages/ProfileSettingsPage"; // Import the new page
+// Removed ProfileSettingsPage import as it will be nested
 
 const queryClient = new QueryClient();
 
@@ -24,14 +24,14 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route 
-                path="/app/*" // Use /* to allow nested routes under /app
+                path="/app/*" // Use /* to allow nested routes under /app, including profile
                 element={
                   <ProtectedRoute>
                     <Index />
                   </ProtectedRoute>
                 } 
               />
-              <Route path="/app/profile" element={<ProtectedRoute><ProfileSettingsPage /></ProtectedRoute>} /> {/* New Profile Settings Route */}
+              {/* The /app/profile route is now handled within Index.tsx */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

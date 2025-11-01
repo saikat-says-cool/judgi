@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square, Save, Mic } from 'lucide-react'; // Import Mic icon
+import { Send, Square, Save, Mic } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
@@ -15,8 +15,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SaveToCanvasDialog from '@/components/SaveToCanvasDialog';
-import { parseAIResponse } from '@/utils/aiResponseParser'; // Import from new utility file
-import VoiceRecorder from '@/components/VoiceRecorder'; // Import VoiceRecorder
+import { parseAIResponse } from '@/utils/aiResponseParser';
+import VoiceRecorder from '@/components/VoiceRecorder';
 
 interface ChatMessage {
   id: string;
@@ -39,14 +39,15 @@ const ChatPage = () => {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null); // Keep this for internal tracking
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [researchMode, setResearchMode] = useState<ResearchMode>('no_research');
-  const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
+  const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto');
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
   const [contentToSaveToCanvas, setContentToSaveToCanvas] = useState('');
   const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false); // New state for voice recording
-  const [isTranscribingAudio, setIsTranscribingAudio] = useState(false); // New state for transcription loading
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribingAudio, setIsTranscribingAudio] = useState(false);
+  const [isInitializingNewChat, setIsInitializingNewChat] = useState(false); // New state for flicker fix
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -61,44 +62,46 @@ const ChatPage = () => {
   }, [messages]);
 
   useEffect(() => {
-    const fetchChatHistory = async (convId: string) => {
+    const loadOrInitializeChat = async () => {
       if (!session?.user?.id) {
         setLoadingHistory(false);
         return;
       }
 
-      setLoadingHistory(true);
-      const { data, error } = await supabase
-        .from('chats')
-        .select('id, role, content, created_at')
-        .eq('user_id', session.user.id)
-        .eq('conversation_id', convId)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error("Error fetching chat history:", error);
-        showError("Failed to load chat history.");
+      if (conversationId === 'new') {
         setMessages([]);
-      } else if (data) {
-        setMessages(data as ChatMessage[]);
+        setCurrentConversationId(null);
+        setLoadingHistory(false);
+        setIsInitializingNewChat(false); // Reset this when on 'new' route
+      } else if (conversationId) {
+        // Only fetch if the conversationId has actually changed
+        // or if messages are empty AND we are not currently initializing a new chat
+        if (conversationId !== currentConversationId || (messages.length === 0 && !isInitializingNewChat)) {
+          setLoadingHistory(true);
+          const { data, error } = await supabase
+            .from('chats')
+            .select('id, role, content, created_at')
+            .eq('user_id', session.user.id)
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: true });
+
+          if (error) {
+            console.error("Error fetching chat history:", error);
+            showError("Failed to load chat history.");
+            setMessages([]);
+          } else if (data) {
+            setMessages(data as ChatMessage[]);
+          }
+          setCurrentConversationId(conversationId); // Update internal tracking after fetch
+          setLoadingHistory(false);
+        }
+      } else {
+        navigate('/app/chat/new', { replace: true });
       }
-      setLoadingHistory(false);
     };
 
-    if (conversationId === 'new') {
-      // If we are explicitly on a 'new' chat route, clear everything
-      setMessages([]);
-      setCurrentConversationId(null);
-      setLoadingHistory(false);
-    } else if (conversationId) {
-      // If there's a conversationId, load it
-      setCurrentConversationId(conversationId);
-      fetchChatHistory(conversationId);
-    } else {
-      // If no conversationId is provided (e.g., /app/chat), redirect to new
-      navigate('/app/chat/new', { replace: true });
-    }
-  }, [conversationId, session?.user?.id, supabase, navigate]); // Removed currentConversationId from dependencies
+    loadOrInitializeChat();
+  }, [conversationId, session?.user?.id, supabase, navigate, currentConversationId, messages.length, isInitializingNewChat]);
 
   const createNewConversation = useCallback(async (initialTitle: string) => {
     if (!session?.user?.id) {
@@ -124,7 +127,7 @@ const ChatPage = () => {
       showError("You must be logged in to send messages.");
       return;
     }
-    if (loadingAIResponse || isTranscribingAudio) { // Disable if transcribing
+    if (loadingAIResponse || isTranscribingAudio) {
       showError("Please wait for the current AI operation to complete.");
       return;
     }
@@ -146,11 +149,13 @@ const ChatPage = () => {
       setDetailedLoadingMessage(null);
 
       if (!activeConversationId) {
+        setIsInitializingNewChat(true); // Set flag when starting new chat
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
         activeConversationId = await createNewConversation(initialTitle);
         if (!activeConversationId) {
           setLoadingAIResponse(false);
           setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
+          setIsInitializingNewChat(false); // Reset on error
           return;
         }
 
@@ -170,6 +175,7 @@ const ChatPage = () => {
           showError("Failed to save your message. Please try again.");
           setLoadingAIResponse(false);
           setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
+          setIsInitializingNewChat(false); // Reset on error
           return;
         }
 
@@ -222,7 +228,7 @@ const ChatPage = () => {
       try {
         for await (const chunk of getLongCatCompletion(messagesForAI, {
           researchMode: researchMode,
-          aiModelMode: aiModelMode, // Pass new AI model mode
+          aiModelMode: aiModelMode,
           userId: session.user.id,
           onStatusUpdate: setDetailedLoadingMessage,
         })) {
@@ -284,6 +290,9 @@ const ChatPage = () => {
         setLoadingAIResponse(false);
         setIsAITyping(false);
         setDetailedLoadingMessage(null);
+        if (isInitializingNewChat) { // Reset flag after AI response is fully processed
+          setIsInitializingNewChat(false);
+        }
       }
     }
   };
@@ -296,17 +305,17 @@ const ChatPage = () => {
   const handleTranscriptionComplete = (text: string) => {
     setInputMessage(text);
     setIsRecording(false);
-    setIsTranscribingAudio(false); // Transcription complete
+    setIsTranscribingAudio(false);
   };
 
   const handleRecordingCancel = () => {
     setIsRecording(false);
-    setIsTranscribingAudio(false); // Transcription cancelled
+    setIsTranscribingAudio(false);
   };
 
   const handleStartRecording = () => {
     setIsRecording(true);
-    setIsTranscribingAudio(true); // Start transcribing state immediately
+    setIsTranscribingAudio(true);
   };
 
   if (loadingHistory) {
@@ -333,8 +342,8 @@ const ChatPage = () => {
           setIsRecording={setIsRecording}
           onTranscriptionComplete={handleTranscriptionComplete}
           onRecordingCancel={handleRecordingCancel}
-          isTranscribingAudio={isTranscribingAudio} // Pass to NewChatWelcome
-          handleStartRecording={handleStartRecording} // Pass to NewChatWelcome
+          isTranscribingAudio={isTranscribingAudio}
+          handleStartRecording={handleStartRecording}
         />
       ) : (
         <>
@@ -440,7 +449,7 @@ const ChatPage = () => {
                   }}
                   disabled={loadingAIResponse}
                 />
-                {inputMessage.trim() === '' && ( // Show mic button only if input is empty
+                {inputMessage.trim() === '' && (
                   <Button
                     type="button"
                     size="icon"

@@ -1,7 +1,10 @@
 // Hardcoded AssemblyAI API keys
 const ASSEMBLYAI_API_KEYS: string[] = [
   "423b13e0543d494ba19bf307da601665",
-  // Add more keys here if available for rotation
+  "aab3043373c64ed1ab847b7b042d5842",
+  "7763ab46f71b482ab99b0e89e82af886",
+  "030ba214fc8443348935c27fd786c59f",
+  "287d8bc4fab746ec9e9b09cb46e10ddf",
 ];
 
 let currentAssemblyAIKeyIndex = 0;

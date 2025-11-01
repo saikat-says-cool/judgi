@@ -83,5 +83,5 @@ These are features that could significantly enhance the application but are like
 ## Phase 4: Professional Features - AI Model & Research Control
 
 ### 4.1 Independent AI Model and Research Depth Controls (DONE)
-- [x] **Action Taken**: Renamed research mode options to "Quick Lookup", "Moderate Research", and "Deep Research". Introduced a new independent toggle for AI model selection: "Auto" (using `LongCat-Flash-Chat`) and "Deep Think" (using `LongCat-Flash-Thinking`). The research mode now exclusively controls the depth of Langsearch calls, while the AI model toggle exclusively controls the LongCat model used. These controls are implemented in both `ChatPage.tsx` and `CanvasAIAssistant.tsx`.
-- [x] **Action Taken**: Increased the research depth for "Moderate Research" to 5 legal documents and for "Deep Research" to 10 legal documents and 5 news articles.
+- [x] **Action Taken**: Renamed research mode options to "No Research", "Moderate Research", and "Deep Research". Introduced a new independent toggle for AI model selection: "Auto" (using `LongCat-Flash-Chat`) and "Deep Think" (using `LongCat-Flash-Thinking`). The research mode now exclusively controls the depth of Langsearch calls, while the AI model toggle exclusively controls the LongCat model used. These controls are implemented in both `ChatPage.tsx` and `CanvasAIAssistant.tsx`.
+- [x] **Action Taken**: Increased the research depth for "Moderate Research" to 10 legal documents and for "Deep Research" to 20 legal documents and 10 news articles.

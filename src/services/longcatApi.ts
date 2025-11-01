@@ -27,7 +27,7 @@ interface LongCatMessage {
 }
 
 interface GetLongCatCompletionOptions {
-  researchMode: 'quick_lookup' | 'moderate_research' | 'deep_research';
+  researchMode: 'no_research' | 'moderate_research' | 'deep_research'; // Updated type
   aiModelMode: 'auto' | 'deep_think'; // New prop for AI model selection
   userId: string;
   currentDocumentContent?: string;
@@ -109,10 +109,10 @@ export const getLongCatCompletion = async function* (
       let newsDocsCount = 0;
 
       if (researchMode === 'moderate_research') {
-        legalDocsCount = 5; // Increased from 2
-      } else if (researchMode === 'deep_research') {
         legalDocsCount = 10; // Increased from 5
-        newsDocsCount = 5; // Increased from 2
+      } else if (researchMode === 'deep_research') {
+        legalDocsCount = 20; // Increased from 10
+        newsDocsCount = 10; // Increased from 5
       }
 
       if (legalDocsCount > 0) {
@@ -158,6 +158,8 @@ export const getLongCatCompletion = async function* (
       const messagesForAI: LongCatMessage[] = [{ role: "system", content: systemPrompt }];
       messagesForAI.push(...messages);
 
+      // Note: LongCat Flash models are optimized for handling large context windows,
+      // so the increased research results should be well within their capabilities.
       onStatusUpdate?.("Generating AI response..."); // Status update before calling OpenAI
       const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
         model: model,

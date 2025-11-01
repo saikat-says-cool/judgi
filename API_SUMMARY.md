@@ -47,10 +47,10 @@ The LongCat API powers the conversational AI capabilities in both the chat inter
     *   **AI Model Selection (`aiModelMode`)**: A new independent parameter (`auto` or `deep_think`) determines the underlying LongCat model.
         *   `auto` mode uses `LongCat-Flash-Chat`.
         *   `deep_think` mode uses `LongCat-Flash-Thinking` with `enable_thinking: true` and `thinking_budget: 1024` for more in-depth processing.
-    *   **Research Modes (`researchMode`)**: The `researchMode` parameter (`quick_lookup`, `moderate_research`, `deep_research`) now *only* controls the depth of external research calls to Langsearch.
-        *   `quick_lookup`: No external research.
-        *   `moderate_research`: Fetches 5 legal documents.
-        *   `deep_research`: Fetches 10 legal documents and 5 news articles.
+    *   **Research Modes (`researchMode`)**: The `researchMode` parameter (`no_research`, `moderate_research`, `deep_research`) now *only* controls the depth of external research calls to Langsearch.
+        *   `no_research`: No external research.
+        *   `moderate_research`: Fetches 10 legal documents.
+        *   `deep_research`: Fetches 20 legal documents and 10 news articles.
     *   **System Prompt Construction**:
         *   The system prompt (`systemPrompt`) is dynamically constructed to define JudgiAI's persona as a legal assistant.
         *   It includes the **current date and time** for contextual awareness.
@@ -61,6 +61,7 @@ The LongCat API powers the conversational AI capabilities in both the chat inter
     *   **Document Update Tags**: The AI is instructed to use `<DOCUMENT_REPLACE>` to overwrite the entire document or `<DOCUMENT_WRITE>` to append content. These tags are parsed client-side to update the `RichTextEditor`.
     *   **Enhanced Latency Feedback**: An `onStatusUpdate` callback is used to provide granular feedback on AI processing stages (e.g., "Searching legal databases...", "Generating AI response...") to the UI.
     *   **Robust Error Handling**: Includes specific error messages for API errors (429, 401) and network issues, with detailed console logging.
+    *   **Large Input Handling**: LongCat Flash models are optimized for handling large context windows, making them suitable for the increased volume of research results.
 
 ### 2.3. Langsearch API (Legal Research)
 

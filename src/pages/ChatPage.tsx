@@ -25,7 +25,7 @@ interface ChatMessage {
   isStreaming?: boolean;
 }
 
-type ResearchMode = 'quick_lookup' | 'moderate_research' | 'deep_research';
+type ResearchMode = 'no_research' | 'moderate_research' | 'deep_research'; // Renamed 'quick_lookup' to 'no_research'
 type AiModelMode = 'auto' | 'deep_think';
 
 const ChatPage = () => {
@@ -39,7 +39,7 @@ const ChatPage = () => {
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const [researchMode, setResearchMode] = useState<ResearchMode>('quick_lookup');
+  const [researchMode, setResearchMode] = useState<ResearchMode>('no_research'); // Default to 'no_research'
   const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
   const [contentToSaveToCanvas, setContentToSaveToCanvas] = useState('');
@@ -316,7 +316,7 @@ const ChatPage = () => {
                   <SelectValue placeholder="Research Mode" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="quick_lookup">Quick Lookup</SelectItem>
+                  <SelectItem value="no_research">No Research</SelectItem> {/* Renamed */}
                   <SelectItem value="moderate_research">Moderate Research</SelectItem>
                   <SelectItem value="deep_research">Deep Research</SelectItem>
                 </SelectContent>

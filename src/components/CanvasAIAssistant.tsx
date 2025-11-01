@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square, Sparkles } from 'lucide-react'; // Added Sparkles icon
+import { Send, Square, Sparkles } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
@@ -17,7 +17,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"; // Import DropdownMenu components
+} from "@/components/ui/dropdown-menu";
+import { parseAIResponse } from '@/utils/aiResponseParser'; // Import from new utility file
 
 interface ChatMessage {
   id: string;
@@ -36,10 +37,10 @@ interface CanvasAIAssistantProps {
   isAIWritingToCanvas: boolean;
   aiOutputFontFamily: string;
   setAiOutputFontFamily: (font: string) => void;
-  aiDocumentAction: 'append' | 'replace' | null; // NEW: Prop for specific AI document action
+  aiDocumentAction: 'append' | 'replace' | null;
 }
 
-type ResearchMode = 'none' | 'medium' | 'max'; // Define ResearchMode type
+type ResearchMode = 'none' | 'medium' | 'max';
 
 const fonts = [
   { name: 'Inter', style: 'font-inter' },
@@ -51,37 +52,6 @@ const fonts = [
   { name: 'Verdana', style: 'font-verdana' },
 ];
 
-const parseAIResponse = (fullAIResponse: string) => {
-  let chatResponse = fullAIResponse;
-  let documentUpdate: { type: 'append' | 'replace'; content: string } | null = null;
-
-  // Regex to find a complete <DOCUMENT_REPLACE>...</DOCUMENT_REPLACE> block
-  const completeReplaceRegex = /<DOCUMENT_REPLACE>(.*?)<\/DOCUMENT_REPLACE>/s;
-  const completeReplaceMatch = fullAIResponse.match(completeReplaceRegex);
-
-  // Regex to find a complete <DOCUMENT_WRITE>...</DOCUMENT_WRITE> block
-  const completeWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
-  const completeWriteMatch = fullAIResponse.match(completeWriteRegex);
-
-  if (completeReplaceMatch && completeReplaceMatch[1]) {
-    documentUpdate = { type: 'replace', content: completeReplaceMatch[1].trim() };
-    chatResponse = fullAIResponse.replace(completeReplaceRegex, '').trim();
-  } else if (completeWriteMatch && completeWriteMatch[1]) {
-    documentUpdate = { type: 'append', content: completeWriteMatch[1].trim() };
-    chatResponse = fullAIResponse.replace(completeWriteRegex, '').trim();
-  }
-
-  // Additionally, for streaming, we need to remove any *partial* document tags and their content
-  // This regex will match:
-  // 1. An opening <DOCUMENT_REPLACE> tag and everything after it until the end of the string
-  // 2. An opening <DOCUMENT_WRITE> tag and everything after it until the end of the string
-  // This ensures that during streaming, the raw tag content doesn't show up in the chat.
-  const partialTagStripRegex = /<(DOCUMENT_REPLACE|DOCUMENT_WRITE)>[\s\S]*$/;
-  chatResponse = chatResponse.replace(partialTagStripRegex, '').trim();
-
-  return { chatResponse, documentUpdate };
-};
-
 const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   writingContent,
   onAIDocumentUpdate,
@@ -91,21 +61,20 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   isAIWritingToCanvas,
   aiOutputFontFamily,
   setAiOutputFontFamily,
-  aiDocumentAction, // NEW: Destructure aiDocumentAction
+  aiDocumentAction,
 }) => {
   const { session } = useSession();
   const [inputMessage, setInputMessage] = useState<string>('');
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
-  const [isAITyping, setIsAITyping] = useState(false); // New state for dynamic thinking indicator
-  const [researchMode, setResearchMode] = useState<ResearchMode>('none'); // New state for research mode
-  const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null); // NEW: State for detailed loading message
+  const [isAITyping, setIsAITyping] = useState(false);
+  const [researchMode, setResearchMode] = useState<ResearchMode>('none');
+  const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for ScrollArea viewport
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (lastMessageRef.current && scrollAreaRef.current) {
       const { scrollHeight, scrollTop, clientHeight } = scrollAreaRef.current;
-      // Only auto-scroll if user is at or near the bottom (within 100px)
       if (scrollHeight - scrollTop - clientHeight < 100) {
         lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
       }
@@ -132,33 +101,31 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
 
     const updatedChatHistory = [...aiChatHistory.filter(msg => !msg.isStreaming), newUserMessage];
     onAIChatHistoryChange(updatedChatHistory);
-    setInputMessage(''); // Clear input only if it was a manual message
+    setInputMessage('');
     setLoadingAIResponse(true);
-    setIsAITyping(false); // Reset isAITyping before AI starts thinking
-    setDetailedLoadingMessage(null); // NEW: Reset detailed message
+    setIsAITyping(false);
+    setDetailedLoadingMessage(null);
 
     const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
-    // Add a placeholder AI message for streaming
     onAIChatHistoryChange((prevHistory) => [
-      ...prevHistory.filter(msg => msg.id !== streamingAIMessageId), // Remove any previous streaming message
+      ...prevHistory.filter(msg => msg.id !== streamingAIMessageId),
       { id: streamingAIMessageId, role: 'assistant', content: '', isStreaming: true, created_at: new Date().toISOString() },
     ]);
 
     let fullAIResponseContent = '';
-    let lastChatResponseLength = 0; // Track length of chat content
+    let lastChatResponseLength = 0;
     try {
       for await (const chunk of getLongCatCompletion(updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content })), {
-        researchMode: researchMode, // Pass the selected research mode
+        researchMode: researchMode,
         userId: session.user.id,
         currentDocumentContent: writingContent,
-        onStatusUpdate: setDetailedLoadingMessage, // NEW: Pass the status update callback
+        onStatusUpdate: setDetailedLoadingMessage,
       })) {
         if (chunk) {
           fullAIResponseContent += chunk;
           
           const { chatResponse: currentChatResponse } = parseAIResponse(fullAIResponseContent);
 
-          // Only set isAITyping to true if the chat response actually has content or is growing
           if (currentChatResponse.length > lastChatResponseLength) {
             setIsAITyping(true);
           }
@@ -173,17 +140,14 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         }
       }
 
-      // After streaming is complete, parse the final full response
       const { chatResponse, documentUpdate } = parseAIResponse(fullAIResponseContent);
 
-      // Update the final AI chat message
       onAIChatHistoryChange((prevHistory) =>
         prevHistory.map((msg) =>
           msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
         )
       );
 
-      // Apply document update if present
       if (documentUpdate) {
         onAIDocumentUpdate(documentUpdate);
       }
@@ -194,8 +158,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       onAIChatHistoryChange((prevHistory) => prevHistory.filter(msg => msg.id !== streamingAIMessageId));
     } finally {
       setLoadingAIResponse(false);
-      setIsAITyping(false); // Reset isAITyping when AI response completes
-      setDetailedLoadingMessage(null); // NEW: Clear detailed message on completion/error
+      setIsAITyping(false);
+      setDetailedLoadingMessage(null);
     }
   };
 
@@ -236,7 +200,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   };
 
   const getChatLoadingMessage = () => {
-    if (detailedLoadingMessage) { // NEW: Use detailed message if available
+    if (detailedLoadingMessage) {
       return detailedLoadingMessage;
     }
     if (aiDocumentAction === 'append') {
@@ -249,9 +213,9 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
 
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
-      <CardHeader className="border-b p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between"> {/* Made responsive */}
+      <CardHeader className="border-b p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="text-lg mb-2 sm:mb-0">AI Assistant</CardTitle>
-        <div className="flex flex-wrap items-center gap-2"> {/* Made responsive */}
+        <div className="flex flex-wrap items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 text-sm" aria-label="Drafting actions">
@@ -284,7 +248,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           </DropdownMenu>
 
           <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select research mode"> {/* Made responsive */}
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select research mode">
               <SelectValue placeholder="Research Mode" />
             </SelectTrigger>
             <SelectContent>
@@ -294,7 +258,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
             </SelectContent>
           </Select>
           <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select AI output font"> {/* Made responsive */}
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select AI output font">
               <SelectValue placeholder="AI Output Font" />
             </SelectTrigger>
             <SelectContent>
@@ -340,11 +304,11 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
                   </div>
                 </div>
               ))}
-              {loadingAIResponse && !isAITyping && ( // Only show "thinking" if loading but not yet typing
+              {loadingAIResponse && !isAITyping && (
                 <div className="flex justify-start w-full">
                   <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full">
                     <Square className="h-4 w-4 animate-spin" />
-                    <span>{getChatLoadingMessage()}</span> {/* NEW: Use specific loading message */}
+                    <span>{getChatLoadingMessage()}</span>
                   </div>
                 </div>
               )}

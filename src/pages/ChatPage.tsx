@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square, Save } from 'lucide-react'; // Import Save icon
+import { Send, Square, Save } from 'lucide-react';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
@@ -14,7 +14,8 @@ import NewChatWelcome from '@/components/NewChatWelcome';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import SaveToCanvasDialog from '@/components/SaveToCanvasDialog'; // Import the new dialog component
+import SaveToCanvasDialog from '@/components/SaveToCanvasDialog';
+import { parseAIResponse } from '@/utils/aiResponseParser'; // Import from new utility file
 
 interface ChatMessage {
   id: string;
@@ -25,30 +26,6 @@ interface ChatMessage {
 }
 
 type ResearchMode = 'none' | 'medium' | 'max';
-
-const parseAIResponse = (fullAIResponse: string) => {
-  let chatResponse = fullAIResponse;
-  let documentUpdate: { type: 'append' | 'replace'; content: string } | null = null;
-
-  const completeReplaceRegex = /<DOCUMENT_REPLACE>(.*?)<\/DOCUMENT_REPLACE>/s;
-  const completeReplaceMatch = fullAIResponse.match(completeReplaceRegex);
-
-  const completeWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
-  const completeWriteMatch = fullAIResponse.match(completeWriteRegex);
-
-  if (completeReplaceMatch && completeReplaceMatch[1]) {
-    documentUpdate = { type: 'replace', content: completeReplaceMatch[1].trim() };
-    chatResponse = fullAIResponse.replace(completeReplaceRegex, '').trim();
-  } else if (completeWriteMatch && completeWriteMatch[1]) {
-    documentUpdate = { type: 'append', content: completeWriteMatch[1].trim() };
-    chatResponse = fullAIResponse.replace(completeWriteRegex, '').trim();
-  }
-
-  const partialTagStripRegex = /<(DOCUMENT_REPLACE|DOCUMENT_WRITE)>[\s\S]*$/;
-  chatResponse = chatResponse.replace(partialTagStripRegex, '').trim();
-
-  return { chatResponse, documentUpdate };
-};
 
 const ChatPage = () => {
   const { supabase, session } = useSession();
@@ -64,7 +41,7 @@ const ChatPage = () => {
   const [researchMode, setResearchMode] = useState<ResearchMode>('none');
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
   const [contentToSaveToCanvas, setContentToSaveToCanvas] = useState('');
-  const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null); // NEW: State for detailed loading message
+  const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -160,7 +137,7 @@ const ChatPage = () => {
       setInputMessage('');
       setLoadingAIResponse(true);
       setIsAITyping(false);
-      setDetailedLoadingMessage(null); // NEW: Reset detailed message
+      setDetailedLoadingMessage(null);
 
       if (!activeConversationId) {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
@@ -240,7 +217,7 @@ const ChatPage = () => {
         for await (const chunk of getLongCatCompletion(messagesForAI, {
           researchMode: researchMode,
           userId: session.user.id,
-          onStatusUpdate: setDetailedLoadingMessage, // NEW: Pass the status update callback
+          onStatusUpdate: setDetailedLoadingMessage,
         })) {
           if (chunk) {
             fullAIResponseContent += chunk;
@@ -299,7 +276,7 @@ const ChatPage = () => {
       } finally {
         setLoadingAIResponse(false);
         setIsAITyping(false);
-        setDetailedLoadingMessage(null); // NEW: Clear detailed message on completion/error
+        setDetailedLoadingMessage(null);
       }
     }
   };
@@ -331,7 +308,7 @@ const ChatPage = () => {
           <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Chat</CardTitle>
             <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
-              <SelectTrigger className="w-full md:w-[180px] h-9 text-sm"> {/* Made responsive */}
+              <SelectTrigger className="w-full md:w-[180px] h-9 text-sm">
                 <SelectValue placeholder="Research Mode" />
               </SelectTrigger>
               <SelectContent>
@@ -355,7 +332,7 @@ const ChatPage = () => {
                         className={`p-3 rounded-lg text-sm ${
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground max-w-[70%]'
-                            : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full flex flex-col' // Added flex-col for button placement
+                            : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full flex flex-col'
                         }`}
                       >
                         {message.role === 'assistant' ? (
@@ -363,7 +340,7 @@ const ChatPage = () => {
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                               {message.content}
                             </ReactMarkdown>
-                            {!message.isStreaming && ( // Only show save button for completed AI messages
+                            {!message.isStreaming && (
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -384,7 +361,7 @@ const ChatPage = () => {
                     <div className="flex justify-start w-full">
                       <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full">
                         <Square className="h-4 w-4 animate-spin" />
-                        <span>{detailedLoadingMessage || "JudgiAI is thinking..."}</span> {/* NEW: Use detailed message */}
+                        <span>{detailedLoadingMessage || "JudgiAI is thinking..."}</span>
                       </div>
                     </div>
                   )}

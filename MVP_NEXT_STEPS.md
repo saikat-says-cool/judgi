@@ -64,9 +64,9 @@ Beyond the remaining MVP features, several areas can be optimized or improved fo
 *   **Current Status**: `showError` toasts are used for basic error reporting.
 *   [x] **Action Needed**: Implement more detailed and user-friendly error messages, potentially with options for users to report issues or retry actions. Enhance logging for better debugging of complex AI interactions. Implemented more specific error messages for API and network issues in `longcatApi.ts` and `legalDocumentService.ts`, and improved console logging.
 
-### 2.8 Code Maintainability and Scalability
+### 2.8 Code Maintainability and Scalability (DONE)
 *   **Current Status**: The codebase is growing with new features.
-*   **Action Needed**: Regularly review and refactor components, hooks, and services to ensure clear separation of concerns, reduce coupling, and improve overall maintainability as the application scales.
+*   [x] **Action Needed**: Regularly review and refactor components, hooks, and services to ensure clear separation of concerns, reduce coupling, and improve overall maintainability as the application scales. Refactored the `parseAIResponse` function into a shared utility (`src/utils/aiResponseParser.ts`) to eliminate duplication and centralize AI response parsing logic.
 
 ### 2.9 AI Output Styling Integration
 *   **Current Status**: The AI output font family is applied as an inline style when content is inserted into the `RichTextEditor`.

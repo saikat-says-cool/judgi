@@ -6,42 +6,42 @@
 
 @layer base {
   :root { /* This will now be the default dark theme */
-    --background: 220 10% 3%;
-    --foreground: 180 20% 98%; /* Made foreground brighter, closer to pure white */
+    --background: 220 10% 5%; /* Slightly lighter background for depth */
+    --foreground: 180 20% 98%;
 
-    --card: 180 10% 10%;
-    --card-foreground: 180 20% 98%; /* Using brighter foreground */
+    --card: 180 10% 12%; /* Slightly lighter card for contrast */
+    --card-foreground: 180 20% 98%;
 
-    --popover: 180 10% 10%;
-    --popover-foreground: 180 20% 98%; /* Using brighter foreground */
+    --popover: 180 10% 12%;
+    --popover-foreground: 180 20% 98%;
 
-    --primary: 180 60% 40%;
-    --primary-foreground: 180 20% 98%; /* Using brighter foreground */
+    --primary: 180 70% 45%; /* More vibrant primary color */
+    --primary-foreground: 180 20% 98%;
 
-    --secondary: 180 10% 15%;
-    --secondary-foreground: 180 20% 98%; /* Using brighter foreground */
+    --secondary: 180 10% 18%; /* Slightly lighter secondary for better distinction */
+    --secondary-foreground: 180 20% 98%;
 
-    --muted: 180 10% 12%;
-    --muted-foreground: 180 20% 70%;
+    --muted: 180 10% 15%; /* Adjusted muted for better contrast */
+    --muted-foreground: 180 20% 75%; /* Brighter muted foreground */
 
-    --accent: 180 10% 15%;
-    --accent-foreground: 180 20% 98%; /* Using brighter foreground */
+    --accent: 180 10% 18%;
+    --accent-foreground: 180 20% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 180 10% 20%;
-    --input: 180 10% 10%;
-    --ring: 180 60% 40%;
+    --border: 180 10% 25%; /* Stronger border for definition */
+    --input: 180 10% 12%; /* Consistent with card/popover */
+    --ring: 180 70% 45%; /* Consistent with primary */
 
     --radius: 0.5rem;
 
     /* Custom prose-invert variables for dark mode */
     --tw-prose-invert-body: hsl(var(--foreground));
-    --tw-prose-invert-headings: hsl(var(--foreground)); /* Explicitly set to foreground */
+    --tw-prose-invert-headings: hsl(var(--foreground));
     --tw-prose-invert-lead: hsl(var(--muted-foreground));
-    --tw-prose-invert-links: hsl(var(--foreground)); /* Changed to foreground for better visibility */
-    --tw-prose-invert-bold: hsl(var(--foreground)); /* Explicitly set to foreground */
+    --tw-prose-invert-links: hsl(var(--primary)); /* Links use primary color */
+    --tw-prose-invert-bold: hsl(var(--foreground));
     --tw-prose-invert-counters: hsl(var(--muted-foreground));
     --tw-prose-invert-bullets: hsl(var(--muted-foreground));
     --tw-prose-invert-hr: hsl(var(--border));
@@ -54,9 +54,6 @@
     --tw-prose-invert-th-borders: hsl(var(--border));
     --tw-prose-invert-td-borders: hsl(var(--border));
   }
-
-  /* Removed the .dark selector as :root now defines dark mode */
-  /* Removed the light theme variables as we are reverting to dark mode only */
 }
 
 @layer base {
@@ -86,7 +83,9 @@
 
   /* Ensure links are foreground color */
   .prose.dark\:prose-invert a {
-    color: hsl(var(--foreground)) !important;
+    color: hsl(var(--primary)) !important; /* Links use primary color */
+    text-decoration: underline; /* Add underline for clarity */
+    text-underline-offset: 2px;
   }
 
   /* Ensure italicized text is foreground color */

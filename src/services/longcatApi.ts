@@ -109,10 +109,10 @@ export const getLongCatCompletion = async function* (
       let newsDocsCount = 0;
 
       if (researchMode === 'moderate_research') {
-        legalDocsCount = 2;
+        legalDocsCount = 5; // Increased from 2
       } else if (researchMode === 'deep_research') {
-        legalDocsCount = 5;
-        newsDocsCount = 2;
+        legalDocsCount = 10; // Increased from 5
+        newsDocsCount = 5; // Increased from 2
       }
 
       if (legalDocsCount > 0) {

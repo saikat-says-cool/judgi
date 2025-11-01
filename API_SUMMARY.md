@@ -49,8 +49,8 @@ The LongCat API powers the conversational AI capabilities in both the chat inter
         *   `deep_think` mode uses `LongCat-Flash-Thinking` with `enable_thinking: true` and `thinking_budget: 1024` for more in-depth processing.
     *   **Research Modes (`researchMode`)**: The `researchMode` parameter (`quick_lookup`, `moderate_research`, `deep_research`) now *only* controls the depth of external research calls to Langsearch.
         *   `quick_lookup`: No external research.
-        *   `moderate_research`: Fetches 2 legal documents.
-        *   `deep_research`: Fetches 5 legal documents and 2 news articles.
+        *   `moderate_research`: Fetches 5 legal documents.
+        *   `deep_research`: Fetches 10 legal documents and 5 news articles.
     *   **System Prompt Construction**:
         *   The system prompt (`systemPrompt`) is dynamically constructed to define JudgiAI's persona as a legal assistant.
         *   It includes the **current date and time** for contextual awareness.
@@ -90,7 +90,7 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
 
 *   **`RichTextEditor`**: The main writing area uses `@tiptap/react` to provide a rich text editing experience. It stores content as HTML.
     *   Features include bold, italic, underline, strikethrough, code, headings, lists, blockquotes, text alignment, undo/redo, and user-selectable font families.
-    *   **Performance Optimization**: Debounced content updates are implemented to reduce the frequency of state updates and auto-saves while typing, improving performance for large documents.
+    *   **Performance Optimization**: Debounced content updates are implemented to reduce the frequency of state updates and auto-saves while typing, improving overall performance for large documents.
 *   **Markdown/HTML Conversion**:
     *   `src/lib/markdownConverter.ts` provides utility functions (`markdownToHtml`, `htmlToMarkdownConverter`) to seamlessly convert between Markdown (for AI communication) and HTML (for the `RichTextEditor`).
     *   When AI needs to read the document, the HTML content is converted to Markdown.

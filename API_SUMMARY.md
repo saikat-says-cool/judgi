@@ -18,11 +18,11 @@ JudgiAI relies on three main API integrations:
 
 Supabase serves as the backend for JudgiAI, handling authentication, database management, and real-time updates.
 
-*   **Client Setup**: The Supabase client is initialized in `src/integrations/supabase/client.ts` using environment variables for the URL and public key.
+*   **Client Setup**: The Supabase client is initialized in `src/integrations/supabase/client.ts` using environment variables for the URL and public key. The `SessionContextProvider` now correctly imports and uses this singleton client, resolving warnings about multiple client instances.
 *   **Authentication**:
     *   User authentication (sign-up, sign-in, session management) is handled by `@supabase/auth-ui-react` and `SessionContextProvider`.
     *   The login page (`src/pages/Login.tsx`) is configured to support email/password and Google OAuth providers.
-    *   User sessions are managed via `supabase.auth.onAuthStateChange`, redirecting users based on their authentication status.
+    *   User sessions are managed via `supabase.auth.onAuthStateChange`, redirecting users based on their authentication status. The `LandingPage` now handles navigation within a `useEffect` to prevent React warnings about state updates during render.
     *   User profiles are stored in the `public.profiles` table, automatically created and populated on new user sign-up via a PostgreSQL trigger (`handle_new_user` function).
     *   A dedicated `ProfileSettingsPage` allows users to view and update their profile information (first name, last name, country).
 *   **Database**:
@@ -130,6 +130,6 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
 *   **Markdown Rendering**: `react-markdown` with `remark-gfm` is used to render Markdown content in chat messages and AI assistant responses, ensuring rich text display.
 *   **Accessibility**: `aria-label` attributes have been added to all icon-only buttons across the application for improved screen reader support.
 *   **Code Maintainability**: The `parseAIResponse` function has been refactored into a shared utility (`src/utils/aiResponseParser.ts`) to centralize AI response parsing logic, improving code maintainability and scalability.
-*   **Voice Input**: Integrated a `VoiceRecorder` component into chat input fields, allowing users to record audio, see a visual audio level, and transcribe it into the input box using AssemblyAI's REST API.
+*   **Voice Input**: Integrated a `VoiceRecorder` component into chat input fields, allowing users to record audio, see a visual audio level, and transcribe it into the input box using AssemblyAI's REST API. **The `VoiceRecorder` component has been refactored to ensure robust lifecycle management, preventing premature stopping and correctly triggering transcription after audio collection. A `isTranscribingAudio` state has been added to disable input and display a loading spinner during the transcription process, providing clear user feedback.**
 
 This summary highlights the key technical components and their interactions, forming the foundation of the JudgiAI application.

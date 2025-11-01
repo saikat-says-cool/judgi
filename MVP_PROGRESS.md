@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time.
+**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription.**
 
 ---
 
@@ -81,5 +81,8 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.2.3 Dark Links in Markdown:** Fixed an issue where links within Markdown content were too dark to read against the background by adjusting the `--tw-prose-invert-links` variable in `src/globals.css`.
 - [x] **3.2.4 Hyperlinked Text Visibility:** Addressed the issue where hyperlinked text was indistinguishable by adding a direct CSS override for `a` tags within `.prose.dark\:prose-invert` to ensure they use `hsl(var(--foreground)) !important`.
 - [x] **3.2.5 Italicized, Quoted, and Bullet-Pointed Text Visibility:** Fixed visibility issues for italicized text, blockquotes, and list items within Markdown by adding direct CSS overrides to ensure they use `hsl(var(--foreground)) !important`.
+- [x] **3.2.6 Voice Recorder Unresponsiveness:** Refactored the `VoiceRecorder` component (`src/components/VoiceRecorder.tsx`) to ensure its `useEffect` hook correctly manages the `MediaRecorder` lifecycle, preventing premature stopping and ensuring the "tick" button correctly triggers transcription after audio collection. This resolved the issue where the microphone button appeared unresponsive.
+- [x] **3.2.7 Supabase Client Warning**: Updated `SessionContext.tsx` to import and use the singleton Supabase client from `src/integrations/supabase/client.ts`, resolving the warning about multiple GoTrueClient instances.
+- [x] **3.2.8 React Router Warning**: Moved the navigation logic in `LandingPage.tsx` into a `useEffect` hook to prevent React warnings about state updates during the render phase.
 
 ---

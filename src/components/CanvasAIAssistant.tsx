@@ -216,6 +216,12 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       case 'expand_section':
         prompt = 'Please expand on the last section of the current document, adding more detail and relevant legal points.';
         break;
+      case 'suggest_argument':
+        prompt = 'Based on the current document content, suggest the next logical argument or section to add.';
+        break;
+      case 'suggest_precedents':
+        prompt = 'Based on the current document content, suggest relevant legal precedents and their citations. Provide them as Markdown links.';
+        break;
       default:
         return;
     }
@@ -254,6 +260,12 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleDraftingAction('expand_section')}>
                 Expand Last Section
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDraftingAction('suggest_argument')}>
+                Suggest Next Argument
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDraftingAction('suggest_precedents')}>
+                Suggest Precedents for Document
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

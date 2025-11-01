@@ -20,12 +20,15 @@ The core functionalities for the MVP are largely in place, but a few key aspects
 
 ### 1.3 AI-Assisted Drafting Features in Copilot Canvas
 *   **Goal**: The Copilot Canvas should offer advanced AI assistance beyond just replacing or appending content. This includes auto-completion, suggesting precedents, reformatting drafts, and auto-generating footnotes/citations.
-*   **Current Status**: The AI can replace or append content to the canvas, and it has access to research results. However, the more nuanced, real-time, and structured drafting aids are not yet explicitly implemented.
+*   **Current Status**: The AI can replace or append content to the canvas, and it has access to research results.
     *   **Auto-completes arguments based on context**: This implies interactive suggestions as the user types.
     *   **Suggests relevant precedents while typing**: Similar to auto-completion, but specifically for legal precedents.
     *   [x] **Reformats drafts into proper legal language or structure**: Implemented a "Drafting Actions" dropdown in the Canvas AI Assistant, allowing users to trigger AI actions like "Summarize Document", "Draft as Petition", "Improve Legal Language", and "Expand Last Section". These actions send specific prompts to the AI to modify the document content.
     *   **Auto-generates footnotes/citations**: This is a specific drafting feature that would require the AI to insert correctly formatted citations directly into the `RichTextEditor`.
-*   **Action Needed**: Develop specific AI prompts and UI integrations to enable these advanced drafting features. This might involve new UI components or specific commands that the AI can interpret to perform these actions within the `RichTextEditor`.
+*   **Refined Approach for Auto-completion and Precedent Suggestions (MVP)**: Instead of real-time "while typing" features, which are complex for an MVP, we will implement these as **on-demand drafting actions** within the Canvas AI Assistant. This provides valuable AI assistance without the technical overhead and potential instability of deep editor integrations.
+    *   **Action Needed (On-demand Argument Completion)**: Add a "Suggest Next Argument" or "Expand Current Thought" action to the Drafting Actions dropdown.
+    *   **Action Needed (On-demand Precedent Suggestions)**: Add a "Suggest Precedents for Document" or "Suggest Precedents for Selection" action to the Drafting Actions dropdown.
+*   **Action Needed (Auto-generate Footnotes/Citations)**: Develop specific AI prompts and UI integrations to enable this advanced drafting feature. This might involve new UI components or specific commands that the AI can interpret to perform these actions within the `RichTextEditor`.
 
 ---
 

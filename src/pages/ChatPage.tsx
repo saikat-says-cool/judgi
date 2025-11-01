@@ -68,15 +68,21 @@ const ChatPage = () => {
         return;
       }
 
+      // If we are actively initializing a new chat, we don't need to load history.
+      // The messages are being managed by handleSendMessage.
+      if (isInitializingNewChat) {
+        setLoadingHistory(false); // Ensure loading state is off
+        return;
+      }
+
       if (conversationId === 'new') {
         setMessages([]);
         setCurrentConversationId(null);
         setLoadingHistory(false);
-        setIsInitializingNewChat(false); // Reset this when on 'new' route
       } else if (conversationId) {
         // Only fetch if the conversationId has actually changed
-        // or if messages are empty AND we are not currently initializing a new chat
-        if (conversationId !== currentConversationId || (messages.length === 0 && !isInitializingNewChat)) {
+        // or if messages are empty (e.g., first load of an existing chat)
+        if (conversationId !== currentConversationId || messages.length === 0) {
           setLoadingHistory(true);
           const { data, error } = await supabase
             .from('chats')
@@ -92,7 +98,7 @@ const ChatPage = () => {
           } else if (data) {
             setMessages(data as ChatMessage[]);
           }
-          setCurrentConversationId(conversationId); // Update internal tracking after fetch
+          setCurrentConversationId(conversationId);
           setLoadingHistory(false);
         }
       } else {

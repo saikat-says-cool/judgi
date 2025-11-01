@@ -60,9 +60,9 @@ Beyond the remaining MVP features, several areas can be optimized or improved fo
 *   **Current Status**: `shadcn/ui` provides a good foundation, but custom components and interactions might have accessibility gaps.
 *   [x] **Action Needed**: Conduct a thorough accessibility audit to ensure the application is usable by individuals with disabilities, covering keyboard navigation, screen reader compatibility, color contrast, and ARIA attributes. Added `aria-label` attributes to all icon-only buttons across the application for improved screen reader support.
 
-### 2.7 Robust Error Handling and User Feedback
+### 2.7 Robust Error Handling and User Feedback (DONE)
 *   **Current Status**: `showError` toasts are used for basic error reporting.
-*   **Action Needed**: Implement more detailed and user-friendly error messages, potentially with options for users to report issues or retry actions. Enhance logging for better debugging of complex AI interactions.
+*   [x] **Action Needed**: Implement more detailed and user-friendly error messages, potentially with options for users to report issues or retry actions. Enhance logging for better debugging of complex AI interactions. Implemented more specific error messages for API and network issues in `longcatApi.ts` and `legalDocumentService.ts`, and improved console logging.
 
 ### 2.8 Code Maintainability and Scalability
 *   **Current Status**: The codebase is growing with new features.

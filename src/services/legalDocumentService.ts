@@ -24,32 +24,47 @@ const makeLangsearchRequest = async (
 ): Promise<Response> => {
   for (let i = 0; i < maxRetries; i++) {
     const apiKey = getLangsearchApiKey();
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-    if (response.status === 429) {
-      console.warn(`Langsearch API rate limit hit for key. Retrying with next key... (Attempt ${i + 1}/${maxRetries})`);
-      rotateLangsearchApiKey();
-      // Add a small delay before retrying to respect rate limits
-      await new Promise(resolve => setTimeout(resolve, 1000)); 
-      continue;
+      if (response.status === 429) {
+        console.warn(`Langsearch API rate limit hit for key. Retrying with next key... (Attempt ${i + 1}/${maxRetries})`);
+        rotateLangsearchApiKey();
+        // Add a small delay before retrying to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000)); 
+        continue;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(`Error from Langsearch API (${url}, Status: ${response.status}):`, errorData);
+        if (response.status === 401) {
+          throw new Error("Authentication failed with Langsearch API. Please check your API key.");
+        } else {
+          throw new Error(`Langsearch API error: ${response.statusText} - ${errorData.message || 'Unknown error'}`);
+        }
+      }
+
+      return response;
+    } catch (error: any) {
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        // This is a network error (e.g., offline, CORS issue, invalid URL)
+        console.error(`Network error during Langsearch API request to ${url}:`, error.message);
+        throw new Error(`Network error during Langsearch API request. Please check your internet connection or API URL.`);
+      } else {
+        // Re-throw other errors, including those from response.json() or custom errors
+        throw error;
+      }
     }
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error(`Error from Langsearch API (${url}):`, errorData);
-      throw new Error(`Langsearch API error: ${response.statusText} - ${errorData.message || 'Unknown error'}`);
-    }
-
-    return response;
   }
-  throw new Error("All Langsearch API keys exhausted or persistent rate limits encountered.");
+  throw new Error("All Langsearch API keys exhausted or persistent rate limits encountered. Please try again later.");
 };
 
 const performRerank = async (query: string, documents: string[], top_n: number): Promise<{ index: number; document: { text: string }; relevance_score: number }[]> => {
@@ -103,6 +118,7 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
     }));
 
     if (candidateDocuments.length === 0) {
+      console.warn("No candidate documents found for legal search query:", initialQuery);
       return [];
     }
 
@@ -121,7 +137,7 @@ export const searchLegalDocuments = async (query: string, count: number = 5, cou
     return finalLegalDocuments;
   } catch (error) {
     console.error("Error in searchLegalDocuments with Langsearch:", error);
-    throw error;
+    throw error; // Re-throw to be caught by the calling function (getLongCatCompletion)
   }
 };
 
@@ -161,6 +177,7 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
     }));
 
     if (candidateNews.length === 0) {
+      console.warn("No candidate news articles found for query:", initialQuery);
       return [];
     }
 
@@ -179,6 +196,6 @@ export const searchCurrentNews = async (query: string, count: number = 2, countr
     return finalNewsDocuments;
   } catch (error) {
     console.error("Error in searchCurrentNews with Langsearch:", error);
-    throw error;
+    throw error; // Re-throw to be caught by the calling function (getLongCatCompletion)
   }
 };

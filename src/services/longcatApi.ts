@@ -42,7 +42,7 @@ export const getLongCatCompletion = async function* (
   // Ensure an API key is available before proceeding
   if (getLongCatApiKeyCount() === 0) {
     console.error("No LongCat API keys configured.");
-    throw new Error("LongCat API Key is missing.");
+    throw new Error("LongCat API Key is missing. Please configure your API keys.");
   }
 
   const maxRetries = getLongCatApiKeyCount();
@@ -57,7 +57,8 @@ export const getLongCatCompletion = async function* (
           .single();
 
         if (error) {
-          console.error("Error fetching user country:", error);
+          console.error("Error fetching user country from Supabase:", error);
+          // Do not throw error here, as AI can still function without country context
         } else if (data) {
           userCountry = data.country;
         }
@@ -115,6 +116,8 @@ export const getLongCatCompletion = async function* (
           }
         } catch (error) {
           console.error("Error during legal document search:", error);
+          onStatusUpdate?.("Failed to search legal documents."); // Status update for search failure
+          // Do not rethrow, allow AI to proceed without research results if search fails
         }
       }
 
@@ -131,6 +134,8 @@ export const getLongCatCompletion = async function* (
           }
         } catch (error) {
           console.error("Error during current news search:", error);
+          onStatusUpdate?.("Failed to search current news."); // Status update for news search failure
+          // Do not rethrow, allow AI to proceed without news results if search fails
         }
       }
 
@@ -166,17 +171,28 @@ export const getLongCatCompletion = async function* (
       }
       return; // If successful, exit the retry loop
     } catch (error: any) {
-      if (error.status === 429 || (error.response && error.response.status === 429)) {
-        console.warn(`LongCat API rate limit hit for key. Retrying with next key... (Attempt ${i + 1}/${maxRetries})`);
-        rotateLongCatApiKey();
-        initializeLongCatClient(); // Re-initialize client with new key
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay
-        continue; // Try again with the new key
+      if (error instanceof OpenAI.APIError) {
+        console.error(`LongCat API Error (Status: ${error.status}):`, error.message, error.code, error.type);
+        if (error.status === 429) {
+          console.warn(`LongCat API rate limit hit for key. Retrying with next key... (Attempt ${i + 1}/${maxRetries})`);
+          rotateLongCatApiKey();
+          initializeLongCatClient(); // Re-initialize client with new key
+          onStatusUpdate?.("Rate limit hit. Retrying with a new key...");
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay
+          continue; // Try again with the new key
+        } else if (error.status === 401) {
+          throw new Error("Authentication failed with LongCat API. Please check your API key.");
+        } else {
+          throw new Error(`LongCat API error: ${error.message || 'Unknown API error'}.`);
+        }
+      } else if (error instanceof Error) {
+        console.error("Network or unexpected error calling LongCat API:", error.message);
+        throw new Error(`Network error or unexpected issue: ${error.message}. Please check your internet connection.`);
       } else {
-        console.error("Error calling LongCat API:", error);
-        throw new Error("Failed to get AI response. Please check your API key and network connection.");
+        console.error("An unknown error occurred:", error);
+        throw new Error("An unknown error occurred while getting AI response.");
       }
     }
   }
-  throw new Error("All LongCat API keys exhausted or persistent rate limits encountered.");
+  throw new Error("All LongCat API keys exhausted or persistent rate limits encountered. Please try again later.");
 };

@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Furthermore, browser retention has been improved to prevent state loss when navigating away and returning to a tab.**
+**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Browser retention has been improved to prevent state loss when navigating away and returning to a tab, and a Vercel deployment syntax error has been resolved. Furthermore, a flicker when starting new chats has been addressed, and a React warning related to the `viewportRef` prop in `ScrollArea` has been fixed.**
 
 ---
 
@@ -33,7 +33,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
     - [x] **Instructed AI to format citations as Markdown links `[Case Title](URL)` in `src/services/longcatApi.ts` system prompt.**
     - [x] **Fixed dark links in Markdown rendering by setting `--tw-prose-invert-links` to `hsl(var(--foreground))` in `src/globals.css` for better visibility.**
     - [x] **Refined Markdown link visibility by adding a direct CSS override for `a` tags within `.prose.dark\:prose-invert` to ensure they use `hsl(var(--foreground)) !important`.**
-    - [x] **Refined the AI system prompt to encourage more relevant citations and hyperlinks from research results.**
+    - [x] **Refined the AI system prompt to encourage more relevant citations and hyperlinks as possible from the provided research results.**
 - [x] **1.3.5 AI Persona & Parameters:** Adjusted AI persona to a general assistant (like ChatGPT) and set parameters (temperature, top_p, max_tokens) to normal-like values. This change is foundational for future, more refined prompt engineering.
 - [x] **1.3.6 Rotating API Keys:** Implemented a system to manage multiple hardcoded API keys for both Langsearch and LongCat, automatically rotating to the next key upon encountering a rate limit (HTTP 429) error.
 - [x] **1.3.7 LongCat API Optimization:** Optimized LongCat API calls to dynamically use the `LongCat-Flash-Thinking` model with `enable_thinking: true` and `thinking_budget: 1024` when "Deep Think" or "Deeper Research" modes are selected, allowing for more in-depth AI processing.
@@ -86,5 +86,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.2.8 React Router Warning**: Moved the navigation logic in `LandingPage.tsx` into a `useEffect` hook to prevent React warnings about state updates during the render phase.
 - [x] **3.2.9 Browser Retention/State Persistence**: Refined the `useEffect` dependencies in `ChatPage.tsx` and `CanvasEditorPage.tsx` to ensure that the component's state (chat messages, document content, etc.) is correctly loaded or reset based on the URL parameters (`conversationId` or `documentId`), preventing loss of context when navigating away and returning to a tab.
 - [x] **3.2.10 Vercel Deployment Syntax Error**: Fixed an "Unexpected ')'" syntax error in `src/pages/CanvasEditorPage.tsx` that was causing Vercel deployments to fail.
+- [x] **3.2.11 Chat Flicker on New Conversation**: Addressed a temporary flicker when sending the first message in a new chat by introducing an `isInitializingNewChat` state and refining the `useEffect` logic in `ChatPage.tsx`.
+- [x] **3.2.12 ScrollArea `viewportRef` Warning**: Fixed a React warning where the `viewportRef` prop was being passed to a native DOM element within the `ScrollArea` component by explicitly filtering it out in `src/components/ui/scroll-area.tsx`.
 
 ---

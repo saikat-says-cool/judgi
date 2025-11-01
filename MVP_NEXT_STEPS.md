@@ -4,7 +4,7 @@ This document outlines the next phases of development for JudgiAI, building upon
 
 ---
 
-**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Browser retention has been improved to prevent state loss when navigating away and returning to a tab, and a Vercel deployment syntax error has been resolved.**
+**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Browser retention has been improved to prevent state loss when navigating away and returning to a tab, and a Vercel deployment syntax error has been resolved. Furthermore, a flicker when starting new chats has been addressed, and a React warning related to the `viewportRef` prop in `ScrollArea` has been fixed.**
 
 ---
 
@@ -14,7 +14,7 @@ This document outlines the next phases of development for JudgiAI, building upon
 - [x] **Action Needed**: Enhance the chat message rendering to parse and display citations from the AI's response in a structured and user-friendly manner. This might involve specific Markdown parsing or AI output formatting to highlight citations.
 
 ### 1.2 "Save Findings to Canvas" from Research Chat (DONE)
-- [x] **Action Needed**: Implement a user interface element (e.g., a "Save to Canvas" button or a context menu option) within the Research Chat that allows users to select and transfer AI-generated content to an existing or new document in the Canvas.
+- [x] **Action Needed**: Implement a user interface element (e.g., a "Save to Canvas" button or a context menu option) within the Research Chat that allows users to select and transfer AI-generated content to an new or existing document in the Canvas.
 
 ### 1.3 AI-Assisted Drafting Features in Copilot Canvas (DONE)
 - [x] **Action Needed**: All core AI-assisted drafting features for the MVP are now implemented as on-demand actions.

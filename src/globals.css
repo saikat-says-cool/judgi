@@ -40,7 +40,7 @@
     --tw-prose-invert-body: hsl(var(--foreground));
     --tw-prose-invert-headings: hsl(var(--foreground)); /* Explicitly set to foreground */
     --tw-prose-invert-lead: hsl(var(--muted-foreground));
-    --tw-prose-invert-links: hsl(var(--primary));
+    --tw-prose-invert-links: hsl(var(--foreground)); /* Changed to foreground for better visibility */
     --tw-prose-invert-bold: hsl(var(--foreground)); /* Explicitly set to foreground */
     --tw-prose-invert-counters: hsl(var(--muted-foreground));
     --tw-prose-invert-bullets: hsl(var(--muted-foreground));

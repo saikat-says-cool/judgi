@@ -84,8 +84,31 @@
     color: hsl(var(--foreground)) !important;
   }
 
-  /* NEW: Ensure links are foreground color */
+  /* Ensure links are foreground color */
   .prose.dark\:prose-invert a {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Ensure italicized text is foreground color */
+  .prose.dark\:prose-invert em {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Ensure blockquotes are foreground color and have proper border */
+  .prose.dark\:prose-invert blockquote {
+    color: hsl(var(--foreground)) !important;
+    border-left-color: hsl(var(--border)) !important; /* Ensure border is visible */
+  }
+
+  /* Ensure list items and their markers are foreground color */
+  .prose.dark\:prose-invert ul li,
+  .prose.dark\:prose-invert ol li {
+    color: hsl(var(--foreground)) !important;
+  }
+  .prose.dark\:prose-invert ul li::before { /* For bullet points */
+    background-color: hsl(var(--foreground)) !important;
+  }
+  .prose.dark\:prose-invert ol li::before { /* For ordered list numbers */
     color: hsl(var(--foreground)) !important;
   }
 

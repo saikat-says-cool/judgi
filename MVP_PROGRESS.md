@@ -80,5 +80,6 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.2.2 Import Syntax Error:** Fixed `Expected 'from', got '=>'` syntax error in `src/pages/ChatPage.tsx`.
 - [x] **3.2.3 Dark Links in Markdown:** Fixed an issue where links within Markdown content were too dark to read against the background by adjusting the `--tw-prose-invert-links` variable in `src/globals.css`.
 - [x] **3.2.4 Hyperlinked Text Visibility:** Addressed the issue where hyperlinked text was indistinguishable by adding a direct CSS override for `a` tags within `.prose.dark\:prose-invert` to ensure they use `hsl(var(--foreground)) !important`.
+- [x] **3.2.5 Italicized, Quoted, and Bullet-Pointed Text Visibility:** Fixed visibility issues for italicized text, blockquotes, and list items within Markdown by adding direct CSS overrides to ensure they use `hsl(var(--foreground)) !important`.
 
 ---

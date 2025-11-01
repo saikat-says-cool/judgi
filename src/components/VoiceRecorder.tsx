@@ -11,7 +11,7 @@ interface VoiceRecorderProps {
   onTranscriptionComplete: (text: string) => void;
   onRecordingCancel: () => void;
   isRecordingActive: boolean;
-  setIsRecordingActive: (active: boolean) => void;
+  setIsRecordingActive: (active: boolean) => void; // Still needed for parent to control initial state
 }
 
 const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
@@ -22,7 +22,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const collectedAudioChunksRef = useRef<Blob[]>([]); // Use ref to collect chunks
+  const collectedAudioChunksRef = useRef<Blob[]>([]);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0); // 0-100 for visual feedback
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -31,6 +31,9 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
   // Function to clean up media resources
   const cleanupMedia = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop(); // Ensure recorder is stopped
+    }
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
@@ -50,28 +53,28 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   // Function to process collected audio chunks for transcription
   const processTranscription = useCallback(async (chunks: Blob[]) => {
     setIsTranscribing(true);
-    setIsRecordingActive(false); // Immediately set recording to inactive in parent
+    // Do NOT call setIsRecordingActive(false) here. Parent will handle it via onTranscriptionComplete/onRecordingCancel.
     cleanupMedia(); // Clean up media resources after chunks are collected
 
     if (chunks.length === 0) {
       showError("No audio recorded.");
+      onRecordingCancel(); // Signal parent to cancel
       setIsTranscribing(false);
-      onRecordingCancel();
       return;
     }
 
     const audioBlob = new Blob(chunks, { type: "audio/webm" });
     try {
       const transcribedText = await transcribeAudio(audioBlob);
-      onTranscriptionComplete(transcribedText);
+      onTranscriptionComplete(transcribedText); // Signal parent with result
     } catch (error) {
       console.error("Transcription error:", error);
       showError(error instanceof Error ? error.message : "Failed to transcribe audio.");
-      onRecordingCancel(); // Go back to normal input on error
+      onRecordingCancel(); // Signal parent to cancel on error
     } finally {
       setIsTranscribing(false);
     }
-  }, [onTranscriptionComplete, onRecordingCancel, setIsRecordingActive, cleanupMedia]);
+  }, [onTranscriptionComplete, onRecordingCancel, cleanupMedia]);
 
   // This useEffect manages the start and stop of the MediaRecorder based on isRecordingActive prop
   useEffect(() => {
@@ -130,7 +133,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         } catch (err) {
           console.error("Error accessing microphone or starting recording:", err);
           showError("Failed to access microphone. Please check permissions and try again.");
-          setIsRecordingActive(false); // Inform parent to stop trying to record
+          onRecordingCancel(); // Signal parent to cancel on error
           cleanupMedia(); // Ensure cleanup on error
         }
       };
@@ -139,13 +142,11 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
     return () => {
       console.log("VoiceRecorder cleanup function running.");
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-        mediaRecorderRef.current.stop(); // Stop recorder if still active
-      }
-      cleanupMedia(); // Ensure all media resources are cleaned up
+      // The cleanupMedia function already handles stopping the recorder and tracks.
+      cleanupMedia(); 
       mediaRecorderRef.current = null;
     };
-  }, [isRecordingActive, setIsRecordingActive, processTranscription, cleanupMedia]);
+  }, [isRecordingActive, processTranscription, cleanupMedia, onRecordingCancel]); // Removed setIsRecordingActive from dependencies
 
   // Memoized function to stop recording and initiate transcription
   const handleSend = useCallback(() => {
@@ -163,9 +164,8 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       mediaRecorderRef.current.stop(); // This will trigger onstop, which calls processTranscription
     }
     cleanupMedia(); // Clean up immediately for cancel
-    setIsRecordingActive(false);
-    onRecordingCancel();
-  }, [onRecordingCancel, setIsRecordingActive, cleanupMedia]);
+    onRecordingCancel(); // Signal parent to cancel
+  }, [onRecordingCancel, cleanupMedia]);
 
   if (isTranscribing) {
     return (

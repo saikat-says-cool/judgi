@@ -35,7 +35,7 @@ Supabase serves as the backend for JudgiAI, handling authentication, database ma
 
 The LongCat API powers the conversational AI capabilities in both the chat interface and the canvas assistant.
 
-*   **Client Initialization**: The `OpenAI` client is initialized in `src/services/longcatApi.ts` with a `baseURL` pointing to `https://api.longcat.chat/openai` and an API key.
+*   **Client Initialization**: The `OpenAI` client is initialized in `src/services/longcatApi.ts` with a `baseURL` pointing to `https://api.longcat.chat/openai` and an `apiKey`.
 *   **API Key Rotation**:
     *   A list of hardcoded LongCat API keys is maintained in `src/utils/longcatApiKeys.ts`.
     *   The `getLongCatApiKey()` and `rotateLongCatApiKey()` functions manage the rotation of keys.
@@ -91,6 +91,7 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
         *   `DOCUMENT_REPLACE`: Overwrites the entire `writingContent` with the AI's output.
         *   `DOCUMENT_WRITE`: Appends the AI's output to the existing `writingContent`.
     *   AI-generated content is styled with a user-selected font family (`aiOutputFontFamily`) before insertion.
+    *   **Specific Loading Feedback**: During AI document updates, the `aiDocumentAction` state in `CanvasEditorPage` is passed to `CanvasAIAssistant`. This allows the AI assistant's chat interface to display specific messages like "JudgiAI is appending to document..." or "JudgiAI is replacing document content..." instead of a generic "JudgiAI is thinking...", providing clearer user feedback during the AI's operation.
 *   **Unsaved Changes**: The `CanvasEditorPage` tracks changes to `writingContent`, `aiChatHistory`, and `documentTitle` to warn users about unsaved work before navigating away. An auto-save mechanism is also implemented.
 *   **Export Functionality**: Documents can be exported as `.docx` or `.pdf` using `docx` and `jspdf` libraries, respectively. The HTML content is converted to plain text (via Markdown) for these exports.
 

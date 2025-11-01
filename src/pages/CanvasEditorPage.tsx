@@ -320,7 +320,7 @@ const CanvasEditorPage = () => {
           value={documentTitle}
           onChange={handleDocumentTitleChange}
           placeholder="Document Title"
-          className="w-64 text-center text-lg font-semibold h-9"
+          className="w-full max-w-xs sm:max-w-sm md:w-64 text-center text-lg font-semibold h-9" {/* Made responsive */}
           disabled={isSaving}
         />
         <Button

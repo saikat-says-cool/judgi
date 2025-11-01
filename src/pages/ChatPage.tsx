@@ -327,7 +327,7 @@ const ChatPage = () => {
           <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Chat</CardTitle>
             <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
-              <SelectTrigger className="w-[180px] h-9 text-sm">
+              <SelectTrigger className="w-full md:w-[180px] h-9 text-sm"> {/* Made responsive */}
                 <SelectValue placeholder="Research Mode" />
               </SelectTrigger>
               <SelectContent>

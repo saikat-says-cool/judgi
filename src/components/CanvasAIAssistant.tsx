@@ -242,9 +242,9 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
 
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
-      <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">AI Assistant</CardTitle>
-        <div className="flex items-center space-x-2">
+      <CardHeader className="border-b p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between"> {/* Made responsive */}
+        <CardTitle className="text-lg mb-2 sm:mb-0">AI Assistant</CardTitle>
+        <div className="flex flex-wrap items-center gap-2"> {/* Made responsive */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 text-sm">
@@ -277,7 +277,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           </DropdownMenu>
 
           <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm"> {/* Made responsive */}
               <SelectValue placeholder="Research Mode" />
             </SelectTrigger>
             <SelectContent>
@@ -287,7 +287,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
             </SelectContent>
           </Select>
           <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm"> {/* Made responsive */}
               <SelectValue placeholder="AI Output Font" />
             </SelectTrigger>
             <SelectContent>

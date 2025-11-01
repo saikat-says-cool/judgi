@@ -30,13 +30,14 @@ interface GetLongCatCompletionOptions {
   researchMode: 'none' | 'medium' | 'max';
   userId: string;
   currentDocumentContent?: string;
+  onStatusUpdate?: (status: string) => void; // New callback for status updates
 }
 
 export const getLongCatCompletion = async function* (
   messages: LongCatMessage[],
   options: GetLongCatCompletionOptions
 ): AsyncGenerator<string, void, unknown> {
-  const { researchMode, userId, currentDocumentContent } = options;
+  const { researchMode, userId, currentDocumentContent, onStatusUpdate } = options;
 
   // Ensure an API key is available before proceeding
   if (getLongCatApiKeyCount() === 0) {
@@ -90,6 +91,7 @@ export const getLongCatCompletion = async function* (
 
       if (researchMode === 'medium' || researchMode === 'max') {
         try {
+          onStatusUpdate?.("Searching legal documents..."); // Status update
           const legalDocs = await searchLegalDocuments(lastUserMessage, researchMode === 'max' ? 5 : 2, userCountry);
           if (legalDocs.length > 0) {
             researchResults += "\n\n<LEGAL_RESEARCH_RESULTS>\n";
@@ -105,6 +107,7 @@ export const getLongCatCompletion = async function* (
 
       if (researchMode === 'max') {
         try {
+          onStatusUpdate?.("Searching current news..."); // Status update
           const newsDocs = await searchCurrentNews(lastUserMessage, 2, userCountry);
           if (newsDocs.length > 0) {
             researchResults += "\n\n<CURRENT_NEWS_RESULTS>\n";
@@ -125,6 +128,7 @@ export const getLongCatCompletion = async function* (
       const messagesForAI: LongCatMessage[] = [{ role: "system", content: systemPrompt }];
       messagesForAI.push(...messages);
 
+      onStatusUpdate?.("Generating AI response..."); // Status update before calling OpenAI
       const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
         model: model,
         messages: messagesForAI,

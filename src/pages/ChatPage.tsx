@@ -64,6 +64,7 @@ const ChatPage = () => {
   const [researchMode, setResearchMode] = useState<ResearchMode>('none');
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
   const [contentToSaveToCanvas, setContentToSaveToCanvas] = useState('');
+  const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null); // NEW: State for detailed loading message
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -159,6 +160,7 @@ const ChatPage = () => {
       setInputMessage('');
       setLoadingAIResponse(true);
       setIsAITyping(false);
+      setDetailedLoadingMessage(null); // NEW: Reset detailed message
 
       if (!activeConversationId) {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
@@ -238,6 +240,7 @@ const ChatPage = () => {
         for await (const chunk of getLongCatCompletion(messagesForAI, {
           researchMode: researchMode,
           userId: session.user.id,
+          onStatusUpdate: setDetailedLoadingMessage, // NEW: Pass the status update callback
         })) {
           if (chunk) {
             fullAIResponseContent += chunk;
@@ -296,6 +299,7 @@ const ChatPage = () => {
       } finally {
         setLoadingAIResponse(false);
         setIsAITyping(false);
+        setDetailedLoadingMessage(null); // NEW: Clear detailed message on completion/error
       }
     }
   };
@@ -380,7 +384,7 @@ const ChatPage = () => {
                     <div className="flex justify-start w-full">
                       <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full">
                         <Square className="h-4 w-4 animate-spin" />
-                        <span>JudgiAI is thinking...</span>
+                        <span>{detailedLoadingMessage || "JudgiAI is thinking..."}</span> {/* NEW: Use detailed message */}
                       </div>
                     </div>
                   )}

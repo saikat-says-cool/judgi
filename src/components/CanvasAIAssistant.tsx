@@ -98,6 +98,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false); // New state for dynamic thinking indicator
   const [researchMode, setResearchMode] = useState<ResearchMode>('none'); // New state for research mode
+  const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null); // NEW: State for detailed loading message
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for ScrollArea viewport
 
@@ -134,6 +135,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     setInputMessage(''); // Clear input only if it was a manual message
     setLoadingAIResponse(true);
     setIsAITyping(false); // Reset isAITyping before AI starts thinking
+    setDetailedLoadingMessage(null); // NEW: Reset detailed message
 
     const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
     // Add a placeholder AI message for streaming
@@ -149,6 +151,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         researchMode: researchMode, // Pass the selected research mode
         userId: session.user.id,
         currentDocumentContent: writingContent,
+        onStatusUpdate: setDetailedLoadingMessage, // NEW: Pass the status update callback
       })) {
         if (chunk) {
           fullAIResponseContent += chunk;
@@ -192,6 +195,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     } finally {
       setLoadingAIResponse(false);
       setIsAITyping(false); // Reset isAITyping when AI response completes
+      setDetailedLoadingMessage(null); // NEW: Clear detailed message on completion/error
     }
   };
 
@@ -232,6 +236,9 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   };
 
   const getChatLoadingMessage = () => {
+    if (detailedLoadingMessage) { // NEW: Use detailed message if available
+      return detailedLoadingMessage;
+    }
     if (aiDocumentAction === 'append') {
       return "JudgiAI is appending to document...";
     } else if (aiDocumentAction === 'replace') {

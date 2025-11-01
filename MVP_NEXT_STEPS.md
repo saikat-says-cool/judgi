@@ -48,9 +48,9 @@ Beyond the remaining MVP features, several areas can be optimized or improved fo
 *   **Current Status**: The `RichTextEditor` handles content as HTML. For very large legal documents, the performance of the editor and the state management for `writingContent` might become a concern.
 *   [x] **Action Needed**: Implemented debounced content updates for the `RichTextEditor` in `CanvasEditorPage.tsx` to reduce the frequency of state updates and auto-saves while typing, improving overall performance.
 
-### 2.4 Enhanced AI Response Latency Feedback
+### 2.4 Enhanced AI Response Latency Feedback (DONE)
 *   **Current Status**: We have "JudgiAI is thinking..." and specific document action messages.
-*   **Action Needed**: For "Deep Think" and "Deeper Research" modes, consider providing more granular feedback on what the AI is doing (e.g., "Searching legal databases...", "Analyzing cases...", "Synthesizing information...") to manage user expectations during longer processing times.
+*   [x] **Action Needed**: For "Deep Think" and "Deeper Research" modes, consider providing more granular feedback on what the AI is doing (e.g., "Searching legal databases...", "Analyzing cases...", "Synthesizing information...") to manage user expectations during longer processing times. Implemented `onStatusUpdate` callback in `getLongCatCompletion` and integrated into `CanvasAIAssistant` and `ChatPage` to display detailed messages.
 
 ### 2.5 Accessibility Review
 *   **Current Status**: `shadcn/ui` provides a good foundation, but custom components and interactions might have accessibility gaps.

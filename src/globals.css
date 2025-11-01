@@ -84,6 +84,11 @@
     color: hsl(var(--foreground)) !important;
   }
 
+  /* NEW: Ensure links are foreground color */
+  .prose.dark\:prose-invert a {
+    color: hsl(var(--foreground)) !important;
+  }
+
   /* Ensure normal paragraph text is white and reduce line spacing */
   .prose.dark\:prose-invert p {
     color: hsl(var(--foreground)) !important;

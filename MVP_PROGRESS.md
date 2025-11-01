@@ -32,6 +32,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **1.3.4 Display AI Response:** Render AI's response, including citations.
     - [x] **Instructed AI to format citations as Markdown links `[Case Title](URL)` in `src/services/longcatApi.ts` system prompt.**
     - [x] **Fixed dark links in Markdown rendering by setting `--tw-prose-invert-links` to `hsl(var(--foreground))` in `src/globals.css` for better visibility.**
+    - [x] **Refined Markdown link visibility by adding a direct CSS override for `a` tags within `.prose.dark\:prose-invert` to ensure they use `hsl(var(--foreground)) !important`.**
 - [x] **1.3.5 AI Persona & Parameters:** Adjusted AI persona to a general assistant (like ChatGPT) and set parameters (temperature, top_p, max_tokens) to normal-like values. This change is foundational for future, more refined prompt engineering.
 - [x] **1.3.6 Rotating API Keys:** Implemented a system to manage multiple hardcoded API keys for both Langsearch and LongCat, automatically rotating to the next key upon encountering a rate limit (HTTP 429) error.
 - [x] **1.3.7 LongCat API Optimization:** Optimized LongCat API calls to dynamically use the `LongCat-Flash-Thinking` model with `enable_thinking: true` and `thinking_budget: 1024` when "Deep Think" or "Deeper Research" modes are selected, allowing for more in-depth AI processing.
@@ -77,5 +78,6 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.2.1 Persistent JSX Parsing Errors:** Resolved recurring `Unexpected token Card` errors in `src/components/CanvasAIAssistant.tsx` through comprehensive rewrites and rebuilds.
 - [x] **3.2.2 Import Syntax Error:** Fixed `Expected 'from', got '=>'` syntax error in `src/pages/ChatPage.tsx`.
 - [x] **3.2.3 Dark Links in Markdown:** Fixed an issue where links within Markdown content were too dark to read against the background by adjusting the `--tw-prose-invert-links` variable in `src/globals.css`.
+- [x] **3.2.4 Hyperlinked Text Visibility:** Addressed the issue where hyperlinked text was indistinguishable by adding a direct CSS override for `a` tags within `.prose.dark\:prose-invert` to ensure they use `hsl(var(--foreground)) !important`.
 
 ---

@@ -33,6 +33,7 @@ const NavLink: React.FC<NavLinkProps> = ({ to, icon, label, isActive, isMobile, 
       !isSidebarExpanded && "justify-center px-0"
     )}
     onClick={onClick}
+    aria-label={isSidebarExpanded ? undefined : label} // Add aria-label only when icon-only
   >
     <Link to={to} className="flex items-center">
       {icon}
@@ -220,7 +221,7 @@ const Sidebar: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         {isSidebarExpanded && <h2 className="text-lg font-semibold">JudgiAI</h2>}
         {!isMobile && (
-          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8">
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8" aria-label={isSidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}>
             {isSidebarExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         )}
@@ -301,6 +302,7 @@ const Sidebar: React.FC = () => {
                     variant={documentId === doc.id ? "secondary" : "ghost"}
                     className="w-full justify-start text-sm"
                     onClick={closeSheet}
+                    aria-label={`Open document ${doc.title}`}
                   >
                     <Link to={`/app/canvas/${doc.id}`} className="flex items-center overflow-hidden whitespace-nowrap">
                       <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -322,7 +324,7 @@ const Sidebar: React.FC = () => {
     return (
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50">
+          <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50" aria-label="Open sidebar menu">
             <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>

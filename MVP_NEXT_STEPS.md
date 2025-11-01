@@ -56,9 +56,9 @@ Beyond the remaining MVP features, several areas can be optimized or improved fo
 *   **Goal**: Ensure the AI is aware of the current date and time to provide more contextually relevant responses.
 *   [x] **Action Needed**: Injected the current date and time into the AI's system prompt in `src/services/longcatApi.ts`.
 
-### 2.6 Accessibility Review
+### 2.6 Accessibility Review (DONE)
 *   **Current Status**: `shadcn/ui` provides a good foundation, but custom components and interactions might have accessibility gaps.
-*   **Action Needed**: Conduct a thorough accessibility audit to ensure the application is usable by individuals with disabilities, covering keyboard navigation, screen reader compatibility, color contrast, and ARIA attributes.
+*   [x] **Action Needed**: Conduct a thorough accessibility audit to ensure the application is usable by individuals with disabilities, covering keyboard navigation, screen reader compatibility, color contrast, and ARIA attributes. Added `aria-label` attributes to all icon-only buttons across the application for improved screen reader support.
 
 ### 2.7 Robust Error Handling and User Feedback
 *   **Current Status**: `showError` toasts are used for basic error reporting.

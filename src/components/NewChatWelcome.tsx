@@ -40,7 +40,7 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
             disabled={loadingAIResponse}
             autoFocus
           />
-          <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
+          <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse} aria-label="Send message">
             {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>

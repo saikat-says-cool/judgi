@@ -211,6 +211,7 @@ const SaveToCanvasDialog: React.FC<SaveToCanvasDialogProps> = ({ isOpen, onClose
                 }
               }}
               disabled={isSaving}
+              aria-label="Generate default title"
             >
               <PlusCircle className="h-4 w-4" />
             </Button>

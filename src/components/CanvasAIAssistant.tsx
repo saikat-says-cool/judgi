@@ -254,7 +254,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         <div className="flex flex-wrap items-center gap-2"> {/* Made responsive */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 text-sm">
+              <Button variant="outline" size="sm" className="h-9 text-sm" aria-label="Drafting actions">
                 <Sparkles className="h-4 w-4 mr-2" /> Drafting Actions
               </Button>
             </DropdownMenuTrigger>
@@ -284,7 +284,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           </DropdownMenu>
 
           <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm"> {/* Made responsive */}
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select research mode"> {/* Made responsive */}
               <SelectValue placeholder="Research Mode" />
             </SelectTrigger>
             <SelectContent>
@@ -294,7 +294,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
             </SelectContent>
           </Select>
           <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm"> {/* Made responsive */}
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select AI output font"> {/* Made responsive */}
               <SelectValue placeholder="AI Output Font" />
             </SelectTrigger>
             <SelectContent>
@@ -365,7 +365,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           }}
           disabled={loadingAIResponse || isAIWritingToCanvas}
         />
-        <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas}>
+        <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas} aria-label="Send message to AI assistant">
           {loadingAIResponse || isAIWritingToCanvas ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </CardFooter>

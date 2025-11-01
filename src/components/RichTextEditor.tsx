@@ -110,6 +110,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleBold().run()}
             variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Toggle bold"
           >
             <Bold className="h-4 w-4" />
           </Button>
@@ -118,6 +119,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleItalic().run()}
             variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Toggle italic"
           >
             <Italic className="h-4 w-4" />
           </Button>
@@ -126,6 +128,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleUnderline().run()}
             variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Toggle underline"
           >
             <UnderlineIcon className="h-4 w-4" />
           </Button>
@@ -134,6 +137,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleStrike().run()}
             variant={editor.isActive('strike') ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Toggle strikethrough"
           >
             <Strikethrough className="h-4 w-4" />
           </Button>
@@ -143,13 +147,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             variant={editor.isActive('code') ? 'secondary' : 'ghost'}
             size="icon"
             title="Toggle Inline Code"
+            aria-label="Toggle inline code"
           >
             <Code className="h-4 w-4" />
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" title="Change Block Type">
+              <Button variant="ghost" size="icon" title="Change Block Type" aria-label="Change block type">
                 <Type className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -174,6 +179,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleBulletList().run()}
             variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Toggle bullet list"
           >
             <List className="h-4 w-4" />
           </Button>
@@ -182,6 +188,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleOrderedList().run()}
             variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Toggle ordered list"
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
@@ -190,12 +197,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().toggleBlockquote().run()}
             variant={editor.isActive('blockquote') ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Toggle blockquote"
           >
             <Quote className="h-4 w-4" />
           </Button>
 
           <Select onValueChange={setFontFamily} value={activeFontFamily}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectTrigger className="w-[180px] h-9 text-sm" aria-label="Select font family">
               <SelectValue placeholder="Select Font" />
             </SelectTrigger>
             <SelectContent>
@@ -211,6 +219,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
             variant={editor.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Align text left"
           >
             <AlignLeft className="h-4 w-4" />
           </Button>
@@ -218,6 +227,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             variant={editor.isActive({ textAlign: 'center' }) ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Align text center"
           >
             <AlignCenter className="h-4 w-4" />
           </Button>
@@ -225,6 +235,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
             variant={editor.isActive({ textAlign: 'right' }) ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Align text right"
           >
             <AlignRight className="h-4 w-4" />
           </Button>
@@ -232,6 +243,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             onClick={() => editor.chain().focus().setTextAlign('justify').run()}
             variant={editor.isActive({ textAlign: 'justify' }) ? 'secondary' : 'ghost'}
             size="icon"
+            aria-label="Justify text"
           >
             <AlignJustify className="h-4 w-4" />
           </Button>
@@ -241,6 +253,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().undo().run()}
             variant="ghost"
             size="icon"
+            aria-label="Undo"
           >
             <Undo className="h-4 w-4" />
           </Button>
@@ -249,6 +262,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             disabled={!editor.can().chain().focus().redo().run()}
             variant="ghost"
             size="icon"
+            aria-label="Redo"
           >
             <Redo className="h-4 w-4" />
           </Button>

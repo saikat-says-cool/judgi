@@ -74,10 +74,10 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                 className="h-8 text-sm"
                 autoFocus
               />
-              <Button variant="ghost" size="icon" onClick={handleRename} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={handleRename} className="h-8 w-8" aria-label="Confirm rename">
                 <Check className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleCancelEdit} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={handleCancelEdit} className="h-8 w-8" aria-label="Cancel rename">
                 <X className="h-4 w-4" />
               </Button>
             </div>

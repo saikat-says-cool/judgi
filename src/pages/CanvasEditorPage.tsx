@@ -199,30 +199,12 @@ const CanvasEditorPage = () => {
     };
   }, [writingContent, aiChatHistory, documentTitle, hasUnsavedChanges, currentDocumentId, saveDocument]);
 
-  // Debounce function
-  const debounce = <T extends (...args: any[]) => void>(func: T, delay: number) => {
-    let timeout: ReturnType<typeof setTimeout>;
-    return function(this: any, ...args: Parameters<T>) {
-      const context = this;
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(context, args), delay);
-    } as T;
-  };
-
-  // Debounced content change handler
-  const debouncedSetWritingContent = useCallback(
-    debounce((content: string) => {
-      setWritingContent(content);
-    }, 500), // Debounce by 500ms
-    []
-  );
-
   const handleContentChange = useCallback((content: string) => {
-    debouncedSetWritingContent(content);
+    setWritingContent(content);
     if (!currentDocumentId && content.trim().length > 0) {
       // This will be handled by the explicit save button or auto-save
     }
-  }, [currentDocumentId, debouncedSetWritingContent]);
+  }, [currentDocumentId]);
 
   const handleAIChatHistoryChange = useCallback((history: ChatMessage[]) => {
     setAiChatHistory(history);
@@ -347,13 +329,14 @@ const CanvasEditorPage = () => {
           onClick={handleManualSave}
           disabled={isSaving || !hasUnsavedChanges}
           className={hasUnsavedChanges ? "text-primary" : "text-muted-foreground"}
+          aria-label="Save document"
         >
           {isSaving ? <Square className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Export document">
               <FileDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -367,7 +350,7 @@ const CanvasEditorPage = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" size="icon" onClick={handleCloseEditor}>
+        <Button variant="ghost" size="icon" onClick={handleCloseEditor} aria-label="Close editor">
           <X className="h-4 w-4" />
         </Button>
       </div>

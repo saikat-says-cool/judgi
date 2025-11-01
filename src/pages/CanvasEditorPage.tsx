@@ -44,7 +44,8 @@ const CanvasEditorPage = () => {
   const [writingContent, setWritingContent] = useState<string>("");
   const [aiChatHistory, setAiChatHistory] = useState<ChatMessage[]>([]);
   const [documentTitle, setDocumentTitle] = useState<string>("Untitled Document");
-  const [isLoading, setIsLoading] = useState(documentId !== 'new'); // Initialize based on documentId
+  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null); // Internal state for active document ID
+  const [isLoading, setIsLoading] = useState(true); // Always start as true, will be set to false by effects
   const [isSaving, setIsSaving] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);
@@ -64,7 +65,6 @@ const CanvasEditorPage = () => {
   const latestChatHistoryRef = useRef(aiChatHistory);
   const latestDocumentTitleRef = useRef(documentTitle);
   const latestHasUnsavedChangesRef = useRef(hasUnsavedChanges);
-  const lastFetchedDocumentIdRef = useRef<string | null>(null); // Ref to track last fetched ID
 
   useEffect(() => {
     latestContentRef.current = writingContent;
@@ -133,9 +133,29 @@ const CanvasEditorPage = () => {
     return true;
   }, [session?.user?.id, supabase]);
 
+  // Effect to update internal currentDocumentId based on URL params
+  useEffect(() => {
+    if (documentId === 'new') {
+      setDocumentTitle("Untitled Document");
+      setWritingContent("");
+      setAiChatHistory([]);
+      setCurrentDocumentId(null);
+      
+      setInitialDocumentTitle("Untitled Document");
+      setInitialWritingContent("");
+      setInitialAiChatHistory([]);
+      setIsLoading(false); // No history to load for a new document
+    } else if (documentId) {
+      setCurrentDocumentId(documentId);
+    } else {
+      navigate('/app/canvas', { replace: true });
+    }
+  }, [documentId, navigate]);
+
+  // Effect to fetch document content when internal currentDocumentId changes
   useEffect(() => {
     const loadDocument = async (id: string) => {
-      if (!session?.user?.id) {
+      if (!session?.user?.id || !id) {
         setIsLoading(false);
         return;
       }
@@ -156,7 +176,6 @@ const CanvasEditorPage = () => {
         setDocumentTitle(data.title);
         setWritingContent(data.content);
         setAiChatHistory(data.chat_history as ChatMessage[]);
-        lastFetchedDocumentIdRef.current = data.id; // Update ref
         
         setInitialDocumentTitle(data.title);
         setInitialWritingContent(data.content);
@@ -165,35 +184,27 @@ const CanvasEditorPage = () => {
       setIsLoading(false);
     };
 
-    if (documentId === 'new') {
-      setDocumentTitle("Untitled Document");
-      setWritingContent("");
-      setAiChatHistory([]);
-      lastFetchedDocumentIdRef.current = null; // Clear ref for new document
-      
+    if (currentDocumentId) {
+      loadDocument(currentDocumentId);
+    } else {
+      setDocumentTitle("Untitled Document"); // Ensure title is reset for new docs
+      setWritingContent(""); // Ensure content is reset for new docs
+      setAiChatHistory([]); // Ensure chat history is reset for new docs
       setInitialDocumentTitle("Untitled Document");
       setInitialWritingContent("");
       setInitialAiChatHistory([]);
       setIsLoading(false);
-    } else if (documentId) {
-      // Only fetch if the documentId has actually changed from the last fetched one
-      if (documentId !== lastFetchedDocumentIdRef.current) {
-        lastFetchedDocumentIdRef.current = documentId; // Update ref
-        loadDocument(documentId);
-      }
-    } else {
-      navigate('/app/canvas', { replace: true });
     }
-  }, [documentId, session?.user?.id, supabase, navigate]);
+  }, [currentDocumentId, session?.user?.id, supabase, navigate]);
 
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (hasUnsavedChanges && lastFetchedDocumentIdRef.current) { // Use ref here
+    if (hasUnsavedChanges && currentDocumentId) {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
       autoSaveTimeoutRef.current = setTimeout(() => {
-        saveDocument(lastFetchedDocumentIdRef.current!, writingContent, aiChatHistory, documentTitle); // Use ref here
+        saveDocument(currentDocumentId, writingContent, aiChatHistory, documentTitle);
       }, 5000);
     }
     return () => {
@@ -201,7 +212,7 @@ const CanvasEditorPage = () => {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [writingContent, aiChatHistory, documentTitle, hasUnsavedChanges, saveDocument]);
+  }, [writingContent, aiChatHistory, documentTitle, hasUnsavedChanges, currentDocumentId, saveDocument]);
 
   const handleContentChange = useCallback((content: string) => {
     setWritingContent(content);
@@ -244,8 +255,8 @@ const CanvasEditorPage = () => {
   };
 
   const handleConfirmClose = async () => {
-    if (lastFetchedDocumentIdRef.current) { // Use ref here
-      await saveDocument(lastFetchedDocumentIdRef.current, writingContent, aiChatHistory, documentTitle); // Use ref here
+    if (currentDocumentId) {
+      await saveDocument(currentDocumentId, writingContent, aiChatHistory, documentTitle);
     } else if (writingContent.trim() || aiChatHistory.length > 0) {
       const newDocId = await createNewDocument(documentTitle);
       if (newDocId) {
@@ -267,15 +278,15 @@ const CanvasEditorPage = () => {
       return;
     }
 
-    if (!lastFetchedDocumentIdRef.current) { // Use ref here
+    if (!currentDocumentId) {
       const newDocId = await createNewDocument(documentTitle);
       if (newDocId) {
-        lastFetchedDocumentIdRef.current = newDocId; // Update ref
+        setCurrentDocumentId(newDocId); // Update internal state before navigating
         await saveDocument(newDocId, writingContent, aiChatHistory, documentTitle);
         navigate(`/app/canvas/${newDocId}`, { replace: true });
       }
     } else {
-      await saveDocument(lastFetchedDocumentIdRef.current, writingContent, aiChatHistory, documentTitle); // Use ref here
+      await saveDocument(currentDocumentId, writingContent, aiChatHistory, documentTitle);
     }
   };
 
@@ -379,7 +390,7 @@ const CanvasEditorPage = () => {
             onAIDocumentUpdate={handleAIDocumentUpdate}
             aiChatHistory={aiChatHistory}
             onAIChatHistoryChange={handleAIChatHistoryChange}
-            documentId={documentId} // Pass documentId from useParams
+            documentId={currentDocumentId} // Pass internal state
             isAIWritingToCanvas={aiWritingToCanvas}
             aiOutputFontFamily={aiOutputFontFamily}
             setAiOutputFontFamily={setAiOutputFontFamily}

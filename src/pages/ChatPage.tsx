@@ -2,18 +2,19 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Import CardHeader and CardTitle
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square } from 'lucide-react';
+import { Send, Square, Save } from 'lucide-react'; // Import Save icon
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import NewChatWelcome from '@/components/NewChatWelcome';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SaveToCanvasDialog from '@/components/SaveToCanvasDialog'; // Import the new dialog component
 
 interface ChatMessage {
   id: string;
@@ -23,17 +24,15 @@ interface ChatMessage {
   isStreaming?: boolean;
 }
 
-type ResearchMode = 'none' | 'medium' | 'max'; // Define ResearchMode type
+type ResearchMode = 'none' | 'medium' | 'max';
 
 const parseAIResponse = (fullAIResponse: string) => {
   let chatResponse = fullAIResponse;
   let documentUpdate: { type: 'append' | 'replace'; content: string } | null = null;
 
-  // Regex to find a complete <DOCUMENT_REPLACE>...</DOCUMENT_REPLACE> block
   const completeReplaceRegex = /<DOCUMENT_REPLACE>(.*?)<\/DOCUMENT_REPLACE>/s;
   const completeReplaceMatch = fullAIResponse.match(completeReplaceRegex);
 
-  // Regex to find a complete <DOCUMENT_WRITE>...</DOCUMENT_WRITE> block
   const completeWriteRegex = /<DOCUMENT_WRITE>(.*?)<\/DOCUMENT_WRITE>/s;
   const completeWriteMatch = fullAIResponse.match(completeWriteRegex);
 
@@ -45,11 +44,6 @@ const parseAIResponse = (fullAIResponse: string) => {
     chatResponse = fullAIResponse.replace(completeWriteRegex, '').trim();
   }
 
-  // Additionally, for streaming, we need to remove any *partial* document tags and their content
-  // This regex will match:
-  // 1. An opening <DOCUMENT_REPLACE> tag and everything after it until the end of the string
-  // 2. An opening <DOCUMENT_WRITE> tag and everything after it until the end of the string
-  // This ensures that during streaming, the raw tag content doesn't show up in the chat.
   const partialTagStripRegex = /<(DOCUMENT_REPLACE|DOCUMENT_WRITE)>[\s\S]*$/;
   chatResponse = chatResponse.replace(partialTagStripRegex, '').trim();
 
@@ -65,16 +59,18 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
-  const [isAITyping, setIsAITyping] = useState(false); // New state for dynamic thinking indicator
+  const [isAITyping, setIsAITyping] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const [researchMode, setResearchMode] = useState<ResearchMode>('none'); // New state for research mode
+  const [researchMode, setResearchMode] = useState<ResearchMode>('none');
+  const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
+  const [contentToSaveToCanvas, setContentToSaveToCanvas] = useState('');
+
   const lastMessageRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for ScrollArea viewport
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (lastMessageRef.current && scrollAreaRef.current) {
       const { scrollHeight, scrollTop, clientHeight } = scrollAreaRef.current;
-      // Only auto-scroll if user is at or near the bottom (within 100px)
       if (scrollHeight - scrollTop - clientHeight < 100) {
         lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
       }
@@ -162,7 +158,7 @@ const ChatPage = () => {
       setMessages((prevMessages) => [...prevMessages, newUserMessage]);
       setInputMessage('');
       setLoadingAIResponse(true);
-      setIsAITyping(false); // Reset isAITyping before AI starts thinking
+      setIsAITyping(false);
 
       if (!activeConversationId) {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
@@ -237,20 +233,17 @@ const ChatPage = () => {
       ]);
 
       let fullAIResponseContent = '';
-      let lastChatResponseLength = 0; // Track length of chat content
+      let lastChatResponseLength = 0;
       try {
         for await (const chunk of getLongCatCompletion(messagesForAI, {
-          researchMode: researchMode, // Pass the selected research mode
-          deepthinkMode: false, // Deepthink mode is separate for now
+          researchMode: researchMode,
           userId: session.user.id,
         })) {
           if (chunk) {
             fullAIResponseContent += chunk;
             
-            // Parse the current accumulated content to get the chat part, stripping document tags
             const { chatResponse: currentChatResponse } = parseAIResponse(fullAIResponseContent);
 
-            // Only set isAITyping to true if the chat response actually has content or is growing
             if (currentChatResponse.length > lastChatResponseLength) {
               setIsAITyping(true);
             }
@@ -302,9 +295,14 @@ const ChatPage = () => {
         setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== streamingAIMessageId));
       } finally {
         setLoadingAIResponse(false);
-        setIsAITyping(false); // Reset isAITyping when AI response completes
+        setIsAITyping(false);
       }
     }
+  };
+
+  const handleOpenSaveToCanvasDialog = (content: string) => {
+    setContentToSaveToCanvas(content);
+    setIsSaveToCanvasDialogOpen(true);
   };
 
   if (loadingHistory) {
@@ -353,20 +351,32 @@ const ChatPage = () => {
                         className={`p-3 rounded-lg text-sm ${
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground max-w-[70%]'
-                            : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full'
+                            : 'bg-muted text-muted-foreground prose prose-sm dark:prose-invert w-full flex flex-col' // Added flex-col for button placement
                         }`}
                       >
                         {message.role === 'assistant' ? (
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {message.content}
-                          </ReactMarkdown>
+                          <>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {message.content}
+                            </ReactMarkdown>
+                            {!message.isStreaming && ( // Only show save button for completed AI messages
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="mt-2 self-end text-xs h-7 px-2 py-1"
+                                onClick={() => handleOpenSaveToCanvasDialog(message.content)}
+                              >
+                                <Save className="h-3 w-3 mr-1" /> Save to Canvas
+                              </Button>
+                            )}
+                          </>
                         ) : (
                           message.content
                         )}
                       </div>
                     </div>
                   ))}
-                  {loadingAIResponse && !isAITyping && ( // Only show "thinking" if loading but not yet typing
+                  {loadingAIResponse && !isAITyping && (
                     <div className="flex justify-start w-full">
                       <div className="p-3 rounded-lg bg-muted text-muted-foreground flex items-center gap-2 text-sm w-full">
                         <Square className="h-4 w-4 animate-spin" />
@@ -397,6 +407,11 @@ const ChatPage = () => {
           </CardFooter>
         </>
       )}
+      <SaveToCanvasDialog
+        isOpen={isSaveToCanvasDialogOpen}
+        onClose={() => setIsSaveToCanvasDialogOpen(false)}
+        contentToSave={contentToSaveToCanvas}
+      />
     </Card>
   );
 };

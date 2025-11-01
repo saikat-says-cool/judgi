@@ -29,8 +29,10 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const animationFrameRef = useRef<number | null>(null);
 
   const startRecording = useCallback(async () => {
+    console.log("Attempting to start recording...");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("Microphone access granted.");
       const recorder = new MediaRecorder(stream);
       setMediaRecorder(recorder);
       setAudioChunks([]);
@@ -42,6 +44,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       };
 
       recorder.onstop = () => {
+        console.log("MediaRecorder stopped.");
         stream.getTracks().forEach((track) => track.stop());
         if (audioContextRef.current) {
           audioContextRef.current.close();
@@ -55,6 +58,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       };
 
       recorder.start();
+      console.log("MediaRecorder started.");
       setIsRecordingActive(true);
 
       // Setup audio visualization
@@ -81,14 +85,15 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
 
     } catch (err) {
-      console.error("Error accessing microphone:", err);
-      showError("Failed to access microphone. Please check permissions.");
+      console.error("Error accessing microphone or starting recording:", err);
+      showError("Failed to access microphone. Please check permissions and try again.");
       setIsRecordingActive(false);
     }
   }, [setIsRecordingActive]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorder && mediaRecorder.state === "recording") {
+      console.log("Stopping MediaRecorder...");
       mediaRecorder.stop();
     }
   }, [mediaRecorder]);
@@ -127,11 +132,13 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   }, [onRecordingCancel, stopRecording, setIsRecordingActive]);
 
   useEffect(() => {
+    console.log("VoiceRecorder useEffect: isRecordingActive changed to", isRecordingActive);
     if (isRecordingActive && !mediaRecorder) {
       startRecording();
     }
     // Cleanup on unmount
     return () => {
+      console.log("VoiceRecorder cleanup.");
       if (mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop();
       }

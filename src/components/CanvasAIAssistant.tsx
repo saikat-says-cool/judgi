@@ -361,7 +361,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               }}
               disabled={loadingAIResponse || isAIWritingToCanvas}
             />
-            {inputMessage.trim() === '' ? (
+            {inputMessage.trim() === '' && ( // Show mic button only if input is empty
               <Button
                 type="button"
                 size="icon"
@@ -371,11 +371,10 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               >
                 <Mic className="h-4 w-4" />
               </Button>
-            ) : (
-              <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas} aria-label="Send message to AI assistant">
-                {loadingAIResponse || isAIWritingToCanvas ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </Button>
             )}
+            <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas} aria-label="Send message to AI assistant">
+              {loadingAIResponse || isAIWritingToCanvas ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
           </>
         )}
       </CardFooter>

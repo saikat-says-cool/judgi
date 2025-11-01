@@ -316,6 +316,14 @@ const ChatPage = () => {
           setInputMessage={setInputMessage}
           handleSendMessage={handleSendMessage}
           loadingAIResponse={loadingAIResponse}
+          researchMode={researchMode}
+          setResearchMode={setResearchMode}
+          aiModelMode={aiModelMode}
+          setAiModelMode={setAiModelMode}
+          isRecording={isRecording}
+          setIsRecording={setIsRecording}
+          onTranscriptionComplete={handleTranscriptionComplete}
+          onRecordingCancel={handleRecordingCancel}
         />
       ) : (
         <>
@@ -416,7 +424,7 @@ const ChatPage = () => {
                   }}
                   disabled={loadingAIResponse}
                 />
-                {inputMessage.trim() === '' ? (
+                {inputMessage.trim() === '' && ( // Show mic button only if input is empty
                   <Button
                     type="button"
                     size="icon"
@@ -426,11 +434,10 @@ const ChatPage = () => {
                   >
                     <Mic className="h-4 w-4" />
                   </Button>
-                ) : (
-                  <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse}>
-                    {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  </Button>
                 )}
+                <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse} aria-label="Send message">
+                  {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
               </>
             )}
           </CardFooter>

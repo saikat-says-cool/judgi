@@ -4,13 +4,23 @@ import React from 'react';
 import { Card } from '@/components/ui/card'; // Added this import
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square } from 'lucide-react'; // Import Square
+import { Send, Square, Mic } from 'lucide-react'; // Import Mic and Square
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import VoiceRecorder from './VoiceRecorder'; // Import VoiceRecorder
 
 interface NewChatWelcomeProps {
   inputMessage: string;
   setInputMessage: (message: string) => void;
   handleSendMessage: () => void;
   loadingAIResponse: boolean;
+  researchMode: 'no_research' | 'moderate_research' | 'deep_research';
+  setResearchMode: (mode: 'no_research' | 'moderate_research' | 'deep_research') => void;
+  aiModelMode: 'auto' | 'deep_think';
+  setAiModelMode: (mode: 'auto' | 'deep_think') => void;
+  isRecording: boolean;
+  setIsRecording: (active: boolean) => void;
+  onTranscriptionComplete: (text: string) => void;
+  onRecordingCancel: () => void;
 }
 
 const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
@@ -18,6 +28,14 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
   setInputMessage,
   handleSendMessage,
   loadingAIResponse,
+  researchMode,
+  setResearchMode,
+  aiModelMode,
+  setAiModelMode,
+  isRecording,
+  setIsRecording,
+  onTranscriptionComplete,
+  onRecordingCancel,
 }) => {
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && !loadingAIResponse) {
@@ -30,19 +48,64 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
       <Card className="w-full max-w-lg p-6 text-center bg-card shadow-lg">
         <h3 className="text-2xl font-semibold mb-4 text-foreground">What can I help with?</h3>
         <p className="text-muted-foreground mb-6">Ask JudgiAI a question to get started.</p>
+
+        <div className="flex flex-wrap justify-center gap-2 mb-6">
+          <Select onValueChange={setResearchMode} value={researchMode}>
+            <SelectTrigger className="w-full md:w-[180px] h-9 text-sm" aria-label="Select research mode">
+              <SelectValue placeholder="Research Mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="no_research">No Research</SelectItem>
+              <SelectItem value="moderate_research">Moderate Research</SelectItem>
+              <SelectItem value="deep_research">Deep Research</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select onValueChange={setAiModelMode} value={aiModelMode}>
+            <SelectTrigger className="w-full md:w-[180px] h-9 text-sm" aria-label="Select AI model">
+              <SelectValue placeholder="AI Model" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto</SelectItem>
+              <SelectItem value="deep_think">Deep Think</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="flex items-center gap-2">
-          <Input
-            placeholder="Ask Judgi"
-            className="flex-1"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyPress}
-            disabled={loadingAIResponse}
-            autoFocus
-          />
-          <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse} aria-label="Send message">
-            {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
+          {isRecording ? (
+            <VoiceRecorder
+              onTranscriptionComplete={onTranscriptionComplete}
+              onRecordingCancel={onRecordingCancel}
+              isRecordingActive={isRecording}
+              setIsRecordingActive={setIsRecording}
+            />
+          ) : (
+            <>
+              <Input
+                placeholder="Ask Judgi"
+                className="flex-1"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                disabled={loadingAIResponse}
+                autoFocus
+              />
+              {inputMessage.trim() === '' && ( // Show mic button only if input is empty
+                <Button
+                  type="button"
+                  size="icon"
+                  onClick={() => setIsRecording(true)}
+                  disabled={loadingAIResponse}
+                  aria-label="Start voice recording"
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
+              )}
+              <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse} aria-label="Send message">
+                {loadingAIResponse ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </>
+          )}
         </div>
       </Card>
     </div>

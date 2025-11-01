@@ -44,7 +44,7 @@ const CanvasEditorPage = () => {
   const [writingContent, setWritingContent] = useState<string>("");
   const [aiChatHistory, setAiChatHistory] = useState<ChatMessage[]>([]);
   const [documentTitle, setDocumentTitle] = useState<string>("Untitled Document");
-  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
+  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null); // Keep this for internal tracking
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
@@ -156,7 +156,7 @@ const CanvasEditorPage = () => {
         setDocumentTitle(data.title);
         setWritingContent(data.content);
         setAiChatHistory(data.chat_history as ChatMessage[]);
-        setCurrentDocumentId(data.id);
+        setCurrentDocumentId(data.id); // Update currentDocumentId here
         
         setInitialDocumentTitle(data.title);
         setInitialWritingContent(data.content);
@@ -166,6 +166,7 @@ const CanvasEditorPage = () => {
     };
 
     if (documentId === 'new') {
+      // If we are explicitly on a 'new' canvas route, clear everything
       setDocumentTitle("Untitled Document");
       setWritingContent("");
       setAiChatHistory([]);
@@ -175,12 +176,14 @@ const CanvasEditorPage = () => {
       setInitialWritingContent("");
       setInitialAiChatHistory([]);
       setIsLoading(false);
-    } else if (documentId && documentId !== currentDocumentId) {
+    } else if (documentId) {
+      // If there's a documentId, load it
       loadDocument(documentId);
-    } else if (!documentId) {
+    } else {
+      // If no documentId is provided (e.g., /app/canvas without an ID), redirect to the canvas home
       navigate('/app/canvas', { replace: true });
     }
-  }, [documentId, session?.user?.id, supabase, navigate, currentDocumentId]);
+  }, [documentId, session?.user?.id, supabase, navigate]); // Removed currentDocumentId from dependencies
 
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -313,6 +316,7 @@ const CanvasEditorPage = () => {
         <p className="text-muted-foreground mt-2">Loading canvas...</p>
       </div>
     );
+  );
   }
 
   return (

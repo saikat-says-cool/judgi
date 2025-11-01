@@ -39,7 +39,7 @@ const ChatPage = () => {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null); // Keep this for internal tracking
   const [researchMode, setResearchMode] = useState<ResearchMode>('no_research');
   const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
@@ -86,18 +86,19 @@ const ChatPage = () => {
     };
 
     if (conversationId === 'new') {
-      if (currentConversationId !== null) {
-         setMessages([]);
-      }
+      // If we are explicitly on a 'new' chat route, clear everything
+      setMessages([]);
       setCurrentConversationId(null);
       setLoadingHistory(false);
-    } else if (conversationId && conversationId !== currentConversationId) {
+    } else if (conversationId) {
+      // If there's a conversationId, load it
       setCurrentConversationId(conversationId);
       fetchChatHistory(conversationId);
-    } else if (!conversationId) {
+    } else {
+      // If no conversationId is provided (e.g., /app/chat), redirect to new
       navigate('/app/chat/new', { replace: true });
     }
-  }, [conversationId, session?.user?.id, supabase, navigate, currentConversationId]);
+  }, [conversationId, session?.user?.id, supabase, navigate]); // Removed currentConversationId from dependencies
 
   const createNewConversation = useCallback(async (initialTitle: string) => {
     if (!session?.user?.id) {

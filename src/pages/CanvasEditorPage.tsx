@@ -45,7 +45,7 @@ const CanvasEditorPage = () => {
   const [aiChatHistory, setAiChatHistory] = useState<ChatMessage[]>([]);
   const [documentTitle, setDocumentTitle] = useState<string>("Untitled Document");
   const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null); // Keep this for internal tracking
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(documentId !== 'new'); // Initialize based on documentId
   const [isSaving, setIsSaving] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);

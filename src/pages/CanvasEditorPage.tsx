@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import RichTextEditor from '@/components/RichTextEditor'; // Import the new RichTextEditor
+import RichTextEditor from '@/components/RichTextEditor';
 import CanvasAIAssistant from '@/components/CanvasAIAssistant';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession } from '@/contexts/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { Button } from '@/components/ui/button';
-import { X, Save, Square, FileDown } from 'lucide-react'; // Import Square
+import { X, Save, Square, FileDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { exportAsDocx, exportAsPdf } from '@/utils/documentExport';
-import { markdownToHtml, htmlToMarkdownConverter } from '@/lib/markdownConverter'; // Import converters
+import { markdownToHtml, htmlToMarkdownConverter } from '@/lib/markdownConverter';
 
 interface ChatMessage {
   id: string;
@@ -41,7 +41,7 @@ const CanvasEditorPage = () => {
   const navigate = useNavigate();
   const { supabase, session } = useSession();
 
-  const [writingContent, setWritingContent] = useState<string>(""); // Now stores HTML
+  const [writingContent, setWritingContent] = useState<string>("");
   const [aiChatHistory, setAiChatHistory] = useState<ChatMessage[]>([]);
   const [documentTitle, setDocumentTitle] = useState<string>("Untitled Document");
   const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
@@ -49,21 +49,18 @@ const CanvasEditorPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);
-  const [aiDocumentAction, setAiDocumentAction] = useState<'append' | 'replace' | null>(null); // New state for specific AI action
-  const [aiOutputFontFamily, setAiOutputFontFamily] = useState('Inter'); // New state for AI output font
+  const [aiDocumentAction, setAiDocumentAction] = useState<'append' | 'replace' | null>(null);
+  const [aiOutputFontFamily, setAiOutputFontFamily] = useState('Inter');
 
-  // New states to store the initial loaded/created content for comparison
-  const [initialWritingContent, setInitialWritingContent] = useState<string>(""); // Now stores HTML
+  const [initialWritingContent, setInitialWritingContent] = useState<string>("");
   const [initialAiChatHistory, setInitialAiChatHistory] = useState<ChatMessage[]>([]);
   const [initialDocumentTitle, setInitialDocumentTitle] = useState<string>("Untitled Document");
 
-  // Derived state for unsaved changes
   const hasUnsavedChanges =
     writingContent !== initialWritingContent ||
-    JSON.stringify(aiChatHistory) !== JSON.stringify(initialAiChatHistory) || // Deep compare chat history
+    JSON.stringify(aiChatHistory) !== JSON.stringify(initialAiChatHistory) ||
     documentTitle !== initialDocumentTitle;
 
-  // Ref to store the latest content and chat history for beforeunload event
   const latestContentRef = useRef(writingContent);
   const latestChatHistoryRef = useRef(aiChatHistory);
   const latestDocumentTitleRef = useRef(documentTitle);
@@ -76,14 +73,12 @@ const CanvasEditorPage = () => {
     latestHasUnsavedChangesRef.current = hasUnsavedChanges;
   }, [writingContent, aiChatHistory, documentTitle, hasUnsavedChanges]);
 
-
-  // Handle beforeunload event for unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (latestHasUnsavedChangesRef.current) {
         event.preventDefault();
-        event.returnValue = ''; // Required for Chrome
-        return ''; // Required for Firefox
+        event.returnValue = '';
+        return '';
       }
     };
 
@@ -93,7 +88,6 @@ const CanvasEditorPage = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
-
 
   const createNewDocument = useCallback(async (initialTitle: string) => {
     if (!session?.user?.id) {
@@ -132,7 +126,6 @@ const CanvasEditorPage = () => {
       showError("Failed to save document.");
       return false;
     }
-    // Update initial states after successful save
     setInitialWritingContent(content);
     setInitialAiChatHistory(chatHistory);
     setInitialDocumentTitle(title);
@@ -140,7 +133,6 @@ const CanvasEditorPage = () => {
     return true;
   }, [session?.user?.id, supabase]);
 
-  // Effect to load document or create new one
   useEffect(() => {
     const loadDocument = async (id: string) => {
       if (!session?.user?.id) {
@@ -159,14 +151,13 @@ const CanvasEditorPage = () => {
       if (error) {
         console.error("Error loading document:", error);
         showError("Failed to load document.");
-        navigate('/app/canvas', { replace: true }); // Redirect to home if document not found or error
+        navigate('/app/canvas', { replace: true });
       } else if (data) {
         setDocumentTitle(data.title);
-        setWritingContent(data.content); // Content is now HTML
+        setWritingContent(data.content);
         setAiChatHistory(data.chat_history as ChatMessage[]);
         setCurrentDocumentId(data.id);
         
-        // Set initial states upon loading
         setInitialDocumentTitle(data.title);
         setInitialWritingContent(data.content);
         setInitialAiChatHistory(data.chat_history as ChatMessage[]);
@@ -175,13 +166,11 @@ const CanvasEditorPage = () => {
     };
 
     if (documentId === 'new') {
-      // Start with a blank canvas, will be saved on first content change or explicit save
       setDocumentTitle("Untitled Document");
-      setWritingContent(""); // Empty HTML
+      setWritingContent("");
       setAiChatHistory([]);
-      setCurrentDocumentId(null); // No ID until saved
+      setCurrentDocumentId(null);
       
-      // Set initial states for a new document
       setInitialDocumentTitle("Untitled Document");
       setInitialWritingContent("");
       setInitialAiChatHistory([]);
@@ -189,11 +178,10 @@ const CanvasEditorPage = () => {
     } else if (documentId && documentId !== currentDocumentId) {
       loadDocument(documentId);
     } else if (!documentId) {
-      navigate('/app/canvas', { replace: true }); // Redirect if no documentId
+      navigate('/app/canvas', { replace: true });
     }
   }, [documentId, session?.user?.id, supabase, navigate, currentDocumentId]);
 
-  // Auto-save logic (optional, but good for user experience)
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (hasUnsavedChanges && currentDocumentId) {
@@ -202,7 +190,7 @@ const CanvasEditorPage = () => {
       }
       autoSaveTimeoutRef.current = setTimeout(() => {
         saveDocument(currentDocumentId, writingContent, aiChatHistory, documentTitle);
-      }, 5000); // Auto-save every 5 seconds of inactivity
+      }, 5000);
     }
     return () => {
       if (autoSaveTimeoutRef.current) {
@@ -211,11 +199,8 @@ const CanvasEditorPage = () => {
     };
   }, [writingContent, aiChatHistory, documentTitle, hasUnsavedChanges, currentDocumentId, saveDocument]);
 
-
   const handleContentChange = useCallback((content: string) => {
-    setWritingContent(content); // Content is now HTML
-    // hasUnsavedChanges is now derived, no need to set it here
-    // If it's a new document and content is added, prompt for initial save/title
+    setWritingContent(content);
     if (!currentDocumentId && content.trim().length > 0) {
       // This will be handled by the explicit save button or auto-save
     }
@@ -223,32 +208,28 @@ const CanvasEditorPage = () => {
 
   const handleAIChatHistoryChange = useCallback((history: ChatMessage[]) => {
     setAiChatHistory(history);
-    // hasUnsavedChanges is now derived, no need to set it here
   }, []);
 
   const handleAIDocumentUpdate = useCallback(async (update: { type: 'append' | 'replace'; content: string }) => {
-    setAiWritingToCanvas(true); // Set AI writing state
-    setAiDocumentAction(update.type); // Set specific AI action
-    const htmlContent = await markdownToHtml(update.content); // Convert AI's Markdown to HTML
+    setAiWritingToCanvas(true);
+    setAiDocumentAction(update.type);
+    const htmlContent = await markdownToHtml(update.content);
     
-    // Wrap AI's content with the selected font family using a span
     const styledHtmlContent = `<span style="font-family: ${aiOutputFontFamily}, sans-serif;">${htmlContent}</span>`;
 
     setWritingContent((prevContent) => {
       if (update.type === 'replace') {
         return styledHtmlContent;
-      } else { // 'append'
-        return prevContent.length > 0 ? `${prevContent}<p></p>${styledHtmlContent}` : styledHtmlContent; // Add a paragraph break
+      } else {
+        return prevContent.length > 0 ? `${prevContent}<p></p>${styledHtmlContent}` : styledHtmlContent;
       }
     });
-    // hasUnsavedChanges is now derived, no need to set it here
-    setAiWritingToCanvas(false); // Reset AI writing state after content is added
-    setAiDocumentAction(null); // Clear specific AI action
-  }, [aiOutputFontFamily]); // Dependency on aiOutputFontFamily
+    setAiWritingToCanvas(false);
+    setAiDocumentAction(null);
+  }, [aiOutputFontFamily]);
 
   const handleDocumentTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setDocumentTitle(e.target.value);
-    // hasUnsavedChanges is now derived, no need to set it here
   }, []);
 
   const handleCloseEditor = () => {
@@ -263,7 +244,6 @@ const CanvasEditorPage = () => {
     if (currentDocumentId) {
       await saveDocument(currentDocumentId, writingContent, aiChatHistory, documentTitle);
     } else if (writingContent.trim() || aiChatHistory.length > 0) {
-      // If it's a new document with content, force an initial save before closing
       const newDocId = await createNewDocument(documentTitle);
       if (newDocId) {
         await saveDocument(newDocId, writingContent, aiChatHistory, documentTitle);
@@ -285,12 +265,11 @@ const CanvasEditorPage = () => {
     }
 
     if (!currentDocumentId) {
-      // If it's a new document, create it first
       const newDocId = await createNewDocument(documentTitle);
       if (newDocId) {
         setCurrentDocumentId(newDocId);
         await saveDocument(newDocId, writingContent, aiChatHistory, documentTitle);
-        navigate(`/app/canvas/${newDocId}`, { replace: true }); // Update URL
+        navigate(`/app/canvas/${newDocId}`, { replace: true });
       }
     } else {
       await saveDocument(currentDocumentId, writingContent, aiChatHistory, documentTitle);
@@ -299,8 +278,6 @@ const CanvasEditorPage = () => {
 
   const handleExportDocx = async () => {
     try {
-      // DOCX export expects plain text or simple HTML, so we'll pass the HTML content directly
-      // The docx library might need further processing of HTML to DOCX
       await exportAsDocx(documentTitle, writingContent);
       showSuccess("Document exported as DOCX!");
     } catch (error) {
@@ -310,7 +287,6 @@ const CanvasEditorPage = () => {
 
   const handleExportPdf = () => {
     try {
-      // PDF export expects plain text, so we'll convert HTML to Markdown then to plain text
       const plainTextContent = htmlToMarkdownConverter(writingContent);
       exportAsPdf(documentTitle, plainTextContent);
       showSuccess("Document exported as PDF!");
@@ -325,13 +301,13 @@ const CanvasEditorPage = () => {
     } else if (aiDocumentAction === 'replace') {
       return "JudgiAI is replacing...";
     }
-    return "JudgiAI is writing..."; // Default if action is not specific
+    return "JudgiAI is writing...";
   };
 
   if (isLoading) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
-        <Square className="h-8 w-8 animate-spin text-primary" /> {/* Changed to Square */}
+        <Square className="h-8 w-8 animate-spin text-primary" />
         <p className="text-muted-foreground mt-2">Loading canvas...</p>
       </div>
     );
@@ -339,7 +315,6 @@ const CanvasEditorPage = () => {
 
   return (
     <div className="relative flex flex-col h-full">
-      {/* Floating Header for Title and Actions */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center space-x-2 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-md border">
         <Input
           value={documentTitle}
@@ -355,7 +330,7 @@ const CanvasEditorPage = () => {
           disabled={isSaving || !hasUnsavedChanges}
           className={hasUnsavedChanges ? "text-primary" : "text-muted-foreground"}
         >
-          {isSaving ? <Square className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} {/* Changed to Square */}
+          {isSaving ? <Square className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         </Button>
 
         <DropdownMenu>
@@ -388,7 +363,7 @@ const CanvasEditorPage = () => {
           />
           {aiWritingToCanvas && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-muted text-muted-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-              <Square className="h-4 w-4 animate-spin" /> {/* Changed to Square */}
+              <Square className="h-4 w-4 animate-spin" />
               <span>{getAiWritingMessage()}</span>
             </div>
           )}
@@ -396,15 +371,15 @@ const CanvasEditorPage = () => {
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={40} minSize={20}>
           <CanvasAIAssistant
-            writingContent={htmlToMarkdownConverter(writingContent)} // Convert HTML to Markdown for AI context
+            writingContent={htmlToMarkdownConverter(writingContent)}
             onAIDocumentUpdate={handleAIDocumentUpdate}
             aiChatHistory={aiChatHistory}
             onAIChatHistoryChange={handleAIChatHistoryChange}
             documentId={currentDocumentId}
             isAIWritingToCanvas={aiWritingToCanvas}
-            aiOutputFontFamily={aiOutputFontFamily} // Pass AI font state
-            setAiOutputFontFamily={setAiOutputFontFamily} // Pass AI font setter
-            aiDocumentAction={aiDocumentAction} {/* NEW: Pass aiDocumentAction */}
+            aiOutputFontFamily={aiOutputFontFamily}
+            setAiOutputFontFamily={setAiOutputFontFamily}
+            aiDocumentAction={aiDocumentAction}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

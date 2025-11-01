@@ -27,11 +27,11 @@ interface LongCatMessage {
 }
 
 interface GetLongCatCompletionOptions {
-  researchMode: 'no_research' | 'moderate_research' | 'deep_research'; // Updated type
-  aiModelMode: 'auto' | 'deep_think'; // New prop for AI model selection
+  researchMode: 'no_research' | 'moderate_research' | 'deep_research';
+  aiModelMode: 'auto' | 'deep_think';
   userId: string;
-  currentDocumentContent?: string;
-  onStatusUpdate?: (status: string) => void; // New callback for status updates
+  currentDocumentContent?: string; // This will be undefined for chat interface
+  onStatusUpdate?: (status: string) => void;
 }
 
 export const getLongCatCompletion = async function* (
@@ -83,22 +83,28 @@ export const getLongCatCompletion = async function* (
         timeZoneName: 'short',
       });
 
-      let systemPrompt = `You are JudgiAI, an intelligent legal assistant. The current date and time is ${currentDateTime}. You are currently assisting a user in drafting a legal document. Your primary goal is to help the user write the document on the left panel, while also engaging in a conversational chat on the right panel. `;
-      systemPrompt += "You have full control over the document on the left. When the user asks you to modify the document, you MUST perform the requested action. ";
-      systemPrompt += "When you want to **replace the entire content of the user's document** (e.g., to polish, restructure, make significant edits, delete parts, shorten, insert in the middle, or any non-append operation), wrap the *entire new document content* in `<DOCUMENT_REPLACE>` and `</DOCUMENT_REPLACE>` tags. This will completely overwrite the current document. ";
-      systemPrompt += "When you want to **add new content to the end of the user's document**, wrap that content in `<DOCUMENT_WRITE>` and `</DOCUMENT_WRITE>` tags. This will append to the current document. ";
-      systemPrompt += "Only use one type of document tag per response. If you use `<DOCUMENT_REPLACE>`, do not use `<DOCUMENT_WRITE>`. ";
-      systemPrompt += "If you perform a document update (either replace or append), you MUST also include a concise, conversational message in your chat response explaining what you have done to the document. For example: 'I've polished the document for you.', 'I've added a new paragraph to the end.', or 'I've removed the requested section.' ";
-      systemPrompt += "If the user asks for clarification or discussion, respond conversationally without any document tags. Always keep your conversational responses concise and helpful. ";
-      systemPrompt += "All document updates (within <DOCUMENT_REPLACE> or <DOCUMENT_WRITE>) and chat responses should be in Markdown format. ";
-      systemPrompt += "When referring to legal research results, always cite them using Markdown link format: `[Case Title](Citation URL)`. **Be diligent and include as many relevant citations and hyperlinks as possible from the provided research results to support your statements.** For example: `[Kesavananda Bharati v. State of Kerala](https://indiankanoon.org/doc/1551775/)`."; // REFINED INSTRUCTION
+      let systemPrompt: string;
+
+      // Differentiate system prompt based on whether currentDocumentContent is provided
+      if (currentDocumentContent !== undefined) {
+        // Canvas Copilot System Prompt
+        systemPrompt = `You are JudgiAI, an intelligent legal assistant. The current date and time is ${currentDateTime}. You are currently assisting a user in drafting a legal document. Your primary goal is to help the user write the document on the left panel, while also engaging in a conversational chat on the right panel. `;
+        systemPrompt += "You have full control over the document on the left. When the user asks you to modify the document, you MUST perform the requested action. ";
+        systemPrompt += "When you want to **replace the entire content of the user's document** (e.g., to polish, restructure, make significant edits, delete parts, shorten, insert in the middle, or any non-append operation), wrap the *entire new document content* in `<DOCUMENT_REPLACE>` and `</DOCUMENT_REPLACE>` tags. This will completely overwrite the current document. ";
+        systemPrompt += "When you want to **add new content to the end of the user's document**, wrap that content in `<DOCUMENT_WRITE>` and `</DOCUMENT_WRITE>` tags. This will append to the current document. ";
+        systemPrompt += "Only use one type of document tag per response. If you use `<DOCUMENT_REPLACE>`, do not use `<DOCUMENT_WRITE>`. ";
+        systemPrompt += "If you perform a document update (either replace or append), you MUST also include a concise, conversational message in your chat response explaining what you have done to the document. For example: 'I've polished the document for you.', 'I've added a new paragraph to the end.', or 'I've removed the requested section.' ";
+        systemPrompt += "If the user asks for clarification or discussion, respond conversationally without any document tags. Always keep your conversational responses concise and helpful. ";
+        systemPrompt += "All document updates (within <DOCUMENT_REPLACE> or <DOCUMENT_WRITE>) and chat responses should be in Markdown format. ";
+        systemPrompt += "When referring to legal research results, always cite them using Markdown link format: `[Case Title](Citation URL)`. **Be diligent and include as many relevant citations and hyperlinks as possible from the provided research results to support your statements.** For example: `[Kesavananda Bharati v. State of Kerala](https://indiankanoon.org/doc/1551775/)`."; // REFINED INSTRUCTION
+        systemPrompt += `\n\nHere is the current content of the document you are helping to write (in Markdown format):\n<CURRENT_DOCUMENT_CONTENT>\n${currentDocumentContent}\n</CURRENT_DOCUMENT_CONTENT>\n`;
+      } else {
+        // Chat Interface System Prompt
+        systemPrompt = `You are JudgiAI, an intelligent legal assistant. The current date and time is ${currentDateTime}. Your primary role is to engage in a conversational chat, providing legal information, summaries, and answers to user queries. You **cannot** modify any documents. Therefore, you **must never** use \`<DOCUMENT_REPLACE>\` or \`<DOCUMENT_WRITE>\` tags in your responses. All your responses should be conversational and in Markdown format. When referring to legal research results, always cite them using Markdown link format: \`[Case Title](Citation URL)\`. Be diligent and include as many relevant citations and hyperlinks as possible from the provided research results to support your statements. For example: \`[Kesavananda Bharati v. State of Kerala](https://indiankanoon.org/doc/1551775/)\`.`;
+      }
 
       if (userCountry) {
         systemPrompt += `\nConsider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;
-      }
-
-      if (currentDocumentContent) {
-        systemPrompt += `\n\nHere is the current content of the document you are helping to write (in Markdown format):\n<CURRENT_DOCUMENT_CONTENT>\n${currentDocumentContent}\n</CURRENT_DOCUMENT_CONTENT>\n`;
       }
 
       let researchResults = '';

@@ -11,7 +11,7 @@ import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-// Removed Select imports
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Re-added Select imports
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,14 +36,11 @@ interface CanvasAIAssistantProps {
   onAIChatHistoryChange: (history: ChatMessage[]) => void;
   documentId: string | null;
   isAIWritingToCanvas: boolean;
-  // Removed aiOutputFontFamily and setAiOutputFontFamily props
   aiDocumentAction: 'append' | 'replace' | null;
 }
 
 type ResearchMode = 'no_research' | 'moderate_research' | 'deep_research';
 type AiModelMode = 'auto' | 'deep_think';
-
-// Removed fonts array
 
 const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   writingContent,
@@ -52,7 +49,6 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   onAIChatHistoryChange,
   documentId,
   isAIWritingToCanvas,
-  // Removed aiOutputFontFamily and setAiOutputFontFamily props
   aiDocumentAction,
 }) => {
   const { session } = useSession();
@@ -60,10 +56,10 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
   const [researchMode, setResearchMode] = useState<ResearchMode>('no_research');
-  const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
+  const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto');
   const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false); // New state for voice recording
-  const [isTranscribingAudio, setIsTranscribingAudio] = useState(false); // New state for transcription loading
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribingAudio, setIsTranscribingAudio] = useState(false);
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -82,7 +78,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       showError("You must be logged in to send messages.");
       return;
     }
-    if (loadingAIResponse || isAIWritingToCanvas || isTranscribingAudio) { // Disable if transcribing
+    if (loadingAIResponse || isAIWritingToCanvas || isTranscribingAudio) {
       showError("Please wait for the current AI operation to complete.");
       return;
     }
@@ -113,7 +109,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     try {
       for await (const chunk of getLongCatCompletion(updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content })), {
         researchMode: researchMode,
-        aiModelMode: aiModelMode, // Pass new AI model mode
+        aiModelMode: aiModelMode,
         userId: session.user.id,
         currentDocumentContent: writingContent,
         onStatusUpdate: setDetailedLoadingMessage,
@@ -211,17 +207,17 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const handleTranscriptionComplete = (text: string) => {
     setInputMessage(text);
     setIsRecording(false);
-    setIsTranscribingAudio(false); // Transcription complete
+    setIsTranscribingAudio(false);
   };
 
   const handleRecordingCancel = () => {
     setIsRecording(false);
-    setIsTranscribingAudio(false); // Transcription cancelled
+    setIsTranscribingAudio(false);
   };
 
   const handleStartRecording = () => {
     setIsRecording(true);
-    setIsTranscribingAudio(true); // Start transcribing state immediately
+    setIsTranscribingAudio(true);
   };
 
   return (
@@ -279,7 +275,6 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               <SelectItem value="deep_think">Deep Think</SelectItem>
             </SelectContent>
           </Select>
-          {/* Removed AI Output Font Select */}
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
@@ -354,7 +349,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               }}
               disabled={loadingAIResponse || isAIWritingToCanvas}
             />
-            {inputMessage.trim() === '' && ( // Show mic button only if input is empty
+            {inputMessage.trim() === '' && (
               <Button
                 type="button"
                 size="icon"

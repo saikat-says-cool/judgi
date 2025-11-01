@@ -49,6 +49,7 @@ const CanvasEditorPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);
+  const [aiDocumentAction, setAiDocumentAction] = useState<'append' | 'replace' | null>(null); // New state for specific AI action
   const [aiOutputFontFamily, setAiOutputFontFamily] = useState('Inter'); // New state for AI output font
 
   // New states to store the initial loaded/created content for comparison
@@ -227,6 +228,7 @@ const CanvasEditorPage = () => {
 
   const handleAIDocumentUpdate = useCallback(async (update: { type: 'append' | 'replace'; content: string }) => {
     setAiWritingToCanvas(true); // Set AI writing state
+    setAiDocumentAction(update.type); // Set specific AI action
     const htmlContent = await markdownToHtml(update.content); // Convert AI's Markdown to HTML
     
     // Wrap AI's content with the selected font family using a span
@@ -241,6 +243,7 @@ const CanvasEditorPage = () => {
     });
     // hasUnsavedChanges is now derived, no need to set it here
     setAiWritingToCanvas(false); // Reset AI writing state after content is added
+    setAiDocumentAction(null); // Clear specific AI action
   }, [aiOutputFontFamily]); // Dependency on aiOutputFontFamily
 
   const handleDocumentTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -316,6 +319,15 @@ const CanvasEditorPage = () => {
     }
   };
 
+  const getAiWritingMessage = () => {
+    if (aiDocumentAction === 'append') {
+      return "JudgiAI is appending...";
+    } else if (aiDocumentAction === 'replace') {
+      return "JudgiAI is replacing...";
+    }
+    return "JudgiAI is writing..."; // Default if action is not specific
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
@@ -377,7 +389,7 @@ const CanvasEditorPage = () => {
           {aiWritingToCanvas && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-muted text-muted-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
               <Square className="h-4 w-4 animate-spin" /> {/* Changed to Square */}
-              <span>JudgiAI is writing...</span>
+              <span>{getAiWritingMessage()}</span>
             </div>
           )}
         </ResizablePanel>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square, Sparkles } from 'lucide-react';
+import { Send, Square, Sparkles, Mic } from 'lucide-react'; // Import Mic icon
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { parseAIResponse } from '@/utils/aiResponseParser'; // Import from new utility file
+import VoiceRecorder from '@/components/VoiceRecorder'; // Import VoiceRecorder
 
 interface ChatMessage {
   id: string;
@@ -40,7 +41,7 @@ interface CanvasAIAssistantProps {
   aiDocumentAction: 'append' | 'replace' | null;
 }
 
-type ResearchMode = 'no_research' | 'moderate_research' | 'deep_research'; // Renamed 'quick_lookup' to 'no_research'
+type ResearchMode = 'no_research' | 'moderate_research' | 'deep_research';
 type AiModelMode = 'auto' | 'deep_think';
 
 const fonts = [
@@ -68,9 +69,10 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const [inputMessage, setInputMessage] = useState<string>('');
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
-  const [researchMode, setResearchMode] = useState<ResearchMode>('no_research'); // Default to 'no_research'
+  const [researchMode, setResearchMode] = useState<ResearchMode>('no_research');
   const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false); // New state for voice recording
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -214,6 +216,15 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     return "JudgiAI is thinking...";
   };
 
+  const handleTranscriptionComplete = (text: string) => {
+    setInputMessage(text);
+    setIsRecording(false);
+  };
+
+  const handleRecordingCancel = () => {
+    setIsRecording(false);
+  };
+
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
       <CardHeader className="border-b p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -255,7 +266,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               <SelectValue placeholder="Research Mode" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="no_research">No Research</SelectItem> {/* Renamed */}
+              <SelectItem value="no_research">No Research</SelectItem>
               <SelectItem value="moderate_research">Moderate Research</SelectItem>
               <SelectItem value="deep_research">Deep Research</SelectItem>
             </SelectContent>
@@ -329,21 +340,44 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         </div>
       </CardContent>
       <CardFooter className="p-4 border-t flex items-center gap-2">
-        <Input
-          placeholder="Ask Judgi"
-          className="flex-1"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !loadingAIResponse && !isAIWritingToCanvas) {
-              handleSendMessage();
-            }
-          }}
-          disabled={loadingAIResponse || isAIWritingToCanvas}
-        />
-        <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas} aria-label="Send message to AI assistant">
-          {loadingAIResponse || isAIWritingToCanvas ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
+        {isRecording ? (
+          <VoiceRecorder
+            onTranscriptionComplete={handleTranscriptionComplete}
+            onRecordingCancel={handleRecordingCancel}
+            isRecordingActive={isRecording}
+            setIsRecordingActive={setIsRecording}
+          />
+        ) : (
+          <>
+            <Input
+              placeholder="Ask Judgi"
+              className="flex-1"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !loadingAIResponse && !isAIWritingToCanvas) {
+                  handleSendMessage();
+                }
+              }}
+              disabled={loadingAIResponse || isAIWritingToCanvas}
+            />
+            {inputMessage.trim() === '' ? (
+              <Button
+                type="button"
+                size="icon"
+                onClick={() => setIsRecording(true)}
+                disabled={loadingAIResponse || isAIWritingToCanvas}
+                aria-label="Start voice recording"
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button type="submit" size="icon" onClick={handleSendMessage} disabled={loadingAIResponse || isAIWritingToCanvas} aria-label="Send message to AI assistant">
+                {loadingAIResponse || isAIWritingToCanvas ? <Square className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            )}
+          </>
+        )}
       </CardFooter>
     </Card>
   );

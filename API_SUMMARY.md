@@ -122,7 +122,7 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
 
 ## 4. User Interface and Experience
 
-*   **Responsive Sidebar**: A dynamic sidebar (`Sidebar.tsx`) provides navigation between Chat, Canvas, and Profile, and displays recent conversations/documents. It's responsive, collapsing on desktop and becoming a sheet on mobile.
+*   **Responsive Sidebar**: A dynamic sidebar (`Sidebar.tsx`) provides navigation between Chat, Canvas, Profile, and **Instructions**, and displays recent conversations/documents. It's responsive, collapsing on desktop and becoming a sheet on mobile.
 *   **Theming**: The application uses a dark theme by default, with Tailwind CSS and custom CSS variables (`src/globals.css`) ensuring consistent styling.
 *   **Loading Indicators**: `Square` icons with `animate-spin` are used as visual loading indicators for AI responses and document loading. These squares are now also integrated as a subtle brand element in backgrounds.
 *   **Toast Notifications**: `sonner` is used for user feedback (success, error, loading messages).

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Import Link
 import { useSession } from '@/contexts/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,13 +36,23 @@ const LandingPage = () => {
         <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto">
           Streamline your legal workflow from inquiry to export with intelligent AI assistance. JudgiAI empowers legal professionals and students to achieve unmatched efficiency and precision.
         </p>
-        <Button
-          size="lg"
-          onClick={() => navigate('/login')}
-          className="px-10 py-6 text-lg sm:text-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          Get Started with JudgiAI
-        </Button>
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">
+          <Button
+            size="lg"
+            onClick={() => navigate('/login')}
+            className="px-10 py-6 text-lg sm:text-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            Get Started with JudgiAI
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="px-10 py-6 text-lg sm:text-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <Link to="/instructions">Learn More</Link>
+          </Button>
+        </div>
       </div>
 
       <section className="w-full max-w-6xl mx-auto py-16 z-10">

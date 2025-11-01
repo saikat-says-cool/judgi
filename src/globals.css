@@ -121,26 +121,5 @@
     margin-bottom: 0.5em; /* Adjust this value for desired line spacing */
   }
 
-  /* Font family definitions */
-  .font-inter {
-    font-family: 'Inter', sans-serif !important;
-  }
-  .font-comfortaa {
-    font-family: 'Comfortaa', sans-serif !important;
-  }
-  .font-arial {
-    font-family: 'Arial', sans-serif !important;
-  }
-  .font-times {
-    font-family: 'Times New Roman', serif !important;
-  }
-  .font-courier {
-    font-family: 'Courier New', monospace !important;
-  }
-  .font-georgia {
-    font-family: 'Georgia', serif !important;
-  }
-  .font-verdana {
-    font-family: 'Verdana', sans-serif !important;
-  }
+  /* Removed Font family definitions */
 }

@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// Removed Select imports
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
@@ -27,18 +27,10 @@ interface RichTextEditorProps {
   readOnly?: boolean;
 }
 
-const fonts = [
-  { name: 'Inter', style: 'font-inter' },
-  { name: 'Comfortaa', style: 'font-comfortaa' },
-  { name: 'Arial', style: 'font-arial' },
-  { name: 'Times New Roman', style: 'font-times' },
-  { name: 'Courier New', style: 'font-courier' },
-  { name: 'Georgia', style: 'font-georgia' },
-  { name: 'Verdana', style: 'font-verdana' },
-];
+// Removed fonts array
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChange, readOnly = false }) => {
-  const [activeFontFamily, setActiveFontFamily] = useState('Inter'); // Local state for active font
+  // Removed activeFontFamily state
 
   const editor = useEditor({
     extensions: [
@@ -65,10 +57,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
     content: content,
     onUpdate: ({ editor }) => {
       onContentChange(editor.getHTML());
-      setActiveFontFamily(editor.getAttributes('textStyle').fontFamily || 'Inter'); // Update on content change
+      // Removed setActiveFontFamily update
     },
     onSelectionUpdate: ({ editor }) => {
-      setActiveFontFamily(editor.getAttributes('textStyle').fontFamily || 'Inter'); // Update on selection change
+      // Removed setActiveFontFamily update
     },
     editable: !readOnly,
     editorProps: {
@@ -87,15 +79,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
   useEffect(() => {
     if (editor) {
       editor.setOptions({ editable: !readOnly });
-      // Set initial font family when editor is ready or readOnly state changes
-      setActiveFontFamily(editor.getAttributes('textStyle').fontFamily || 'Inter');
+      // Removed initial font family setting
     }
   }, [readOnly, editor]);
 
-  const setFontFamily = useCallback((fontFamily: string) => {
-    editor?.chain().focus().setFontFamily(fontFamily).run();
-    setActiveFontFamily(fontFamily); // Explicitly update local state immediately
-  }, [editor]);
+  // Removed setFontFamily useCallback
 
   if (!editor) {
     return null;
@@ -202,18 +190,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
             <Quote className="h-4 w-4" />
           </Button>
 
-          <Select onValueChange={setFontFamily} value={activeFontFamily}>
-            <SelectTrigger className="w-[180px] h-9 text-sm" aria-label="Select font family">
-              <SelectValue placeholder="Select Font" />
-            </SelectTrigger>
-            <SelectContent>
-              {fonts.map((font) => (
-                <SelectItem key={font.name} value={font.name} className={font.style}>
-                  {font.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Removed Font Family Select */}
 
           <Button
             onClick={() => editor.chain().focus().setTextAlign('left').run()}

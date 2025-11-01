@@ -11,7 +11,7 @@ import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// Removed Select imports
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,23 +36,14 @@ interface CanvasAIAssistantProps {
   onAIChatHistoryChange: (history: ChatMessage[]) => void;
   documentId: string | null;
   isAIWritingToCanvas: boolean;
-  aiOutputFontFamily: string;
-  setAiOutputFontFamily: (font: string) => void;
+  // Removed aiOutputFontFamily and setAiOutputFontFamily props
   aiDocumentAction: 'append' | 'replace' | null;
 }
 
 type ResearchMode = 'no_research' | 'moderate_research' | 'deep_research';
 type AiModelMode = 'auto' | 'deep_think';
 
-const fonts = [
-  { name: 'Inter', style: 'font-inter' },
-  { name: 'Comfortaa', style: 'font-comfortaa' },
-  { name: 'Arial', style: 'font-arial' },
-  { name: 'Times New Roman', style: 'font-times' },
-  { name: 'Courier New', style: 'font-courier' },
-  { name: 'Georgia', style: 'font-georgia' },
-  { name: 'Verdana', style: 'font-verdana' },
-];
+// Removed fonts array
 
 const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   writingContent,
@@ -61,8 +52,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   onAIChatHistoryChange,
   documentId,
   isAIWritingToCanvas,
-  aiOutputFontFamily,
-  setAiOutputFontFamily,
+  // Removed aiOutputFontFamily and setAiOutputFontFamily props
   aiDocumentAction,
 }) => {
   const { session } = useSession();
@@ -289,18 +279,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               <SelectItem value="deep_think">Deep Think</SelectItem>
             </SelectContent>
           </Select>
-          <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily} disabled={loadingAIResponse || isAIWritingToCanvas || isTranscribingAudio}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select AI output font">
-              <SelectValue placeholder="AI Output Font" />
-            </SelectTrigger>
-            <SelectContent>
-              {fonts.map((font) => (
-                <SelectItem key={font.name} value={font.name} className={font.style}>
-                  {font.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Removed AI Output Font Select */}
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col overflow-hidden p-0">

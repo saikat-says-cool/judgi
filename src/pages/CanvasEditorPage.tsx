@@ -50,7 +50,7 @@ const CanvasEditorPage = () => {
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);
   const [aiDocumentAction, setAiDocumentAction] = useState<'append' | 'replace' | null>(null);
-  const [aiOutputFontFamily, setAiOutputFontFamily] = useState('Inter');
+  // Removed aiOutputFontFamily state
 
   const [initialWritingContent, setInitialWritingContent] = useState<string>("");
   const [initialAiChatHistory, setInitialAiChatHistory] = useState<ChatMessage[]>([]);
@@ -218,9 +218,8 @@ const CanvasEditorPage = () => {
     setAiDocumentAction(update.type);
     const htmlContent = await markdownToHtml(update.content);
     
-    // Convert font family name to a valid Tailwind CSS class name
-    const fontClassName = `font-${aiOutputFontFamily.toLowerCase().replace(/\s/g, '-')}`;
-    const styledHtmlContent = `<span class="${fontClassName}">${htmlContent}</span>`;
+    // Removed font family styling
+    const styledHtmlContent = htmlContent;
 
     setWritingContent((prevContent) => {
       if (update.type === 'replace') {
@@ -231,7 +230,7 @@ const CanvasEditorPage = () => {
     });
     setAiWritingToCanvas(false);
     setAiDocumentAction(null);
-  }, [aiOutputFontFamily]);
+  }, []); // Removed aiOutputFontFamily from dependencies
 
   const handleDocumentTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setDocumentTitle(e.target.value);
@@ -383,8 +382,7 @@ const CanvasEditorPage = () => {
             onAIChatHistoryChange={handleAIChatHistoryChange}
             documentId={currentDocumentId}
             isAIWritingToCanvas={aiWritingToCanvas}
-            aiOutputFontFamily={aiOutputFontFamily}
-            setAiOutputFontFamily={setAiOutputFontFamily}
+            // Removed aiOutputFontFamily and setAiOutputFontFamily props
             aiDocumentAction={aiDocumentAction}
           />
         </ResizablePanel>

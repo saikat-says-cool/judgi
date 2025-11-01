@@ -4,7 +4,7 @@ This document outlines the next phases of development for JudgiAI, building upon
 
 ---
 
-**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Browser retention has been improved to prevent state loss when navigating away and returning to a tab, and a Vercel deployment syntax error has been resolved. Furthermore, a flicker when starting new chats has been addressed, and a React warning related to the `viewportRef` prop in `ScrollArea` has been fixed. The user interface has been significantly enhanced for a first-class feel, and the landing page now features world-class SaaS copy and design, incorporating the brand's square shape subtly throughout.**
+**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Browser retention has been improved to prevent state loss when navigating away and returning to a tab, and a Vercel deployment syntax error has been resolved. Furthermore, a flicker when starting new chats has been addressed, and a React warning related to the `viewportRef` prop in `ScrollArea` has been fixed. The user interface has been significantly enhanced for a first-class feel, and the landing page now features world-class SaaS copy and design, incorporating the brand's square shape subtly throughout. All font selection features have been removed from the canvas editor and AI assistant.**
 
 ---
 
@@ -48,7 +48,7 @@ This document outlines the next phases of development for JudgiAI, building upon
 - [x] **Action Needed**: Regularly review and refactor components, hooks, and services to ensure clear separation of concerns, reduce coupling, and improve overall maintainability as the application scales. Refactored the `parseAIResponse` function into a shared utility (`src/utils/aiResponseParser.ts`) to eliminate duplication and centralize AI response parsing logic.
 
 ### 2.9 AI Output Styling Integration (DONE)
-- [x] **Action Needed**: Explore if this styling can be managed more robustly through TipTap's schema or custom CSS classes rather than inline styles, for better consistency and easier modification. Updated `CanvasEditorPage.tsx` to apply AI output font styling using Tailwind CSS classes instead of inline styles.
+- [x] **Action Needed**: Removed AI output font styling to align with the removal of font selection features.
 
 ---
 

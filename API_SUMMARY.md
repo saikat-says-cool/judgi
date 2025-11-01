@@ -22,7 +22,6 @@ Supabase serves as the backend for JudgiAI, handling authentication, database ma
 *   **Authentication**:
     *   User authentication (sign-up, sign-in, session management) is handled by `@supabase/auth-ui-react` and `SessionContextProvider`.
     *   The login page (`src/pages/Login.tsx`) is configured to support email/password and Google OAuth providers.
-    *   User sessions are managed via `supabase.auth.onAuthStateChange`, redirecting users based on their authentication status. The `LandingPage` now handles navigation within a `useEffect` to prevent React warnings about state updates during render.
     *   User profiles are stored in the `public.profiles` table, automatically created and populated on new user sign-up via a PostgreSQL trigger (`handle_new_user` function).
     *   A dedicated `ProfileSettingsPage` allows users to view and update their profile information (first name, last name, country). This page is now a nested route under `/app/profile` for consistent routing.
 *   **Database**:
@@ -106,7 +105,7 @@ AssemblyAI is integrated to provide voice input capabilities, converting spoken 
 The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that integrates directly with the `CanvasAIAssistant`.
 
 *   **`RichTextEditor`**: The main writing area uses `@tiptap/react` to provide a rich text editing experience. It stores content as HTML.
-    *   Features include bold, italic, underline, strikethrough, code, headings, lists, blockquotes, text alignment, undo/redo, and user-selectable font families.
+    *   Features include bold, italic, underline, strikethrough, code, headings, lists, blockquotes, text alignment, undo/redo.
     *   **Performance Optimization**: Debounced content updates are implemented to reduce the frequency of state updates and auto-saves while typing, improving overall performance for large documents.
 *   **Markdown/HTML Conversion**:
     *   `src/lib/markdownConverter.ts` provides utility functions (`markdownToHtml`, `htmlToMarkdownConverter`) to seamlessly convert between Markdown (for AI communication) and HTML (for the `RichTextEditor`).
@@ -117,7 +116,6 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
     *   `onAIDocumentUpdate` callback in `CanvasEditorPage` handles these updates:
         *   `DOCUMENT_REPLACE`: Overwrites the entire `writingContent` with the AI's output.
         *   `DOCUMENT_WRITE`: Appends the AI's output to the existing `writingContent`.
-    *   AI-generated content is styled with a user-selected font family using **Tailwind CSS classes** (e.g., `font-inter`) instead of inline styles, for better consistency and maintainability.
     *   **Specific Loading Feedback**: During AI document updates, the `aiDocumentAction` state in `CanvasEditorPage` is passed to `CanvasAIAssistant`. This allows the AI assistant's chat interface to display specific messages like "JudgiAI is appending to document..." or "JudgiAI is replacing document content..." instead of a generic "JudgiAI is thinking...", providing clearer user feedback during the AI's operation.
 *   **Unsaved Changes**: The `CanvasEditorPage` tracks changes to `writingContent`, `aiChatHistory`, and `documentTitle` to warn users about unsaved work before navigating away. An auto-save mechanism is also implemented.
 *   **Export Functionality**: Documents can be exported as `.docx` or `.pdf` using `docx` and `jspdf` libraries, respectively. The HTML content is converted to plain text (via Markdown) for these exports.

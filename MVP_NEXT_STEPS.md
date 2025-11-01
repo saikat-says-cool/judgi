@@ -23,7 +23,7 @@ The core functionalities for the MVP are largely in place, but a few key aspects
 *   **Current Status**: The AI can replace or append content to the canvas, and it has access to research results. However, the more nuanced, real-time, and structured drafting aids are not yet explicitly implemented.
     *   **Auto-completes arguments based on context**: This implies interactive suggestions as the user types.
     *   **Suggests relevant precedents while typing**: Similar to auto-completion, but specifically for legal precedents.
-    *   **Reformats drafts into proper legal language or structure**: While the AI can `replace` content, the spec implies more structured reformatting capabilities that might be triggered by specific user commands or UI elements, rather than just free-form chat requests.
+    *   [x] **Reformats drafts into proper legal language or structure**: Implemented a "Drafting Actions" dropdown in the Canvas AI Assistant, allowing users to trigger AI actions like "Summarize Document", "Draft as Petition", "Improve Legal Language", and "Expand Last Section". These actions send specific prompts to the AI to modify the document content.
     *   **Auto-generates footnotes/citations**: This is a specific drafting feature that would require the AI to insert correctly formatted citations directly into the `RichTextEditor`.
 *   **Action Needed**: Develop specific AI prompts and UI integrations to enable these advanced drafting features. This might involve new UI components or specific commands that the AI can interpret to perform these actions within the `RichTextEditor`.
 

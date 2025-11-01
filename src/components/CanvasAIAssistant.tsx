@@ -5,13 +5,19 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Square } from 'lucide-react';
+import { Send, Square, Sparkles } from 'lucide-react'; // Added Sparkles icon
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Import DropdownMenu components
 
 interface ChatMessage {
   id: string;
@@ -105,7 +111,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     }
   }, [aiChatHistory]);
 
-  const handleSendMessage = async () => {
+  const sendAIRequest = async (messageContent: string) => {
     if (!session?.user?.id) {
       showError("You must be logged in to send messages.");
       return;
@@ -115,81 +121,105 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       return;
     }
 
-    if (inputMessage.trim()) {
-      const userMessageContent = inputMessage.trim();
-      const newUserMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: 'user',
-        content: userMessageContent,
-        created_at: new Date().toISOString(),
-      };
+    const userMessageContent = messageContent.trim();
+    const newUserMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userMessageContent,
+      created_at: new Date().toISOString(),
+    };
 
-      const updatedChatHistory = [...aiChatHistory.filter(msg => !msg.isStreaming), newUserMessage];
-      onAIChatHistoryChange(updatedChatHistory);
-      setInputMessage('');
-      setLoadingAIResponse(true);
-      setIsAITyping(false); // Reset isAITyping before AI starts thinking
+    const updatedChatHistory = [...aiChatHistory.filter(msg => !msg.isStreaming), newUserMessage];
+    onAIChatHistoryChange(updatedChatHistory);
+    setInputMessage(''); // Clear input only if it was a manual message
+    setLoadingAIResponse(true);
+    setIsAITyping(false); // Reset isAITyping before AI starts thinking
 
-      const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
-      // Add a placeholder AI message for streaming
-      onAIChatHistoryChange((prevHistory) => [
-        ...prevHistory.filter(msg => msg.id !== streamingAIMessageId), // Remove any previous streaming message
-        { id: streamingAIMessageId, role: 'assistant', content: '', isStreaming: true, created_at: new Date().toISOString() },
-      ]);
+    const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
+    // Add a placeholder AI message for streaming
+    onAIChatHistoryChange((prevHistory) => [
+      ...prevHistory.filter(msg => msg.id !== streamingAIMessageId), // Remove any previous streaming message
+      { id: streamingAIMessageId, role: 'assistant', content: '', isStreaming: true, created_at: new Date().toISOString() },
+    ]);
 
-      let fullAIResponseContent = '';
-      let lastChatResponseLength = 0; // Track length of chat content
-      try {
-        for await (const chunk of getLongCatCompletion(updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content })), {
-          researchMode: researchMode, // Pass the selected research mode
-          deepthinkMode: false,
-          userId: session.user.id,
-          currentDocumentContent: writingContent,
-        })) {
-          if (chunk) {
-            fullAIResponseContent += chunk;
-            
-            const { chatResponse: currentChatResponse } = parseAIResponse(fullAIResponseContent);
+    let fullAIResponseContent = '';
+    let lastChatResponseLength = 0; // Track length of chat content
+    try {
+      for await (const chunk of getLongCatCompletion(updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content })), {
+        researchMode: researchMode, // Pass the selected research mode
+        userId: session.user.id,
+        currentDocumentContent: writingContent,
+      })) {
+        if (chunk) {
+          fullAIResponseContent += chunk;
+          
+          const { chatResponse: currentChatResponse } = parseAIResponse(fullAIResponseContent);
 
-            // Only set isAITyping to true if the chat response actually has content or is growing
-            if (currentChatResponse.length > lastChatResponseLength) {
-              setIsAITyping(true);
-            }
-            lastChatResponseLength = currentChatResponse.length;
-
-            onAIChatHistoryChange((prevHistory) =>
-              prevHistory.map((msg) =>
-                msg.id === streamingAIMessageId ? { ...msg, content: currentChatResponse } : msg
-              )
-            );
-            await new Promise(resolve => setTimeout(resolve, 10));
+          // Only set isAITyping to true if the chat response actually has content or is growing
+          if (currentChatResponse.length > lastChatResponseLength) {
+            setIsAITyping(true);
           }
+          lastChatResponseLength = currentChatResponse.length;
+
+          onAIChatHistoryChange((prevHistory) =>
+            prevHistory.map((msg) =>
+              msg.id === streamingAIMessageId ? { ...msg, content: currentChatResponse } : msg
+            )
+          );
+          await new Promise(resolve => setTimeout(resolve, 10));
         }
-
-        // After streaming is complete, parse the final full response
-        const { chatResponse, documentUpdate } = parseAIResponse(fullAIResponseContent);
-
-        // Update the final AI chat message
-        onAIChatHistoryChange((prevHistory) =>
-          prevHistory.map((msg) =>
-            msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
-          )
-        );
-
-        // Apply document update if present
-        if (documentUpdate) {
-          onAIDocumentUpdate(documentUpdate);
-        }
-
-      } catch (error) {
-        console.error("Error getting AI response:", error);
-        showError("Failed to get AI response. Please check your API key and network connection.");
-        onAIChatHistoryChange((prevHistory) => prevHistory.filter(msg => msg.id !== streamingAIMessageId));
-      } finally {
-        setLoadingAIResponse(false);
-        setIsAITyping(false); // Reset isAITyping when AI response completes
       }
+
+      // After streaming is complete, parse the final full response
+      const { chatResponse, documentUpdate } = parseAIResponse(fullAIResponseContent);
+
+      // Update the final AI chat message
+      onAIChatHistoryChange((prevHistory) =>
+        prevHistory.map((msg) =>
+          msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
+        )
+      );
+
+      // Apply document update if present
+      if (documentUpdate) {
+        onAIDocumentUpdate(documentUpdate);
+      }
+
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      showError("Failed to get AI response. Please check your API key and network connection.");
+      onAIChatHistoryChange((prevHistory) => prevHistory.filter(msg => msg.id !== streamingAIMessageId));
+    } finally {
+      setLoadingAIResponse(false);
+      setIsAITyping(false); // Reset isAITyping when AI response completes
     }
+  };
+
+  const handleSendMessage = () => {
+    if (inputMessage.trim()) {
+      sendAIRequest(inputMessage);
+    }
+  };
+
+  const handleDraftingAction = (action: string) => {
+    let prompt = '';
+    switch (action) {
+      case 'summarize':
+        prompt = 'Please summarize the current document content concisely.';
+        break;
+      case 'petition':
+        prompt = 'Please reformat the current document content into a draft legal petition structure.';
+        break;
+      case 'improve_language':
+        prompt = 'Please improve the legal language and clarity of the current document content.';
+        break;
+      case 'expand_section':
+        prompt = 'Please expand on the last section of the current document, adding more detail and relevant legal points.';
+        break;
+      default:
+        return;
+    }
+    sendAIRequest(prompt);
   };
 
   const getChatLoadingMessage = () => {
@@ -206,6 +236,28 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
         <CardTitle className="text-lg">AI Assistant</CardTitle>
         <div className="flex items-center space-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 text-sm">
+                <Sparkles className="h-4 w-4 mr-2" /> Drafting Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleDraftingAction('summarize')}>
+                Summarize Document
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDraftingAction('petition')}>
+                Draft as Petition
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDraftingAction('improve_language')}>
+                Improve Legal Language
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDraftingAction('expand_section')}>
+                Expand Last Section
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
             <SelectTrigger className="w-[180px] h-9 text-sm">
               <SelectValue placeholder="Research Mode" />

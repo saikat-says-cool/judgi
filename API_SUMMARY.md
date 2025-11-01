@@ -21,8 +21,10 @@ Supabase serves as the backend for JudgiAI, handling authentication, database ma
 *   **Client Setup**: The Supabase client is initialized in `src/integrations/supabase/client.ts` using environment variables for the URL and public key.
 *   **Authentication**:
     *   User authentication (sign-up, sign-in, session management) is handled by `@supabase/auth-ui-react` and `SessionContextProvider`.
+    *   The login page (`src/pages/Login.tsx`) is configured to support email/password and Google OAuth providers.
     *   User sessions are managed via `supabase.auth.onAuthStateChange`, redirecting users based on their authentication status.
     *   User profiles are stored in the `public.profiles` table, automatically created and populated on new user sign-up via a PostgreSQL trigger (`handle_new_user` function).
+    *   A dedicated `ProfileSettingsPage` allows users to view and update their profile information (first name, last name, country).
 *   **Database**:
     *   **`public.profiles`**: Stores user-specific profile data (first name, last name, avatar URL, country).
     *   **`public.conversations`**: Stores metadata for chat conversations (ID, user ID, title, timestamps).
@@ -48,11 +50,14 @@ The LongCat API powers the conversational AI capabilities in both the chat inter
         *   For `medium` (Deep Think) and `max` (Deeper Research), it uses `LongCat-Flash-Thinking` with `enable_thinking: true` and `thinking_budget: 1024` for more in-depth processing.
     *   **System Prompt Construction**:
         *   The system prompt (`systemPrompt`) is dynamically constructed to define JudgiAI's persona as a legal assistant.
+        *   It includes the **current date and time** for contextual awareness.
         *   It includes instructions for document manipulation using `<DOCUMENT_REPLACE>` and `<DOCUMENT_WRITE>` tags.
         *   It incorporates the user's country (fetched from Supabase `profiles`) for contextual awareness.
         *   Crucially, it injects `researchResults` (from Langsearch) and `currentDocumentContent` (from the Canvas) into the prompt, providing the AI with relevant context.
     *   **Streaming Responses**: The function yields chunks of the AI's response, allowing for real-time display in the UI.
     *   **Document Update Tags**: The AI is instructed to use `<DOCUMENT_REPLACE>` to overwrite the entire document or `<DOCUMENT_WRITE>` to append content. These tags are parsed client-side to update the `RichTextEditor`.
+    *   **Enhanced Latency Feedback**: An `onStatusUpdate` callback is used to provide granular feedback on AI processing stages (e.g., "Searching legal documents...", "Generating AI response...") to the UI.
+    *   **Robust Error Handling**: Includes specific error messages for API errors (429, 401) and network issues, with detailed console logging.
 
 ### 2.3. Langsearch API (Legal Research)
 
@@ -74,6 +79,7 @@ The Langsearch API is used to perform legal document and current news searches, 
     *   Similar two-step process for news articles, using `web-search` with `freshness: "oneDay"` and then `rerank` for relevance.
     *   Query construction is adapted for news searches (e.g., "current Indian legal news about...").
 *   **Integration with LongCat**: The results from `searchLegalDocuments` and `searchCurrentNews` are injected into the LongCat AI's system prompt as `<LEGAL_RESEARCH_RESULTS>` and `<CURRENT_NEWS_RESULTS>`, providing the AI with up-to-date and relevant information.
+*   **Robust Error Handling**: Includes specific error messages for API errors (429, 401) and network issues, with detailed console logging.
 
 ## 3. AI Interaction with the Canvas
 
@@ -81,6 +87,7 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
 
 *   **`RichTextEditor`**: The main writing area uses `@tiptap/react` to provide a rich text editing experience. It stores content as HTML.
     *   Features include bold, italic, underline, strikethrough, code, headings, lists, blockquotes, text alignment, undo/redo, and user-selectable font families.
+    *   **Performance Optimization**: Debounced content updates are implemented to reduce the frequency of state updates and auto-saves while typing, improving performance for large documents.
 *   **Markdown/HTML Conversion**:
     *   `src/lib/markdownConverter.ts` provides utility functions (`markdownToHtml`, `htmlToMarkdownConverter`) to seamlessly convert between Markdown (for AI communication) and HTML (for the `RichTextEditor`).
     *   When AI needs to read the document, the HTML content is converted to Markdown.
@@ -90,17 +97,19 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
     *   `onAIDocumentUpdate` callback in `CanvasEditorPage` handles these updates:
         *   `DOCUMENT_REPLACE`: Overwrites the entire `writingContent` with the AI's output.
         *   `DOCUMENT_WRITE`: Appends the AI's output to the existing `writingContent`.
-    *   AI-generated content is styled with a user-selected font family (`aiOutputFontFamily`) before insertion.
+    *   AI-generated content is styled with a user-selected font family using **Tailwind CSS classes** (e.g., `font-inter`) instead of inline styles, for better consistency and maintainability.
     *   **Specific Loading Feedback**: During AI document updates, the `aiDocumentAction` state in `CanvasEditorPage` is passed to `CanvasAIAssistant`. This allows the AI assistant's chat interface to display specific messages like "JudgiAI is appending to document..." or "JudgiAI is replacing document content..." instead of a generic "JudgiAI is thinking...", providing clearer user feedback during the AI's operation.
 *   **Unsaved Changes**: The `CanvasEditorPage` tracks changes to `writingContent`, `aiChatHistory`, and `documentTitle` to warn users about unsaved work before navigating away. An auto-save mechanism is also implemented.
 *   **Export Functionality**: Documents can be exported as `.docx` or `.pdf` using `docx` and `jspdf` libraries, respectively. The HTML content is converted to plain text (via Markdown) for these exports.
 
 ## 4. User Interface and Experience
 
-*   **Responsive Sidebar**: A dynamic sidebar (`Sidebar.tsx`) provides navigation between Chat and Canvas, and displays recent conversations/documents. It's responsive, collapsing on desktop and becoming a sheet on mobile.
+*   **Responsive Sidebar**: A dynamic sidebar (`Sidebar.tsx`) provides navigation between Chat, Canvas, and Profile, and displays recent conversations/documents. It's responsive, collapsing on desktop and becoming a sheet on mobile.
 *   **Theming**: The application uses a dark theme by default, with Tailwind CSS and custom CSS variables (`src/globals.css`) ensuring consistent styling.
 *   **Loading Indicators**: `Square` icons with `animate-spin` are used as visual loading indicators for AI responses and document loading.
 *   **Toast Notifications**: `sonner` is used for user feedback (success, error, loading messages).
 *   **Markdown Rendering**: `react-markdown` with `remark-gfm` is used to render Markdown content in chat messages and AI assistant responses, ensuring rich text display.
+*   **Accessibility**: `aria-label` attributes have been added to all icon-only buttons across the application for improved screen reader support.
+*   **Code Maintainability**: The `parseAIResponse` function has been refactored into a shared utility (`src/utils/aiResponseParser.ts`) to centralize AI response parsing logic, improving code maintainability and scalability.
 
 This summary highlights the key technical components and their interactions, forming the foundation of the JudgiAI application.

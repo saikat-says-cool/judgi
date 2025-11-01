@@ -222,6 +222,9 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       case 'suggest_precedents':
         prompt = 'Based on the current document content, suggest relevant legal precedents and their citations. Provide them as Markdown links.';
         break;
+      case 'generate_footnotes':
+        prompt = 'Review the current document content and generate appropriate footnotes or citations for any legal statements or references. Insert them directly into the document using the appropriate document tags.';
+        break;
       default:
         return;
     }
@@ -266,6 +269,9 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleDraftingAction('suggest_precedents')}>
                 Suggest Precedents for Document
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDraftingAction('generate_footnotes')}>
+                Generate Footnotes/Citations
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

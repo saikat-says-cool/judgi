@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Square, Save, Mic } from 'lucide-react'; // Import Mic icon
-import { useSession } from '@/contexts/SessionContext'; // Corrected import path
+import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import NewChatWelcome from '@/components/NewChatWelcome';
@@ -24,6 +24,7 @@ interface ChatMessage {
   content: string;
   created_at?: string;
   isStreaming?: boolean;
+  conversation_id?: string; // Added conversation_id to the interface
 }
 
 type ResearchMode = 'no_research' | 'moderate_research' | 'deep_research';
@@ -36,7 +37,7 @@ const ChatPage = () => {
 
   const [inputMessage, setInputMessage] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(true); // Always start as true, will be set to false by effects
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
   const [researchMode, setResearchMode] = useState<ResearchMode>('no_research');
@@ -49,6 +50,7 @@ const ChatPage = () => {
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastLoadedConversationIdRef = useRef<string | undefined>(undefined); // Ref to track the last conversation ID successfully loaded into `messages` state
 
   // Effect to scroll to the bottom of the chat
   useEffect(() => {
@@ -68,10 +70,19 @@ const ChatPage = () => {
         return;
       }
 
+      // Check if the current messages state already corresponds to this convId
+      const isCurrentConvLoaded = messages.length > 0 && messages[0]?.conversation_id === convId;
+
+      if (convId !== 'new' && isCurrentConvLoaded && lastLoadedConversationIdRef.current === convId) {
+        // If already loaded and matches the current URL ID, skip fetch to prevent flicker
+        setLoadingHistory(false);
+        return;
+      }
+
       setLoadingHistory(true);
       const { data, error } = await supabase
         .from('chats')
-        .select('id, role, content, created_at')
+        .select('id, role, content, created_at, conversation_id') // Select conversation_id
         .eq('user_id', session.user.id)
         .eq('conversation_id', convId)
         .order('created_at', { ascending: true });
@@ -84,17 +95,24 @@ const ChatPage = () => {
         setMessages(data as ChatMessage[]);
       }
       setLoadingHistory(false);
+      lastLoadedConversationIdRef.current = convId; // Update ref after successful fetch
     };
 
     if (conversationId === 'new') {
       setMessages([]);
       setLoadingHistory(false); // No history to load for a new chat
+      lastLoadedConversationIdRef.current = undefined; // Reset ref for new chat
     } else if (conversationId) {
-      fetchChatHistory(conversationId);
+      // Only fetch if the conversationId has changed or if it's not yet loaded
+      if (conversationId !== lastLoadedConversationIdRef.current || messages.length === 0) {
+        fetchChatHistory(conversationId);
+      } else {
+        setLoadingHistory(false); // Already loaded and matches current ID
+      }
     } else {
       navigate('/app/chat/new', { replace: true });
     }
-  }, [conversationId, session?.user?.id, supabase, navigate]);
+  }, [conversationId, session?.user?.id, supabase, navigate, messages]); // Added messages to dependencies
 
   const createNewConversation = useCallback(async (initialTitle: string) => {
     if (!session?.user?.id) {
@@ -166,7 +184,7 @@ const ChatPage = () => {
           role: 'user',
           content: userMessageContent,
         })
-        .select('id, created_at')
+        .select('id, created_at, conversation_id') // Select conversation_id here
         .single();
 
       if (userMessageError) {
@@ -178,7 +196,7 @@ const ChatPage = () => {
       } else if (userMessageData) {
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
-            msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at } : msg
+            msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at, conversation_id: userMessageData.conversation_id } : msg
           )
         );
       }
@@ -245,7 +263,7 @@ const ChatPage = () => {
             role: 'assistant',
             content: chatResponse,
           })
-          .select('id, created_at')
+          .select('id, created_at, conversation_id') // Select conversation_id here
           .single();
 
         if (aiMessageError) {
@@ -255,7 +273,7 @@ const ChatPage = () => {
         } else if (aiMessageData) {
           setMessages((prevMessages) =>
             prevMessages.map((msg) =>
-              msg.id === streamingAIMessageId ? { ...msg, id: aiMessageData.id, created_at: aiMessageData.created_at } : msg
+              msg.id === streamingAIMessageId ? { ...msg, id: aiMessageData.id, created_at: aiMessageData.created_at, conversation_id: aiMessageData.conversation_id } : msg
             )
           );
         }

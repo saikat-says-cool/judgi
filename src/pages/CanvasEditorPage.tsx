@@ -316,7 +316,6 @@ const CanvasEditorPage = () => {
         <p className="text-muted-foreground mt-2">Loading canvas...</p>
       </div>
     );
-  );
   }
 
   return (

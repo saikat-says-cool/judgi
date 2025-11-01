@@ -39,7 +39,6 @@ const ChatPage = () => {
   const [loadingHistory, setLoadingHistory] = useState(conversationId !== 'new'); // Initialize based on conversationId
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [researchMode, setResearchMode] = useState<ResearchMode>('no_research');
   const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
@@ -50,6 +49,7 @@ const ChatPage = () => {
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastFetchedConversationIdRef = useRef<string | null>(null); // Ref to track last fetched ID
 
   useEffect(() => {
     if (lastMessageRef.current && scrollAreaRef.current) {
@@ -86,19 +86,19 @@ const ChatPage = () => {
     };
 
     if (conversationId === 'new') {
-      // If we are explicitly on a 'new' chat route, clear everything
       setMessages([]);
-      setCurrentConversationId(null);
-      setLoadingHistory(false); // Ensure loading is false for new chat
-    } else if (conversationId && conversationId !== currentConversationId) {
-      // If there's a conversationId and it's different from current, load it
-      setCurrentConversationId(conversationId);
-      fetchChatHistory(conversationId);
-    } else if (!conversationId) {
-      // If no conversationId is provided (e.g., /app/chat), redirect to new
+      lastFetchedConversationIdRef.current = null; // Clear ref for new chat
+      setLoadingHistory(false); // No history to load for a new chat
+    } else if (conversationId) {
+      // Only fetch if the conversationId has actually changed from the last fetched one
+      if (conversationId !== lastFetchedConversationIdRef.current) {
+        lastFetchedConversationIdRef.current = conversationId; // Update ref
+        fetchChatHistory(conversationId);
+      }
+    } else {
       navigate('/app/chat/new', { replace: true });
     }
-  }, [conversationId, session?.user?.id, supabase, navigate, currentConversationId]);
+  }, [conversationId, session?.user?.id, supabase, navigate]);
 
   const createNewConversation = useCallback(async (initialTitle: string) => {
     if (!session?.user?.id) {
@@ -131,8 +131,7 @@ const ChatPage = () => {
 
     if (inputMessage.trim()) {
       const userMessageContent = inputMessage.trim();
-      let activeConversationId = currentConversationId;
-      let shouldNavigateAfterAI = false; // Flag to control navigation timing
+      let activeConversationId = conversationId; // Use conversationId from URL directly
 
       const newUserMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -146,16 +145,18 @@ const ChatPage = () => {
       setIsAITyping(false);
       setDetailedLoadingMessage(null);
 
-      if (!activeConversationId) {
+      let shouldNavigateAfterAI = false;
+
+      if (activeConversationId === 'new') {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
-        activeConversationId = await createNewConversation(initialTitle);
-        if (!activeConversationId) {
+        const newConvId = await createNewConversation(initialTitle);
+        if (!newConvId) {
           setLoadingAIResponse(false);
           setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
           return;
         }
-        setCurrentConversationId(activeConversationId); // Update internal tracking
-        shouldNavigateAfterAI = true; // Set flag to navigate after AI response
+        activeConversationId = newConvId;
+        shouldNavigateAfterAI = true;
       }
 
       // Save user message to DB
@@ -222,14 +223,12 @@ const ChatPage = () => {
 
         const { chatResponse } = parseAIResponse(fullAIResponseContent);
 
-        // Update local state with final AI response
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
           )
         );
 
-        // Save AI message to DB
         const { data: aiMessageData, error: aiMessageError } = await supabase
           .from('chats')
           .insert({

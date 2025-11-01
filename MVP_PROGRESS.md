@@ -30,6 +30,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **1.3.2 Research Modes:** Implemented "Quick Lookup", "Deep Think", "Deeper Research" selection UI in both the main chat and canvas AI assistant.
 - [x] **1.3.3 Contextual Search:** Integrated `searchLegalDocuments` and `searchCurrentNews` based on research mode and user country, injecting results into the AI's system prompt. **Enhanced Langsearch query construction for better legal relevance.**
 - [x] **1.3.4 Display AI Response:** Render AI's response, including citations.
+    - [x] **Instructed AI to format citations as Markdown links `[Case Title](URL)` in `src/services/longcatApi.ts` system prompt.**
 - [x] **1.3.5 AI Persona & Parameters:** Adjusted AI persona to a general assistant (like ChatGPT) and set parameters (temperature, top_p, max_tokens) to normal-like values. This change is foundational for future, more refined prompt engineering.
 - [x] **1.3.6 Rotating API Keys:** Implemented a system to manage multiple hardcoded API keys for both Langsearch and LongCat, automatically rotating to the next key upon encountering a rate limit (HTTP 429) error.
 - [x] **1.3.7 LongCat API Optimization:** Optimized LongCat API calls to dynamically use the `LongCat-Flash-Thinking` model with `enable_thinking: true` and `thinking_budget: 1024` when "Deep Think" or "Deeper Research" modes are selected, allowing for more in-depth AI processing.

@@ -75,6 +75,7 @@ export const getLongCatCompletion = async function* (
       systemPrompt += "If you perform a document update (either replace or append), you MUST also include a concise, conversational message in your chat response explaining what you have done to the document. For example: 'I've polished the document for you.', 'I've added a new paragraph to the end.', or 'I've removed the requested section.' ";
       systemPrompt += "If the user asks for clarification or discussion, respond conversationally without any document tags. Always keep your conversational responses concise and helpful. ";
       systemPrompt += "All document updates (within <DOCUMENT_REPLACE> or <DOCUMENT_WRITE>) and chat responses should be in Markdown format. ";
+      systemPrompt += "When referring to legal research results, always cite them using Markdown link format: `[Case Title](Citation URL)`. For example: `[Kesavananda Bharati v. State of Kerala](https://indiankanoon.org/doc/1551775/)`."; // NEW INSTRUCTION
 
       if (userCountry) {
         systemPrompt += `\nConsider the user's location in ${userCountry} for general context, but do not assume a legal focus unless explicitly asked.`;

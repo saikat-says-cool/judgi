@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSession } from '@/contexts/SessionContext';
 import { showError, showSuccess } from '@/utils/toast';
-import { FileText, PlusCircle } from 'lucide-react';
+import { FileText, PlusCircle, Square } from 'lucide-react'; // Added Square import
 import { markdownToHtml } from '@/lib/markdownConverter';
 
 interface Document {

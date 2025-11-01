@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import LandingPage from "./pages/LandingPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { SessionContextProvider } from "./contexts/SessionContext";
+import ProfileSettingsPage from "./pages/ProfileSettingsPage"; // Import the new page
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
+              <Route path="/app/profile" element={<ProtectedRoute><ProfileSettingsPage /></ProtectedRoute>} /> {/* New Profile Settings Route */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

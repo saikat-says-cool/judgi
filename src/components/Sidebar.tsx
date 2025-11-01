@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Menu, MessageSquare, LayoutDashboard, PlusCircle, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Menu, MessageSquare, LayoutDashboard, PlusCircle, ChevronLeft, ChevronRight, FileText, User } from 'lucide-react'; // Import User icon
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSession } from '@/contexts/SessionContext';
 import { showError } from '@/utils/toast';
@@ -70,6 +70,7 @@ const Sidebar: React.FC = () => {
   const isChatMode = location.pathname.startsWith('/app/chat');
   const isCanvasMode = location.pathname.startsWith('/app/canvas');
   const isCanvasHomePage = location.pathname === '/app/canvas';
+  const isProfileMode = location.pathname === '/app/profile'; // New state for profile mode
 
   const closeSheet = () => {
     if (isMobile) {
@@ -240,6 +241,15 @@ const Sidebar: React.FC = () => {
           icon={<LayoutDashboard className="h-4 w-4" />}
           label="Canvas"
           isActive={isCanvasMode}
+          isMobile={isMobile}
+          onClick={closeSheet}
+          isSidebarExpanded={isSidebarExpanded}
+        />
+        <NavLink
+          to="/app/profile"
+          icon={<User className="h-4 w-4" />}
+          label="Profile"
+          isActive={isProfileMode}
           isMobile={isMobile}
           onClick={closeSheet}
           isSidebarExpanded={isSidebarExpanded}

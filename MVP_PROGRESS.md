@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription.**
+**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Furthermore, browser retention has been improved to prevent state loss when navigating away and returning to a tab.**
 
 ---
 
@@ -84,5 +84,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.2.6 Voice Recorder Unresponsiveness:** Refactored the `VoiceRecorder` component (`src/components/VoiceRecorder.tsx`) to ensure its `useEffect` hook correctly manages the `MediaRecorder` lifecycle, preventing premature stopping and ensuring the "tick" button correctly triggers transcription after audio collection. This resolved the issue where the microphone button appeared unresponsive.
 - [x] **3.2.7 Supabase Client Warning**: Updated `SessionContext.tsx` to import and use the singleton Supabase client from `src/integrations/supabase/client.ts`, resolving the warning about multiple GoTrueClient instances.
 - [x] **3.2.8 React Router Warning**: Moved the navigation logic in `LandingPage.tsx` into a `useEffect` hook to prevent React warnings about state updates during the render phase.
+- [x] **3.2.9 Browser Retention/State Persistence**: Refined the `useEffect` dependencies in `ChatPage.tsx` and `CanvasEditorPage.tsx` to ensure that the component's state (chat messages, document content, etc.) is correctly loaded or reset based on the URL parameters (`conversationId` or `documentId`), preventing loss of context when navigating away and returning to a tab.
+- [x] **3.2.10 Vercel Deployment Syntax Error**: Fixed an "Unexpected ')'" syntax error in `src/pages/CanvasEditorPage.tsx` that was causing Vercel deployments to fail.
 
 ---

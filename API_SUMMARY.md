@@ -89,7 +89,7 @@ The Langsearch API is used to perform legal document and current news searches, 
 
 AssemblyAI is integrated to provide voice input capabilities, converting spoken audio into text.
 
-*   **API Key Rotation**:
+*   **API Key Management**:
     *   A list of hardcoded AssemblyAI API keys is maintained in `src/utils/assemblyAiApiKeys.ts`.
     *   The `transcribeAudio` function manages the rotation of keys, retrying with the next available key upon encountering a `429 (Too Many Requests)` error.
 *   **`transcribeAudio` Function**:
@@ -131,5 +131,6 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
 *   **Accessibility**: `aria-label` attributes have been added to all icon-only buttons across the application for improved screen reader support.
 *   **Code Maintainability**: The `parseAIResponse` function has been refactored into a shared utility (`src/utils/aiResponseParser.ts`) to centralize AI response parsing logic, improving code maintainability and scalability.
 *   **Voice Input**: Integrated a `VoiceRecorder` component into chat input fields, allowing users to record audio, see a visual audio level, and transcribe it into the input box using AssemblyAI's REST API. **The `VoiceRecorder` component has been refactored to ensure robust lifecycle management, preventing premature stopping and correctly triggering transcription after audio collection. A `isTranscribingAudio` state has been added to disable input and display a loading spinner during the transcription process, providing clear user feedback.**
+*   **Browser Retention/State Persistence**: The `useEffect` hooks in `ChatPage.tsx` and `CanvasEditorPage.tsx` have been refined to ensure that the component's state (chat messages, document content, etc.) is correctly loaded or reset based on the URL parameters (`conversationId` or `documentId`), preventing loss of context when navigating away and returning to a tab.
 
 This summary highlights the key technical components and their interactions, forming the foundation of the JudgiAI application.

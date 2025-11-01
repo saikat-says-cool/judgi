@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '@/contexts/SessionContext';
@@ -10,10 +10,11 @@ const LandingPage = () => {
   const { session, isLoading } = useSession();
 
   // If already logged in, redirect to the main app
-  if (!isLoading && session) {
-    navigate('/app'); // Corrected redirect to /app
-    return null;
-  }
+  useEffect(() => {
+    if (!isLoading && session) {
+      navigate('/app');
+    }
+  }, [isLoading, session, navigate]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4">

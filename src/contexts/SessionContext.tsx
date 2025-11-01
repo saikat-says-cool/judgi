@@ -1,15 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Session, createClient } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
-
-// Initialize Supabase client
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+import { supabase } from '@/integrations/supabase/client'; // Import the singleton client
 
 interface SessionContextType {
   supabase: typeof supabase;
@@ -31,9 +26,9 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
         setIsLoading(false);
 
         if (event === 'SIGNED_IN') {
-          navigate('/app'); // Corrected redirect to /app on sign in
+          navigate('/app');
         } else if (event === 'SIGNED_OUT') {
-          navigate('/login'); // Redirect to login page on sign out
+          navigate('/login');
         } else if (event === 'AUTH_API_ERROR') {
           showError("Authentication error. Please try again.");
           console.error("Supabase Auth API Error:", currentSession);

@@ -20,7 +20,8 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   isRecordingActive,
   setIsRecordingActive,
 }) => {
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0); // 0-100 for visual feedback
@@ -28,75 +29,95 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  const startRecording = useCallback(async () => {
-    console.log("Attempting to start recording...");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("Microphone access granted.");
-      const recorder = new MediaRecorder(stream);
-      setMediaRecorder(recorder);
-      setAudioChunks([]);
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          setAudioChunks((prev) => [...prev, event.data]);
-        }
-      };
-
-      recorder.onstop = () => {
-        console.log("MediaRecorder stopped.");
-        stream.getTracks().forEach((track) => track.stop());
-        if (audioContextRef.current) {
-          audioContextRef.current.close();
-          audioContextRef.current = null;
-        }
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-          animationFrameRef.current = null;
-        }
-        setAudioLevel(0);
-      };
-
-      recorder.start();
-      console.log("MediaRecorder started.");
-      setIsRecordingActive(true);
-
-      // Setup audio visualization
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      source.connect(analyserRef.current);
-      analyserRef.current.fftSize = 256;
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      const updateAudioLevel = () => {
-        if (analyserRef.current) {
-          analyserRef.current.getByteFrequencyData(dataArray);
-          let sum = 0;
-          for (let i = 0; i < bufferLength; i++) {
-            sum += dataArray[i];
-          }
-          const average = sum / bufferLength;
-          setAudioLevel(Math.min(100, Math.max(0, Math.floor(average * 0.7)))); // Scale to 0-100
-        }
-        animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
-      };
-      animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
-
-    } catch (err) {
-      console.error("Error accessing microphone or starting recording:", err);
-      showError("Failed to access microphone. Please check permissions and try again.");
-      setIsRecordingActive(false);
-    }
-  }, [setIsRecordingActive]);
-
   const stopRecording = useCallback(() => {
-    if (mediaRecorder && mediaRecorder.state === "recording") {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
       console.log("Stopping MediaRecorder...");
-      mediaRecorder.stop();
+      mediaRecorderRef.current.stop();
     }
-  }, [mediaRecorder]);
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    setAudioLevel(0);
+  }, []);
+
+  useEffect(() => {
+    console.log("VoiceRecorder useEffect: isRecordingActive changed to", isRecordingActive);
+    let currentRecorder: MediaRecorder | null = null;
+    let currentStream: MediaStream | null = null;
+
+    const startRecording = async () => {
+      console.log("Attempting to start recording...");
+      try {
+        currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStreamRef.current = currentStream; // Store stream in ref
+        console.log("Microphone access granted.");
+        currentRecorder = new MediaRecorder(currentStream);
+        mediaRecorderRef.current = currentRecorder; // Store recorder in ref
+        setAudioChunks([]); // Reset chunks for new recording session
+
+        currentRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            setAudioChunks((prev) => [...prev, event.data]);
+          }
+        };
+
+        currentRecorder.onstop = () => {
+          console.log("MediaRecorder stopped.");
+          // Stream and context cleanup handled by the main cleanup function
+        };
+
+        currentRecorder.start();
+        console.log("MediaRecorder started.");
+
+        // Setup audio visualization
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const source = audioContextRef.current.createMediaStreamSource(currentStream);
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        source.connect(analyserRef.current);
+        analyserRef.current.fftSize = 256;
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        const updateAudioLevel = () => {
+          if (analyserRef.current) {
+            analyserRef.current.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+              sum += dataArray[i];
+            }
+            const average = sum / bufferLength;
+            setAudioLevel(Math.min(100, Math.max(0, Math.floor(average * 0.7)))); // Scale to 0-100
+          }
+          animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
+        };
+        animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
+
+      } catch (err) {
+        console.error("Error accessing microphone or starting recording:", err);
+        showError("Failed to access microphone. Please check permissions and try again.");
+        setIsRecordingActive(false);
+      }
+    };
+
+    if (isRecordingActive) {
+      startRecording();
+    }
+
+    return () => {
+      console.log("VoiceRecorder cleanup.");
+      stopRecording(); // Use the memoized stopRecording for cleanup
+      mediaRecorderRef.current = null;
+    };
+  }, [isRecordingActive, setIsRecordingActive, stopRecording]);
 
   const handleSend = useCallback(async () => {
     stopRecording(); // Ensure recording is stopped
@@ -130,28 +151,6 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     setIsRecordingActive(false); // Immediately set recording to inactive in parent
     onRecordingCancel();
   }, [onRecordingCancel, stopRecording, setIsRecordingActive]);
-
-  useEffect(() => {
-    console.log("VoiceRecorder useEffect: isRecordingActive changed to", isRecordingActive);
-    if (isRecordingActive && !mediaRecorder) {
-      startRecording();
-    }
-    // Cleanup on unmount
-    return () => {
-      console.log("VoiceRecorder cleanup.");
-      if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-    };
-  }, [isRecordingActive, mediaRecorder, startRecording]);
 
   if (isTranscribing) {
     return (

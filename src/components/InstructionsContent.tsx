@@ -32,7 +32,7 @@ The Research Chat is your conversational AI partner for legal inquiries. Ask que
 ### Asking Questions
 
 *   Simply type your legal question or query into the input field at the bottom of the chat.
-*   Press \`Enter\` or click the \`Send\` button (paper airplane icon) to submit your query.
+*   Press \\\`Enter\\\` or click the \\\`Send\\\` button (paper airplane icon) to submit your query.
 
 ### Research Modes: Tailor Your AI's Depth
 
@@ -53,32 +53,32 @@ Before sending a message, you can select a research mode to control how deeply J
 Independently of research depth, you can choose how the AI processes your request.
 
 *   **Auto**:
-    *   **Purpose**: The standard, efficient AI model (`LongCat-Flash-Chat`) for quick and direct responses.
+    *   **Purpose**: The standard, efficient AI model (\\\`LongCat-Flash-Chat\\\`) for quick and direct responses.
     *   **When to Use**: Most everyday queries, general information, or when speed is a priority.
 *   **Deep Think**:
-    *   **Purpose**: Activates a more analytical AI model (`LongCat-Flash-Thinking`) with an enhanced "thinking budget." This allows the AI to perform more complex reasoning and provide more detailed, nuanced responses.
+    *   **Purpose**: Activates a more analytical AI model (\\\`LongCat-Flash-Thinking\\\`) with an enhanced "thinking budget." This allows the AI to perform more complex reasoning and provide more detailed, nuanced responses.
     *   **When to Use**: For intricate legal problems, strategic advice, or when you need the AI to delve deeper into logical connections and implications.
 
 ### Interpreting AI Responses
 
 *   **Structured Summaries**: AI responses are formatted for clarity, often including summaries of cases, statutes, or legal principles.
-*   **Citations**: JudgiAI diligently includes citations for legal research results. These will appear as **Markdown links** (e.g., \`[Kesavananda Bharati v. State of Kerala](https://indiankanoon.org/doc/1551775/)\`). Click on these links to open the source document in a new tab for verification and deeper reading.
+*   **Citations**: JudgiAI diligently includes citations for legal research results. These will appear as **Markdown links** (e.g., \\\`[Kesavananda Bharati v. State of Kerala](https://indiankanoon.org/doc/1551775/)\\\`). Click on these links to open the source document in a new tab for verification and deeper reading.
 *   **Loading Indicators**: While JudgiAI is processing, you'll see a spinning square icon and detailed status messages (e.g., "Searching legal documents...", "Generating AI response...") to keep you informed.
 
 ### Voice Input
 
 *   **Start Recording**: If the input field is empty, a microphone icon will appear. Click it to start recording your query.
 *   **Audio Level Feedback**: A pulsating microphone icon provides visual feedback on your audio input level.
-*   **Send/Cancel**: Click the \`Check\` icon to send your recorded message for transcription and AI processing, or the \`X\` icon to cancel the recording.
+*   **Send/Cancel**: Click the \\\`Check\\\` icon to send your recorded message for transcription and AI processing, or the \\\`X\\\` icon to cancel the recording.
 *   **Transcription Status**: A "Transcribing audio..." message will appear while your speech is being converted to text.
 
 ### Saving to Canvas
 
-*   After an AI response, a \`Save to Canvas\` button (floppy disk icon) will appear below the message.
+*   After an AI response, a \\\`Save to Canvas\\\` button (floppy disk icon) will appear below the message.
 *   Clicking this button will open a dialog:
     *   **Select Existing Document**: Choose one of your existing documents from the list to append the AI's response to it.
     *   **Create New Document**: Enter a new title to create a brand new document in your Canvas, and the AI's response will be its initial content.
-*   Click \`Save\` to complete the action.
+*   Click \\\`Save\\\` to complete the action.
 
 ---
 
@@ -89,7 +89,7 @@ The Copilot Canvas is your dedicated environment for drafting legal documents wi
 ### Creating or Opening Documents
 
 *   **From Canvas Home**: Navigate to the "Canvas" tab in the sidebar. Here, you can:
-    *   Click \`Create New Canvas\` to start a fresh document.
+    *   Click \\\`Create New Canvas\\\` to start a fresh document.
     *   Select any of your "Recent Canvases" to continue working on an existing document.
 *   **From Chat**: Use the "Save to Canvas" feature in the Research Chat to create a new document or append to an existing one.
 
@@ -98,20 +98,20 @@ The Copilot Canvas is your dedicated environment for drafting legal documents wi
 The left panel of the Canvas is your rich text editor, powered by TipTap. It supports comprehensive formatting without needing to switch modes.
 
 *   **Basic Formatting**:
-    *   **Bold**: \`B\` icon
-    *   **Italic**: \`I\` icon
-    *   **Underline**: \`U\` icon
-    *   **Strikethrough**: \`S\` icon
-    *   **Inline Code**: \`</>\` icon
+    *   **Bold**: \\\`B\\\` icon
+    *   **Italic**: \\\`I\\\` icon
+    *   **Underline**: \\\`U\\\` icon
+    *   **Strikethrough**: \\\`S\\\` icon
+    *   **Inline Code**: \\\`</>\\\` icon
 *   **Block Types**:
     *   **Paragraph**: Default text.
-    *   **Headings**: \`H1\`, \`H2\`, \`H3\` icons (via the \`Type\` dropdown).
-    *   **Lists**: \`Bullet List\` and \`Ordered List\` icons.
-    *   **Blockquote**: \`Quote\` icon.
+    *   **Headings**: \\\`H1\\\`, \\\`H2\\\`, \\\`H3\\\` icons (via the \\\`Type\\\` dropdown).
+    *   **Lists**: \\\`Bullet List\\\` and \\\`Ordered List\\\` icons.
+    *   **Blockquote**: \\\`Quote\\\` icon.
 *   **Text Alignment**:
     *   Align Left, Center, Right, Justify icons.
-*   **Undo/Redo**: \`Undo\` and \`Redo\` icons for quick revisions.
-*   **Highlight**: \`Highlight\` icon to apply text highlighting.
+*   **Undo/Redo**: \\\`Undo\\\` and \\\`Redo\\\` icons for quick revisions.
+*   **Highlight**: \\\`Highlight\\\` icon to apply text highlighting.
 *   **Note**: Font family selection has been removed to maintain a consistent aesthetic.
 
 ### AI Assistant Chat (within Canvas)
@@ -119,7 +119,7 @@ The left panel of the Canvas is your rich text editor, powered by TipTap. It sup
 The right panel is your dedicated AI Assistant, providing contextual help based on your document content.
 
 *   **Asking Questions**: Type your questions or commands into the input field. The AI will use the content of your document as context.
-*   **Drafting Actions**: Use the \`Drafting Actions\` dropdown for common legal drafting tasks:
+*   **Drafting Actions**: Use the \\\`Drafting Actions\\\` dropdown for common legal drafting tasks:
     *   **Summarize Document**: Get a concise summary of your current document.
     *   **Draft as Petition**: Reformat your content into a legal petition structure.
     *   **Improve Legal Language**: Enhance the clarity and professionalism of your writing.
@@ -132,10 +132,10 @@ The right panel is your dedicated AI Assistant, providing contextual help based 
 
 The AI Assistant can directly modify your document using special tags. You'll see a conversational message in the chat explaining what the AI has done.
 
-*   **Replacing Content (\`<DOCUMENT_REPLACE>\`)**:
+*   **Replacing Content (\\\`<DOCUMENT_REPLACE>\\\`)**:
     *   **Action**: The AI will completely overwrite the entire content of your document with its new output.
     *   **When Used**: For major restructuring, polishing, significant edits, or when the AI needs to start fresh based on your command.
-*   **Appending Content (\`<DOCUMENT_WRITE>\`)**:
+*   **Appending Content (\\\`<DOCUMENT_WRITE>\\\`)**:
     *   **Action**: The AI will add its new output to the very end of your existing document.
     *   **When Used**: For adding new sections, arguments, or continuations.
 *   **AI Writing Indicator**: While the AI is actively modifying your document, a message like "JudgiAI is appending..." or "JudgiAI is replacing document content..." will appear at the bottom of the writing canvas, providing clear feedback.
@@ -144,14 +144,14 @@ The AI Assistant can directly modify your document using special tags. You'll se
 
 *   **Document Title**: Edit the document title directly in the input field at the top of the editor.
 *   **Auto-Save**: Your document content and AI chat history are automatically saved every 5 seconds when changes are detected.
-*   **Manual Save**: Click the \`Save\` icon (floppy disk) at the top to manually save your changes at any time.
+*   **Manual Save**: Click the \\\`Save\\\` icon (floppy disk) at the top to manually save your changes at any time.
 *   **Unsaved Changes Warning**: If you try to navigate away with unsaved changes, a dialog will prompt you to save or discard your work.
-*   **Deleting Documents**: From the Canvas Home page, you can delete documents using the \`Trash2\` icon next to each document.
+*   **Deleting Documents**: From the Canvas Home page, you can delete documents using the \\\`Trash2\\\` icon next to each document.
 
 ### Exporting Documents
 
-*   Click the \`File Down\` icon at the top of the editor.
-*   Choose either \`Download as DOCX\` or \`Download as PDF\` to export your document in the desired format.
+*   Click the \\\`File Down\\\` icon at the top of the editor.
+*   Choose either \\\`Download as DOCX\\\` or \\\`Download as PDF\\\` to export your document in the desired format.
 
 ---
 
@@ -165,7 +165,7 @@ The sidebar provides quick access to key areas of the application.
 *   **Instructions**: View this detailed user guide.
 *   **Recent Chats**: Quickly jump back into your ongoing conversations.
 *   **Recent Documents**: Access your recently edited legal documents.
-*   **Expand/Collapse**: On desktop, click the \`Chevron Left/Right\` icon to expand or collapse the sidebar. On mobile, use the \`Menu\` icon to open/close the sidebar sheet.
+*   **Expand/Collapse**: On desktop, click the \\\`Chevron Left/Right\\\` icon to expand or collapse the sidebar. On mobile, use the \\\`Menu\\\` icon to open/close the sidebar sheet.
 
 ---
 
@@ -173,9 +173,9 @@ The sidebar provides quick access to key areas of the application.
 
 Manage your personal information here.
 
-*   **Access**: Click the \`Profile\` link in the sidebar.
+*   **Access**: Click the \\\`Profile\\\` link in the sidebar.
 *   **Update Details**: Edit your first name, last name, and country.
-*   **Save Changes**: Click \`Save Changes\` to update your profile.
+*   **Save Changes**: Click \\\`Save Changes\\\` to update your profile.
 *   **Country Context**: Your specified country helps the AI provide more relevant legal context in its responses.
 
 ---

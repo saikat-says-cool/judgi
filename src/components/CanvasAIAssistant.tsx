@@ -73,6 +73,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false); // New state for voice recording
+  const [isTranscribingAudio, setIsTranscribingAudio] = useState(false); // New state for transcription loading
+
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -90,7 +92,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       showError("You must be logged in to send messages.");
       return;
     }
-    if (loadingAIResponse || isAIWritingToCanvas) {
+    if (loadingAIResponse || isAIWritingToCanvas || isTranscribingAudio) { // Disable if transcribing
       showError("Please wait for the current AI operation to complete.");
       return;
     }
@@ -219,10 +221,17 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const handleTranscriptionComplete = (text: string) => {
     setInputMessage(text);
     setIsRecording(false);
+    setIsTranscribingAudio(false); // Transcription complete
   };
 
   const handleRecordingCancel = () => {
     setIsRecording(false);
+    setIsTranscribingAudio(false); // Transcription cancelled
+  };
+
+  const handleStartRecording = () => {
+    setIsRecording(true);
+    setIsTranscribingAudio(true); // Start transcribing state immediately
   };
 
   return (
@@ -232,7 +241,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 text-sm" aria-label="Drafting actions">
+              <Button variant="outline" size="sm" className="h-9 text-sm" aria-label="Drafting actions" disabled={loadingAIResponse || isAIWritingToCanvas || isTranscribingAudio}>
                 <Sparkles className="h-4 w-4 mr-2" /> Drafting Actions
               </Button>
             </DropdownMenuTrigger>
@@ -261,7 +270,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
+          <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode} disabled={loadingAIResponse || isAIWritingToCanvas || isTranscribingAudio}>
             <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select research mode">
               <SelectValue placeholder="Research Mode" />
             </SelectTrigger>
@@ -271,7 +280,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               <SelectItem value="deep_research">Deep Research</SelectItem>
             </SelectContent>
           </Select>
-          <Select onValueChange={(value: AiModelMode) => setAiModelMode(value)} value={aiModelMode}>
+          <Select onValueChange={(value: AiModelMode) => setAiModelMode(value)} value={aiModelMode} disabled={loadingAIResponse || isAIWritingToCanvas || isTranscribingAudio}>
             <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select AI model">
               <SelectValue placeholder="AI Model" />
             </SelectTrigger>
@@ -280,7 +289,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               <SelectItem value="deep_think">Deep Think</SelectItem>
             </SelectContent>
           </Select>
-          <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily}>
+          <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily} disabled={loadingAIResponse || isAIWritingToCanvas || isTranscribingAudio}>
             <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select AI output font">
               <SelectValue placeholder="AI Output Font" />
             </SelectTrigger>
@@ -347,6 +356,11 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
             isRecordingActive={isRecording}
             setIsRecordingActive={setIsRecording}
           />
+        ) : isTranscribingAudio ? (
+          <div className="flex items-center justify-center w-full h-full px-2 py-2">
+            <Square className="h-5 w-5 animate-spin mr-2 text-primary" />
+            <span className="text-muted-foreground text-sm">Transcribing audio...</span>
+          </div>
         ) : (
           <>
             <Input
@@ -365,7 +379,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               <Button
                 type="button"
                 size="icon"
-                onClick={() => setIsRecording(true)}
+                onClick={handleStartRecording}
                 disabled={loadingAIResponse || isAIWritingToCanvas}
                 aria-label="Start voice recording"
               >

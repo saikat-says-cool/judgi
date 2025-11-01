@@ -46,6 +46,7 @@ const ChatPage = () => {
   const [contentToSaveToCanvas, setContentToSaveToCanvas] = useState('');
   const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false); // New state for voice recording
+  const [isTranscribingAudio, setIsTranscribingAudio] = useState(false); // New state for transcription loading
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -122,8 +123,8 @@ const ChatPage = () => {
       showError("You must be logged in to send messages.");
       return;
     }
-    if (loadingAIResponse) {
-      showError("Please wait for the current AI response to complete.");
+    if (loadingAIResponse || isTranscribingAudio) { // Disable if transcribing
+      showError("Please wait for the current AI operation to complete.");
       return;
     }
 
@@ -294,10 +295,17 @@ const ChatPage = () => {
   const handleTranscriptionComplete = (text: string) => {
     setInputMessage(text);
     setIsRecording(false);
+    setIsTranscribingAudio(false); // Transcription complete
   };
 
   const handleRecordingCancel = () => {
     setIsRecording(false);
+    setIsTranscribingAudio(false); // Transcription cancelled
+  };
+
+  const handleStartRecording = () => {
+    setIsRecording(true);
+    setIsTranscribingAudio(true); // Start transcribing state immediately
   };
 
   if (loadingHistory) {
@@ -324,13 +332,15 @@ const ChatPage = () => {
           setIsRecording={setIsRecording}
           onTranscriptionComplete={handleTranscriptionComplete}
           onRecordingCancel={handleRecordingCancel}
+          isTranscribingAudio={isTranscribingAudio} // Pass to NewChatWelcome
+          handleStartRecording={handleStartRecording} // Pass to NewChatWelcome
         />
       ) : (
         <>
           <CardHeader className="border-b p-4 flex flex-row items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-lg">Chat</CardTitle>
             <div className="flex flex-wrap gap-2">
-              <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
+              <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode} disabled={loadingAIResponse || isTranscribingAudio}>
                 <SelectTrigger className="w-full md:w-[180px] h-9 text-sm">
                   <SelectValue placeholder="Research Mode" />
                 </SelectTrigger>
@@ -340,7 +350,7 @@ const ChatPage = () => {
                   <SelectItem value="deep_research">Deep Research</SelectItem>
                 </SelectContent>
               </Select>
-              <Select onValueChange={(value: AiModelMode) => setAiModelMode(value)} value={aiModelMode}>
+              <Select onValueChange={(value: AiModelMode) => setAiModelMode(value)} value={aiModelMode} disabled={loadingAIResponse || isTranscribingAudio}>
                 <SelectTrigger className="w-full md:w-[180px] h-9 text-sm">
                   <SelectValue placeholder="AI Model" />
                 </SelectTrigger>
@@ -410,6 +420,11 @@ const ChatPage = () => {
                 isRecordingActive={isRecording}
                 setIsRecordingActive={setIsRecording}
               />
+            ) : isTranscribingAudio ? (
+              <div className="flex items-center justify-center w-full h-full px-2 py-2">
+                <Square className="h-5 w-5 animate-spin mr-2 text-primary" />
+                <span className="text-muted-foreground text-sm">Transcribing audio...</span>
+              </div>
             ) : (
               <>
                 <Input
@@ -428,7 +443,7 @@ const ChatPage = () => {
                   <Button
                     type="button"
                     size="icon"
-                    onClick={() => setIsRecording(true)}
+                    onClick={handleStartRecording}
                     disabled={loadingAIResponse}
                     aria-label="Start voice recording"
                   >

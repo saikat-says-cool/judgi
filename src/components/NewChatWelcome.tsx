@@ -21,6 +21,8 @@ interface NewChatWelcomeProps {
   setIsRecording: (active: boolean) => void;
   onTranscriptionComplete: (text: string) => void;
   onRecordingCancel: () => void;
+  isTranscribingAudio: boolean; // New prop for transcription loading
+  handleStartRecording: () => void; // New prop to start recording
 }
 
 const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
@@ -36,9 +38,11 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
   setIsRecording,
   onTranscriptionComplete,
   onRecordingCancel,
+  isTranscribingAudio,
+  handleStartRecording,
 }) => {
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && !loadingAIResponse) {
+    if (event.key === 'Enter' && !loadingAIResponse && !isTranscribingAudio) {
       handleSendMessage();
     }
   };
@@ -50,7 +54,7 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
         <p className="text-muted-foreground mb-6">Ask JudgiAI a question to get started.</p>
 
         <div className="flex flex-wrap justify-center gap-2 mb-6">
-          <Select onValueChange={setResearchMode} value={researchMode}>
+          <Select onValueChange={setResearchMode} value={researchMode} disabled={loadingAIResponse || isTranscribingAudio}>
             <SelectTrigger className="w-full md:w-[180px] h-9 text-sm" aria-label="Select research mode">
               <SelectValue placeholder="Research Mode" />
             </SelectTrigger>
@@ -60,7 +64,7 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
               <SelectItem value="deep_research">Deep Research</SelectItem>
             </SelectContent>
           </Select>
-          <Select onValueChange={setAiModelMode} value={aiModelMode}>
+          <Select onValueChange={setAiModelMode} value={aiModelMode} disabled={loadingAIResponse || isTranscribingAudio}>
             <SelectTrigger className="w-full md:w-[180px] h-9 text-sm" aria-label="Select AI model">
               <SelectValue placeholder="AI Model" />
             </SelectTrigger>
@@ -79,6 +83,11 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
               isRecordingActive={isRecording}
               setIsRecordingActive={setIsRecording}
             />
+          ) : isTranscribingAudio ? (
+            <div className="flex items-center justify-center w-full h-full px-2 py-2">
+              <Square className="h-5 w-5 animate-spin mr-2 text-primary" />
+              <span className="text-muted-foreground text-sm">Transcribing audio...</span>
+            </div>
           ) : (
             <>
               <Input
@@ -94,7 +103,7 @@ const NewChatWelcome: React.FC<NewChatWelcomeProps> = ({
                 <Button
                   type="button"
                   size="icon"
-                  onClick={() => setIsRecording(true)}
+                  onClick={handleStartRecording}
                   disabled={loadingAIResponse}
                   aria-label="Start voice recording"
                 >

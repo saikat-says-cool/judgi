@@ -339,7 +339,7 @@ const ChatPage = () => {
           isRecording={isRecording}
           setIsRecording={setIsRecording}
           onTranscriptionComplete={handleTranscriptionComplete}
-          onRecordingCancel={handleRecordingCancel}
+          onRecordingCancel={onRecordingCancel}
           isTranscribingAudio={isTranscribingAudio} // Pass to NewChatWelcome
           handleStartRecording={handleStartRecording} // Pass to NewChatWelcome
         />

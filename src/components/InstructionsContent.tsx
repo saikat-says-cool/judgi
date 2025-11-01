@@ -204,8 +204,8 @@ We hope this guide helps you make the most of JudgiAI. Happy drafting and resear
 
 const InstructionsContent: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 p-4 bg-background text-foreground">
-      <div className="w-full max-w-4xl p-6 bg-card shadow-lg rounded-lg prose dark:prose-invert">
+    <div className="flex flex-col flex-1 p-4 bg-background text-foreground overflow-y-auto">
+      <div className="w-full max-w-4xl mx-auto p-6 bg-card shadow-lg rounded-lg prose dark:prose-invert">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {instructionsMarkdown}
         </ReactMarkdown>

@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Square, Save, Mic } from 'lucide-react'; // Import Mic icon
-import { useSession } from '@/contexts/SessionContext';
+import { useSession } from '@/contexts/Session/SessionContext'; // Corrected import path
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import NewChatWelcome from '@/components/NewChatWelcome';
@@ -39,7 +39,6 @@ const ChatPage = () => {
   const [loadingHistory, setLoadingHistory] = useState(true); // Always start as true, will be set to false by effects
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null); // Internal state for active conversation ID
   const [researchMode, setResearchMode] = useState<ResearchMode>('no_research');
   const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
@@ -61,23 +60,10 @@ const ChatPage = () => {
     }
   }, [messages]);
 
-  // Effect to update internal currentConversationId based on URL params
-  useEffect(() => {
-    if (conversationId === 'new') {
-      setMessages([]);
-      setCurrentConversationId(null);
-      setLoadingHistory(false); // No history to load for a new chat
-    } else if (conversationId) {
-      setCurrentConversationId(conversationId);
-    } else {
-      navigate('/app/chat/new', { replace: true });
-    }
-  }, [conversationId, navigate]);
-
-  // Effect to fetch chat history when internal currentConversationId changes
+  // Effect to fetch chat history when conversationId from URL changes
   useEffect(() => {
     const fetchChatHistory = async (convId: string) => {
-      if (!session?.user?.id || !convId) {
+      if (!session?.user?.id) {
         setLoadingHistory(false);
         return;
       }
@@ -100,13 +86,15 @@ const ChatPage = () => {
       setLoadingHistory(false);
     };
 
-    if (currentConversationId) {
-      fetchChatHistory(currentConversationId);
+    if (conversationId === 'new') {
+      setMessages([]);
+      setLoadingHistory(false); // No history to load for a new chat
+    } else if (conversationId) {
+      fetchChatHistory(conversationId);
     } else {
-      setMessages([]); // Ensure messages are clear if currentConversationId becomes null (e.g., 'new' chat)
-      setLoadingHistory(false);
+      navigate('/app/chat/new', { replace: true });
     }
-  }, [currentConversationId, session?.user?.id, supabase]); // Depends on internal ID and session
+  }, [conversationId, session?.user?.id, supabase, navigate]);
 
   const createNewConversation = useCallback(async (initialTitle: string) => {
     if (!session?.user?.id) {
@@ -139,7 +127,7 @@ const ChatPage = () => {
 
     if (inputMessage.trim()) {
       const userMessageContent = inputMessage.trim();
-      let activeConversationId = currentConversationId; // Use internal state for active ID
+      let activeConversationId = conversationId; // Use conversationId from URL directly
 
       const newUserMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -147,6 +135,8 @@ const ChatPage = () => {
         content: userMessageContent,
         created_at: new Date().toISOString(),
       };
+      
+      // Optimistically add user message to UI
       setMessages((prevMessages) => [...prevMessages, newUserMessage]);
       setInputMessage('');
       setLoadingAIResponse(true);
@@ -155,15 +145,16 @@ const ChatPage = () => {
 
       let shouldNavigateAfterAI = false;
 
-      if (!activeConversationId) { // If it's a new chat
+      if (activeConversationId === 'new') {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
-        activeConversationId = await createNewConversation(initialTitle);
-        if (!activeConversationId) {
+        const newConvId = await createNewConversation(initialTitle);
+        if (!newConvId) {
           setLoadingAIResponse(false);
-          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id)); // Remove optimistic message
           return;
         }
-        shouldNavigateAfterAI = true; // Set flag to navigate after AI response
+        activeConversationId = newConvId;
+        shouldNavigateAfterAI = true;
       }
 
       // Save user message to DB
@@ -192,7 +183,15 @@ const ChatPage = () => {
         );
       }
 
-      const messagesForAI = [...messages.filter(msg => !msg.isStreaming), { role: 'user', content: userMessageContent }];
+      // Construct messages for AI:
+      // If it's a new conversation, only send the current user message.
+      // If it's an existing conversation, send the full current messages array.
+      const messagesForAI: LongCatMessage[] = [];
+      if (activeConversationId !== 'new') { // If it's an existing conversation
+        messagesForAI.push(...messages.filter(msg => !msg.isStreaming));
+      }
+      messagesForAI.push({ role: 'user', content: userMessageContent });
+
 
       const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
       setMessages((prevMessages) => [
@@ -263,7 +262,6 @@ const ChatPage = () => {
 
         // Navigate ONLY after AI response is fully processed and saved, if it was a new chat
         if (shouldNavigateAfterAI && activeConversationId) {
-          setCurrentConversationId(activeConversationId); // Update internal state before navigating
           navigate(`/app/chat/${activeConversationId}`, { replace: true });
         }
 

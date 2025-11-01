@@ -4,7 +4,7 @@ This document outlines the next phases of development for JudgiAI, building upon
 
 ---
 
-**All Minimum Viable Product (MVP) features and optimizations have been successfully implemented.** The application is now fully functional according to the MVP specification.
+**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time.
 
 ---
 
@@ -77,3 +77,10 @@ These are features that could significantly enhance the application but are like
 
 ### 3.6 User Feedback and Rating System
 *   Allow users to rate the quality of AI responses and document suggestions to help improve the AI model over time.
+
+---
+
+## Phase 4: Professional Features - AI Model & Research Control
+
+### 4.1 Independent AI Model and Research Depth Controls (DONE)
+- [x] **Action Taken**: Renamed research mode options to "Quick Lookup", "Moderate Research", and "Deep Research". Introduced a new independent toggle for AI model selection: "Auto" (using `LongCat-Flash-Chat`) and "Deep Think" (using `LongCat-Flash-Thinking`). The research mode now exclusively controls the depth of Langsearch calls, while the AI model toggle exclusively controls the LongCat model used. These controls are implemented in both `ChatPage.tsx` and `CanvasAIAssistant.tsx`.

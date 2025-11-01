@@ -27,7 +27,8 @@ interface LongCatMessage {
 }
 
 interface GetLongCatCompletionOptions {
-  researchMode: 'none' | 'medium' | 'max';
+  researchMode: 'quick_lookup' | 'moderate_research' | 'deep_research';
+  aiModelMode: 'auto' | 'deep_think'; // New prop for AI model selection
   userId: string;
   currentDocumentContent?: string;
   onStatusUpdate?: (status: string) => void; // New callback for status updates
@@ -37,7 +38,7 @@ export const getLongCatCompletion = async function* (
   messages: LongCatMessage[],
   options: GetLongCatCompletionOptions
 ): AsyncGenerator<string, void, unknown> {
-  const { researchMode, userId, currentDocumentContent, onStatusUpdate } = options;
+  const { researchMode, aiModelMode, userId, currentDocumentContent, onStatusUpdate } = options;
 
   // Ensure an API key is available before proceeding
   if (getLongCatApiKeyCount() === 0) {
@@ -64,10 +65,10 @@ export const getLongCatCompletion = async function* (
         }
       }
 
-      const useThinkingModel = researchMode === 'medium' || researchMode === 'max';
-      const model = useThinkingModel ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
-      const enableThinking = useThinkingModel;
-      const thinkingBudget = 1024;
+      // Model selection based on aiModelMode
+      const model = aiModelMode === 'deep_think' ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+      const enableThinking = aiModelMode === 'deep_think';
+      const thinkingBudget = 1024; // Consistent thinking budget for Deep Think mode
 
       // Get current date and time
       const now = new Date();
@@ -103,10 +104,21 @@ export const getLongCatCompletion = async function* (
       let researchResults = '';
       const lastUserMessage = messages.findLast(msg => msg.role === 'user')?.content || '';
 
-      if (researchMode === 'medium' || researchMode === 'max') {
+      // Determine research depth based on researchMode
+      let legalDocsCount = 0;
+      let newsDocsCount = 0;
+
+      if (researchMode === 'moderate_research') {
+        legalDocsCount = 2;
+      } else if (researchMode === 'deep_research') {
+        legalDocsCount = 5;
+        newsDocsCount = 2;
+      }
+
+      if (legalDocsCount > 0) {
         try {
           onStatusUpdate?.("Searching legal documents..."); // Status update
-          const legalDocs = await searchLegalDocuments(lastUserMessage, researchMode === 'max' ? 5 : 2, userCountry);
+          const legalDocs = await searchLegalDocuments(lastUserMessage, legalDocsCount, userCountry);
           if (legalDocs.length > 0) {
             researchResults += "\n\n<LEGAL_RESEARCH_RESULTS>\n";
             legalDocs.forEach(doc => {
@@ -121,10 +133,10 @@ export const getLongCatCompletion = async function* (
         }
       }
 
-      if (researchMode === 'max') {
+      if (newsDocsCount > 0) {
         try {
           onStatusUpdate?.("Searching current news..."); // Status update
-          const newsDocs = await searchCurrentNews(lastUserMessage, 2, userCountry);
+          const newsDocs = await searchCurrentNews(lastUserMessage, newsDocsCount, userCountry);
           if (newsDocs.length > 0) {
             researchResults += "\n\n<CURRENT_NEWS_RESULTS>\n";
             newsDocs.forEach(doc => {

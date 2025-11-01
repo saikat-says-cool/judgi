@@ -44,10 +44,13 @@ The LongCat API powers the conversational AI capabilities in both the chat inter
     *   If a `429 (Too Many Requests)` error is encountered, the system automatically retries the request with the next available API key.
 *   **`getLongCatCompletion` Function**:
     *   This asynchronous generator function handles streaming AI responses.
-    *   **Research Modes**: It accepts a `researchMode` parameter (`none`, `medium`, `max`) which influences the AI's behavior and context.
-    *   **Model Selection**:
-        *   For `none` (Quick Lookup), it uses `LongCat-Flash-Chat`.
-        *   For `medium` (Deep Think) and `max` (Deeper Research), it uses `LongCat-Flash-Thinking` with `enable_thinking: true` and `thinking_budget: 1024` for more in-depth processing.
+    *   **AI Model Selection (`aiModelMode`)**: A new independent parameter (`auto` or `deep_think`) determines the underlying LongCat model.
+        *   `auto` mode uses `LongCat-Flash-Chat`.
+        *   `deep_think` mode uses `LongCat-Flash-Thinking` with `enable_thinking: true` and `thinking_budget: 1024` for more in-depth processing.
+    *   **Research Modes (`researchMode`)**: The `researchMode` parameter (`quick_lookup`, `moderate_research`, `deep_research`) now *only* controls the depth of external research calls to Langsearch.
+        *   `quick_lookup`: No external research.
+        *   `moderate_research`: Fetches 2 legal documents.
+        *   `deep_research`: Fetches 5 legal documents and 2 news articles.
     *   **System Prompt Construction**:
         *   The system prompt (`systemPrompt`) is dynamically constructed to define JudgiAI's persona as a legal assistant.
         *   It includes the **current date and time** for contextual awareness.
@@ -56,7 +59,7 @@ The LongCat API powers the conversational AI capabilities in both the chat inter
         *   Crucially, it injects `researchResults` (from Langsearch) and `currentDocumentContent` (from the Canvas) into the prompt, providing the AI with relevant context.
     *   **Streaming Responses**: The function yields chunks of the AI's response, allowing for real-time display in the UI.
     *   **Document Update Tags**: The AI is instructed to use `<DOCUMENT_REPLACE>` to overwrite the entire document or `<DOCUMENT_WRITE>` to append content. These tags are parsed client-side to update the `RichTextEditor`.
-    *   **Enhanced Latency Feedback**: An `onStatusUpdate` callback is used to provide granular feedback on AI processing stages (e.g., "Searching legal documents...", "Generating AI response...") to the UI.
+    *   **Enhanced Latency Feedback**: An `onStatusUpdate` callback is used to provide granular feedback on AI processing stages (e.g., "Searching legal databases...", "Generating AI response...") to the UI.
     *   **Robust Error Handling**: Includes specific error messages for API errors (429, 401) and network issues, with detailed console logging.
 
 ### 2.3. Langsearch API (Legal Research)
@@ -70,13 +73,13 @@ The Langsearch API is used to perform legal document and current news searches, 
     *   Similar to LongCat, a list of hardcoded Langsearch API keys is managed in `src/utils/langsearchApiKeys.ts`.
     *   `makeLangsearchRequest` handles automatic key rotation and retries on `429` errors.
 *   **`searchLegalDocuments` Function**:
-    *   Takes a `query`, `count`, and `country` as parameters.
+    *   Takes a `query`, `count`, and `country` as parameters. The `count` is now dynamically determined by the `researchMode` in `getLongCatCompletion`.
     *   **Two-Step Search Process**:
         1.  **Initial Broad Search**: Uses `web-search` with an enhanced query (e.g., "Indian legal cases about...") to retrieve a larger set of candidate documents (e.g., 10).
         2.  **Semantic Reranking**: The content of these candidate documents is then passed to the `rerank` endpoint along with the original query. This step semantically re-orders the documents by relevance and selects the `top_n` (e.g., 5) most relevant ones.
     *   Results are formatted into `LegalDocument` objects, including title, content, and citation (URL).
 *   **`searchCurrentNews` Function**:
-    *   Similar two-step process for news articles, using `web-search` with `freshness: "oneDay"` and then `rerank` for relevance.
+    *   Similar two-step process for news articles, using `web-search` with `freshness: "oneDay"` and then `rerank` for relevance. The `count` is also dynamically determined by `researchMode`.
     *   Query construction is adapted for news searches (e.g., "current Indian legal news about...").
 *   **Integration with LongCat**: The results from `searchLegalDocuments` and `searchCurrentNews` are injected into the LongCat AI's system prompt as `<LEGAL_RESEARCH_RESULTS>` and `<CURRENT_NEWS_RESULTS>`, providing the AI with up-to-date and relevant information.
 *   **Robust Error Handling**: Includes specific error messages for API errors (429, 401) and network issues, with detailed console logging.

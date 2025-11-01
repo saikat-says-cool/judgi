@@ -40,7 +40,8 @@ interface CanvasAIAssistantProps {
   aiDocumentAction: 'append' | 'replace' | null;
 }
 
-type ResearchMode = 'none' | 'medium' | 'max';
+type ResearchMode = 'quick_lookup' | 'moderate_research' | 'deep_research';
+type AiModelMode = 'auto' | 'deep_think';
 
 const fonts = [
   { name: 'Inter', style: 'font-inter' },
@@ -67,7 +68,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
   const [inputMessage, setInputMessage] = useState<string>('');
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
-  const [researchMode, setResearchMode] = useState<ResearchMode>('none');
+  const [researchMode, setResearchMode] = useState<ResearchMode>('quick_lookup');
+  const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -117,6 +119,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     try {
       for await (const chunk of getLongCatCompletion(updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content })), {
         researchMode: researchMode,
+        aiModelMode: aiModelMode, // Pass new AI model mode
         userId: session.user.id,
         currentDocumentContent: writingContent,
         onStatusUpdate: setDetailedLoadingMessage,
@@ -252,9 +255,18 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
               <SelectValue placeholder="Research Mode" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Quick Lookup</SelectItem>
-              <SelectItem value="medium">Deep Think</SelectItem>
-              <SelectItem value="max">Deeper Research</SelectItem>
+              <SelectItem value="quick_lookup">Quick Lookup</SelectItem>
+              <SelectItem value="moderate_research">Moderate Research</SelectItem>
+              <SelectItem value="deep_research">Deep Research</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select onValueChange={(value: AiModelMode) => setAiModelMode(value)} value={aiModelMode}>
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm" aria-label="Select AI model">
+              <SelectValue placeholder="AI Model" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto</SelectItem>
+              <SelectItem value="deep_think">Deep Think</SelectItem>
             </SelectContent>
           </Select>
           <Select onValueChange={setAiOutputFontFamily} value={aiOutputFontFamily}>

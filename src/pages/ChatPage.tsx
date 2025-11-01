@@ -25,7 +25,8 @@ interface ChatMessage {
   isStreaming?: boolean;
 }
 
-type ResearchMode = 'none' | 'medium' | 'max';
+type ResearchMode = 'quick_lookup' | 'moderate_research' | 'deep_research';
+type AiModelMode = 'auto' | 'deep_think';
 
 const ChatPage = () => {
   const { supabase, session } = useSession();
@@ -38,7 +39,8 @@ const ChatPage = () => {
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const [researchMode, setResearchMode] = useState<ResearchMode>('none');
+  const [researchMode, setResearchMode] = useState<ResearchMode>('quick_lookup');
+  const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
   const [contentToSaveToCanvas, setContentToSaveToCanvas] = useState('');
   const [detailedLoadingMessage, setDetailedLoadingMessage] = useState<string | null>(null);
@@ -216,6 +218,7 @@ const ChatPage = () => {
       try {
         for await (const chunk of getLongCatCompletion(messagesForAI, {
           researchMode: researchMode,
+          aiModelMode: aiModelMode, // Pass new AI model mode
           userId: session.user.id,
           onStatusUpdate: setDetailedLoadingMessage,
         })) {
@@ -305,18 +308,29 @@ const ChatPage = () => {
         />
       ) : (
         <>
-          <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
+          <CardHeader className="border-b p-4 flex flex-row items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-lg">Chat</CardTitle>
-            <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
-              <SelectTrigger className="w-full md:w-[180px] h-9 text-sm">
-                <SelectValue placeholder="Research Mode" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Quick Lookup</SelectItem>
-                <SelectItem value="medium">Deep Think</SelectItem>
-                <SelectItem value="max">Deeper Research</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-2">
+              <Select onValueChange={(value: ResearchMode) => setResearchMode(value)} value={researchMode}>
+                <SelectTrigger className="w-full md:w-[180px] h-9 text-sm">
+                  <SelectValue placeholder="Research Mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="quick_lookup">Quick Lookup</SelectItem>
+                  <SelectItem value="moderate_research">Moderate Research</SelectItem>
+                  <SelectItem value="deep_research">Deep Research</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select onValueChange={(value: AiModelMode) => setAiModelMode(value)} value={aiModelMode}>
+                <SelectTrigger className="w-full md:w-[180px] h-9 text-sm">
+                  <SelectValue placeholder="AI Model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto</SelectItem>
+                  <SelectItem value="deep_think">Deep Think</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-hidden">

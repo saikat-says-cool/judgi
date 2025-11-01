@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Square, Save, Mic } from 'lucide-react'; // Import Mic icon
-import { useSession } from '@/contexts/Session/SessionContext'; // Corrected import path
+import { useSession } from '@/contexts/SessionContext'; // Corrected import path
 import { showError } from '@/utils/toast';
 import { getLongCatCompletion } from '@/services/longcatApi';
 import NewChatWelcome from '@/components/NewChatWelcome';

@@ -44,8 +44,8 @@ const CanvasEditorPage = () => {
   const [writingContent, setWritingContent] = useState<string>("");
   const [aiChatHistory, setAiChatHistory] = useState<ChatMessage[]>([]);
   const [documentTitle, setDocumentTitle] = useState<string>("Untitled Document");
-  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null); // Internal state for active document ID
-  const [isLoading, setIsLoading] = useState(true); // Always start as true, will be set to false by effects
+  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null); // Keep this for internal tracking
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [aiWritingToCanvas, setAiWritingToCanvas] = useState(false);
@@ -133,29 +133,9 @@ const CanvasEditorPage = () => {
     return true;
   }, [session?.user?.id, supabase]);
 
-  // Effect to update internal currentDocumentId based on URL params
-  useEffect(() => {
-    if (documentId === 'new') {
-      setDocumentTitle("Untitled Document");
-      setWritingContent("");
-      setAiChatHistory([]);
-      setCurrentDocumentId(null);
-      
-      setInitialDocumentTitle("Untitled Document");
-      setInitialWritingContent("");
-      setInitialAiChatHistory([]);
-      setIsLoading(false); // No history to load for a new document
-    } else if (documentId) {
-      setCurrentDocumentId(documentId);
-    } else {
-      navigate('/app/canvas', { replace: true });
-    }
-  }, [documentId, navigate]);
-
-  // Effect to fetch document content when internal currentDocumentId changes
   useEffect(() => {
     const loadDocument = async (id: string) => {
-      if (!session?.user?.id || !id) {
+      if (!session?.user?.id) {
         setIsLoading(false);
         return;
       }
@@ -176,6 +156,7 @@ const CanvasEditorPage = () => {
         setDocumentTitle(data.title);
         setWritingContent(data.content);
         setAiChatHistory(data.chat_history as ChatMessage[]);
+        setCurrentDocumentId(data.id); // Update currentDocumentId here
         
         setInitialDocumentTitle(data.title);
         setInitialWritingContent(data.content);
@@ -184,18 +165,25 @@ const CanvasEditorPage = () => {
       setIsLoading(false);
     };
 
-    if (currentDocumentId) {
-      loadDocument(currentDocumentId);
-    } else {
-      setDocumentTitle("Untitled Document"); // Ensure title is reset for new docs
-      setWritingContent(""); // Ensure content is reset for new docs
-      setAiChatHistory([]); // Ensure chat history is reset for new docs
+    if (documentId === 'new') {
+      // If we are explicitly on a 'new' canvas route, clear everything
+      setDocumentTitle("Untitled Document");
+      setWritingContent("");
+      setAiChatHistory([]);
+      setCurrentDocumentId(null);
+      
       setInitialDocumentTitle("Untitled Document");
       setInitialWritingContent("");
       setInitialAiChatHistory([]);
       setIsLoading(false);
+    } else if (documentId) {
+      // If there's a documentId, load it
+      loadDocument(documentId);
+    } else {
+      // If no documentId is provided (e.g., /app/canvas without an ID), redirect to the canvas home
+      navigate('/app/canvas', { replace: true });
     }
-  }, [currentDocumentId, session?.user?.id, supabase, navigate]);
+  }, [documentId, session?.user?.id, supabase, navigate]); // Removed currentDocumentId from dependencies
 
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -216,7 +204,10 @@ const CanvasEditorPage = () => {
 
   const handleContentChange = useCallback((content: string) => {
     setWritingContent(content);
-  }, []);
+    if (!currentDocumentId && content.trim().length > 0) {
+      // This will be handled by the explicit save button or auto-save
+    }
+  }, [currentDocumentId]);
 
   const handleAIChatHistoryChange = useCallback((history: ChatMessage[]) => {
     setAiChatHistory(history);
@@ -281,7 +272,7 @@ const CanvasEditorPage = () => {
     if (!currentDocumentId) {
       const newDocId = await createNewDocument(documentTitle);
       if (newDocId) {
-        setCurrentDocumentId(newDocId); // Update internal state before navigating
+        setCurrentDocumentId(newDocId);
         await saveDocument(newDocId, writingContent, aiChatHistory, documentTitle);
         navigate(`/app/canvas/${newDocId}`, { replace: true });
       }
@@ -390,7 +381,7 @@ const CanvasEditorPage = () => {
             onAIDocumentUpdate={handleAIDocumentUpdate}
             aiChatHistory={aiChatHistory}
             onAIChatHistoryChange={handleAIChatHistoryChange}
-            documentId={currentDocumentId} // Pass internal state
+            documentId={currentDocumentId}
             isAIWritingToCanvas={aiWritingToCanvas}
             aiOutputFontFamily={aiOutputFontFamily}
             setAiOutputFontFamily={setAiOutputFontFamily}

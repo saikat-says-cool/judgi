@@ -24,7 +24,6 @@ interface ChatMessage {
   content: string;
   created_at?: string;
   isStreaming?: boolean;
-  conversation_id?: string; // Added conversation_id to the interface
 }
 
 type ResearchMode = 'no_research' | 'moderate_research' | 'deep_research';
@@ -40,6 +39,7 @@ const ChatPage = () => {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingAIResponse, setLoadingAIResponse] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null); // Keep this for internal tracking
   const [researchMode, setResearchMode] = useState<ResearchMode>('no_research');
   const [aiModelMode, setAiModelMode] = useState<AiModelMode>('auto'); // New state for AI model mode
   const [isSaveToCanvasDialogOpen, setIsSaveToCanvasDialogOpen] = useState(false);
@@ -50,9 +50,7 @@ const ChatPage = () => {
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const lastLoadedConversationIdRef = useRef<string | undefined>(undefined); // Ref to track the last conversation ID successfully loaded into `messages` state
 
-  // Effect to scroll to the bottom of the chat
   useEffect(() => {
     if (lastMessageRef.current && scrollAreaRef.current) {
       const { scrollHeight, scrollTop, clientHeight } = scrollAreaRef.current;
@@ -62,7 +60,6 @@ const ChatPage = () => {
     }
   }, [messages]);
 
-  // Effect to fetch chat history when conversationId from URL changes
   useEffect(() => {
     const fetchChatHistory = async (convId: string) => {
       if (!session?.user?.id) {
@@ -70,19 +67,10 @@ const ChatPage = () => {
         return;
       }
 
-      // Check if the current messages state already corresponds to this convId
-      const isCurrentConvLoaded = messages.length > 0 && messages[0]?.conversation_id === convId;
-
-      if (convId !== 'new' && isCurrentConvLoaded && lastLoadedConversationIdRef.current === convId) {
-        // If already loaded and matches the current URL ID, skip fetch to prevent flicker
-        setLoadingHistory(false);
-        return;
-      }
-
       setLoadingHistory(true);
       const { data, error } = await supabase
         .from('chats')
-        .select('id, role, content, created_at, conversation_id') // Select conversation_id
+        .select('id, role, content, created_at')
         .eq('user_id', session.user.id)
         .eq('conversation_id', convId)
         .order('created_at', { ascending: true });
@@ -95,24 +83,22 @@ const ChatPage = () => {
         setMessages(data as ChatMessage[]);
       }
       setLoadingHistory(false);
-      lastLoadedConversationIdRef.current = convId; // Update ref after successful fetch
     };
 
     if (conversationId === 'new') {
+      // If we are explicitly on a 'new' chat route, clear everything
       setMessages([]);
-      setLoadingHistory(false); // No history to load for a new chat
-      lastLoadedConversationIdRef.current = undefined; // Reset ref for new chat
+      setCurrentConversationId(null);
+      setLoadingHistory(false);
     } else if (conversationId) {
-      // Only fetch if the conversationId has changed or if it's not yet loaded
-      if (conversationId !== lastLoadedConversationIdRef.current || messages.length === 0) {
-        fetchChatHistory(conversationId);
-      } else {
-        setLoadingHistory(false); // Already loaded and matches current ID
-      }
+      // If there's a conversationId, load it
+      setCurrentConversationId(conversationId);
+      fetchChatHistory(conversationId);
     } else {
+      // If no conversationId is provided (e.g., /app/chat), redirect to new
       navigate('/app/chat/new', { replace: true });
     }
-  }, [conversationId, session?.user?.id, supabase, navigate, messages]); // Added messages to dependencies
+  }, [conversationId, session?.user?.id, supabase, navigate]); // Removed currentConversationId from dependencies
 
   const createNewConversation = useCallback(async (initialTitle: string) => {
     if (!session?.user?.id) {
@@ -145,7 +131,7 @@ const ChatPage = () => {
 
     if (inputMessage.trim()) {
       const userMessageContent = inputMessage.trim();
-      let activeConversationId = conversationId; // Use conversationId from URL directly
+      let activeConversationId = currentConversationId;
 
       const newUserMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -153,63 +139,77 @@ const ChatPage = () => {
         content: userMessageContent,
         created_at: new Date().toISOString(),
       };
-      
-      // Optimistically add user message to UI
       setMessages((prevMessages) => [...prevMessages, newUserMessage]);
       setInputMessage('');
       setLoadingAIResponse(true);
       setIsAITyping(false);
       setDetailedLoadingMessage(null);
 
-      let shouldNavigateAfterAI = false;
-
-      if (activeConversationId === 'new') {
+      if (!activeConversationId) {
         const initialTitle = userMessageContent.substring(0, 50) + (userMessageContent.length > 50 ? '...' : '');
-        const newConvId = await createNewConversation(initialTitle);
-        if (!newConvId) {
+        activeConversationId = await createNewConversation(initialTitle);
+        if (!activeConversationId) {
           setLoadingAIResponse(false);
-          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id)); // Remove optimistic message
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
           return;
         }
-        activeConversationId = newConvId;
-        shouldNavigateAfterAI = true;
-      }
 
-      // Save user message to DB
-      const { data: userMessageData, error: userMessageError } = await supabase
-        .from('chats')
-        .insert({
-          user_id: session.user.id,
-          conversation_id: activeConversationId,
-          role: 'user',
-          content: userMessageContent,
-        })
-        .select('id, created_at, conversation_id') // Select conversation_id here
-        .single();
+        const { data: userMessageData, error: userMessageError } = await supabase
+          .from('chats')
+          .insert({
+            user_id: session.user.id,
+            conversation_id: activeConversationId,
+            role: 'user',
+            content: userMessageContent,
+          })
+          .select('id, created_at')
+          .single();
 
-      if (userMessageError) {
-        console.error("Error saving user message to Supabase:", userMessageError);
-        showError("Failed to save your message. Please try again.");
-        setLoadingAIResponse(false);
-        setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
-        return;
-      } else if (userMessageData) {
+        if (userMessageError) {
+          console.error("Error saving first user message to Supabase:", userMessageError);
+          showError("Failed to save your message. Please try again.");
+          setLoadingAIResponse(false);
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
+          return;
+        }
+
+        setCurrentConversationId(activeConversationId);
+        navigate(`/app/chat/${activeConversationId}`, { replace: true });
+
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
-            msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at, conversation_id: userMessageData.conversation_id } : msg
+            msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at } : msg
           )
         );
+
+      } else {
+        const { data: userMessageData, error: userMessageError } = await supabase
+          .from('chats')
+          .insert({
+            user_id: session.user.id,
+            conversation_id: activeConversationId,
+            role: newUserMessage.role,
+            content: newUserMessage.content,
+          })
+          .select('id, created_at')
+          .single();
+
+        if (userMessageError) {
+          console.error("Error saving user message to Supabase:", userMessageError);
+          showError("Failed to save your message. Please try again.");
+          setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== newUserMessage.id));
+          setLoadingAIResponse(false);
+          return;
+        } else if (userMessageData) {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg.id === newUserMessage.id ? { ...msg, id: userMessageData.id, created_at: userMessageData.created_at } : msg
+            )
+          );
+        }
       }
 
-      // Construct messages for AI:
-      // If it's a new conversation, only send the current user message.
-      // If it's an existing conversation, send the full current messages array.
-      const messagesForAI: LongCatMessage[] = [];
-      if (activeConversationId !== 'new') { // If it's an existing conversation
-        messagesForAI.push(...messages.filter(msg => !msg.isStreaming));
-      }
-      messagesForAI.push({ role: 'user', content: userMessageContent });
-
+      const messagesForAI = [...messages.filter(msg => !msg.isStreaming), { role: 'user', content: userMessageContent }];
 
       const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
       setMessages((prevMessages) => [
@@ -222,7 +222,7 @@ const ChatPage = () => {
       try {
         for await (const chunk of getLongCatCompletion(messagesForAI, {
           researchMode: researchMode,
-          aiModelMode: aiModelMode,
+          aiModelMode: aiModelMode, // Pass new AI model mode
           userId: session.user.id,
           onStatusUpdate: setDetailedLoadingMessage,
         })) {
@@ -247,14 +247,12 @@ const ChatPage = () => {
 
         const { chatResponse } = parseAIResponse(fullAIResponseContent);
 
-        // Update local state with final AI response
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
           )
         );
 
-        // Save AI message to DB
         const { data: aiMessageData, error: aiMessageError } = await supabase
           .from('chats')
           .insert({
@@ -263,7 +261,7 @@ const ChatPage = () => {
             role: 'assistant',
             content: chatResponse,
           })
-          .select('id, created_at, conversation_id') // Select conversation_id here
+          .select('id, created_at')
           .single();
 
         if (aiMessageError) {
@@ -273,14 +271,9 @@ const ChatPage = () => {
         } else if (aiMessageData) {
           setMessages((prevMessages) =>
             prevMessages.map((msg) =>
-              msg.id === streamingAIMessageId ? { ...msg, id: aiMessageData.id, created_at: aiMessageData.created_at, conversation_id: aiMessageData.conversation_id } : msg
+              msg.id === streamingAIMessageId ? { ...msg, id: aiMessageData.id, created_at: aiMessageData.created_at } : msg
             )
           );
-        }
-
-        // Navigate ONLY after AI response is fully processed and saved, if it was a new chat
-        if (shouldNavigateAfterAI && activeConversationId) {
-          navigate(`/app/chat/${activeConversationId}`, { replace: true });
         }
 
       } catch (error) {
@@ -306,10 +299,10 @@ const ChatPage = () => {
     setIsTranscribingAudio(false); // Transcription complete
   };
 
-  const handleRecordingCancel = useCallback(() => { // Made useCallback
+  const handleRecordingCancel = () => {
     setIsRecording(false);
     setIsTranscribingAudio(false); // Transcription cancelled
-  }, []); // Empty dependency array as it doesn't depend on props/state
+  };
 
   const handleStartRecording = () => {
     setIsRecording(true);
@@ -339,7 +332,7 @@ const ChatPage = () => {
           isRecording={isRecording}
           setIsRecording={setIsRecording}
           onTranscriptionComplete={handleTranscriptionComplete}
-          onRecordingCancel={handleRecordingCancel} // Corrected to handleRecordingCancel
+          onRecordingCancel={handleRecordingCancel}
           isTranscribingAudio={isTranscribingAudio} // Pass to NewChatWelcome
           handleStartRecording={handleStartRecording} // Pass to NewChatWelcome
         />

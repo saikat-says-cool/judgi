@@ -4,7 +4,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 
 ---
 
-**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Browser retention has been improved to prevent state loss when navigating away and returning to a tab, and a Vercel deployment syntax error has been resolved. Furthermore, a flicker when starting new chats has been addressed, and a React warning related to the `viewportRef` prop in `ScrollArea` has been fixed.**
+**Current Status:** The JudgiAI Minimum Viable Product (MVP) is now fully implemented. This includes all core UI, chat infrastructure, comprehensive AI integration with LongCat and Langsearch (featuring research modes, API key rotation, and detailed latency feedback), the full Copilot Canvas with rich text editing and AI-assisted drafting actions, user profile management, performance optimizations, accessibility enhancements, robust error handling, code maintainability refactoring, and AI awareness of the current date and time. **Voice input via AssemblyAI has also been successfully integrated, with robust lifecycle management for the recorder and clear loading states during transcription. Browser retention has been improved to prevent state loss when navigating away and returning to a tab, and a Vercel deployment syntax error has been resolved. Furthermore, a flicker when starting new chats has been addressed, and a React warning related to the `viewportRef` prop in `ScrollArea` has been fixed. The user interface has been significantly enhanced for a first-class feel, and the landing page now features world-class SaaS copy and design, incorporating the brand's square shape subtly throughout.**
 
 ---
 
@@ -37,6 +37,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **1.3.5 AI Persona & Parameters:** Adjusted AI persona to a general assistant (like ChatGPT) and set parameters (temperature, top_p, max_tokens) to normal-like values. This change is foundational for future, more refined prompt engineering.
 - [x] **1.3.6 Rotating API Keys:** Implemented a system to manage multiple hardcoded API keys for both Langsearch and LongCat, automatically rotating to the next key upon encountering a rate limit (HTTP 429) error.
 - [x] **1.3.7 LongCat API Optimization:** Optimized LongCat API calls to dynamically use the `LongCat-Flash-Thinking` model with `enable_thinking: true` and `thinking_budget: 1024` when "Deep Think" or "Deeper Research" modes are selected, allowing for more in-depth AI processing.
+- [x] **1.3.8 Strict Chat Prompting**: Implemented distinct system prompts for the chat and canvas interfaces, ensuring the AI in the chat strictly provides conversational responses and never uses document modification tags.
 
 ## Phase 2: Copilot Canvas Infrastructure (DONE)
 
@@ -74,6 +75,7 @@ This document outlines the step-by-step plan to build the JudgiAI MVP, tracking 
 - [x] **3.1.15 Smaller Chat Font Size:** Reduced the font size for all chat messages and AI responses in both the main chat and canvas assistant chat to `text-sm`.
 - [x] **3.1.16 Refined AI Streaming Display:** Implemented more robust parsing during AI streaming to prevent partial document update tags (like `<DOCUMENT_REPLACE>` or `<DOCUMENT_WRITE>`) and their content from appearing in the chat. The "JudgiAI is thinking..." indicator now disappears as soon as the first character of the AI's response is streamed.
 - [x] **3.1.17 Specific AI Document Action Loading Messages:** Implemented specific loading messages in the Canvas Copilot's chat interface (e.g., "JudgiAI is appending to document...", "JudgiAI is replacing document content...") when the AI is actively modifying the document, providing clearer feedback during the "lag" period before chat content appears.
+- [x] **3.1.18 Enhanced UI and Landing Page**: The overall user interface has been made more attractive and first-class, with a revamped landing page featuring world-class SaaS copy and a subtle square brand pattern integrated into backgrounds.
 
 ### 3.2 Bug Fixes (DONE)
 - [x] **3.2.1 Persistent JSX Parsing Errors:** Resolved recurring `Unexpected token Card` errors in `src/components/CanvasAIAssistant.tsx` through comprehensive rewrites and rebuilds.

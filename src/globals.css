@@ -53,6 +53,9 @@
     --tw-prose-invert-pre-bg: hsl(var(--muted));
     --tw-prose-invert-th-borders: hsl(var(--border));
     --tw-prose-invert-td-borders: hsl(var(--border));
+
+    /* Brand square pattern color - very subtle */
+    --square-pattern-color: 220 10% 15% / 0.05;
   }
 }
 

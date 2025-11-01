@@ -22,7 +22,6 @@ Supabase serves as the backend for JudgiAI, handling authentication, database ma
 *   **Authentication**:
     *   User authentication (sign-up, sign-in, session management) is handled by `@supabase/auth-ui-react` and `SessionContextProvider`.
     *   The login page (`src/pages/Login.tsx`) is configured to support email/password and Google OAuth providers.
-    *   User sessions are managed via `supabase.auth.onAuthStateChange`, redirecting users based on their authentication status. The `LandingPage` now handles navigation within a `useEffect` to prevent React warnings about state updates during render.
     *   User profiles are stored in the `public.profiles` table, automatically created and populated on new user sign-up via a PostgreSQL trigger (`handle_new_user` function).
     *   A dedicated `ProfileSettingsPage` allows users to view and update their profile information (first name, last name, country).
 *   **Database**:
@@ -57,6 +56,7 @@ The LongCat API powers the conversational AI capabilities in both the chat inter
         *   It includes instructions for document manipulation using `<DOCUMENT_REPLACE>` and `<DOCUMENT_WRITE>` tags.
         *   It incorporates the user's country (fetched from Supabase `profiles`) for contextual awareness.
         *   Crucially, it injects `researchResults` (from Langsearch) and `currentDocumentContent` (from the Canvas) into the prompt, providing the AI with relevant context.
+        *   **Strict Chat Prompting**: The system prompt is now strictly differentiated for the chat interface, explicitly forbidding the use of document modification tags (`<DOCUMENT_REPLACE>`, `<DOCUMENT_WRITE>`) to ensure the AI behaves purely conversationally in that context.
     *   **Streaming Responses**: The function yields chunks of the AI's response, allowing for real-time display in the UI.
     *   **Document Update Tags**: The AI is instructed to use `<DOCUMENT_REPLACE>` to overwrite the entire document or `<DOCUMENT_WRITE>` to append content. These tags are parsed client-side to update the `RichTextEditor`.
     *   **Enhanced Latency Feedback**: An `onStatusUpdate` callback is used to provide granular feedback on AI processing stages (e.g., "Searching legal databases...", "Generating AI response...") to the UI.
@@ -125,7 +125,7 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
 
 *   **Responsive Sidebar**: A dynamic sidebar (`Sidebar.tsx`) provides navigation between Chat, Canvas, and Profile, and displays recent conversations/documents. It's responsive, collapsing on desktop and becoming a sheet on mobile.
 *   **Theming**: The application uses a dark theme by default, with Tailwind CSS and custom CSS variables (`src/globals.css`) ensuring consistent styling.
-*   **Loading Indicators**: `Square` icons with `animate-spin` are used as visual loading indicators for AI responses and document loading.
+*   **Loading Indicators**: `Square` icons with `animate-spin` are used as visual loading indicators for AI responses and document loading. These squares are now also integrated as a subtle brand element in backgrounds.
 *   **Toast Notifications**: `sonner` is used for user feedback (success, error, loading messages).
 *   **Markdown Rendering**: `react-markdown` with `remark-gfm` is used to render Markdown content in chat messages and AI assistant responses, ensuring rich text display.
 *   **Accessibility**: `aria-label` attributes have been added to all icon-only buttons across the application for improved screen reader support.
@@ -134,5 +134,6 @@ The Canvas (`CanvasEditorPage`) is a sophisticated writing environment that inte
 *   **Browser Retention/State Persistence**: The `useEffect` hooks in `ChatPage.tsx` and `CanvasEditorPage.tsx` have been refined to ensure that the component's state (chat messages, document content, etc.) is correctly loaded or reset based on the URL parameters (`conversationId` or `documentId`), preventing loss of context when navigating away and returning to a tab.
 *   **Chat Flicker Fix**: Implemented `isInitializingNewChat` state and refined `useEffect` logic in `ChatPage.tsx` to prevent temporary flicker when starting a new chat.
 *   **ScrollArea `viewportRef` Warning Fix**: Modified `src/components/ui/scroll-area.tsx` to explicitly prevent the `viewportRef` prop from being passed to the underlying DOM element rendered by `ScrollAreaPrimitive.Root`, resolving a React warning.
+*   **Enhanced Landing Page**: The `LandingPage.tsx` has been significantly updated with world-class SaaS copy, a more engaging layout, and improved visual elements to create a first-class user experience.
 
 This summary highlights the key technical components and their interactions, forming the foundation of the JudgiAI application.

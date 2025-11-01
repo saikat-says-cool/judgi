@@ -19,9 +19,14 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8 text-foreground">Welcome to Dyad App</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 relative overflow-hidden">
+      {/* Subtle background squares */}
+      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none">
+        <div className="w-full h-full bg-[size:30px_30px] bg-[repeating-linear-gradient(0deg,hsl(var(--square-pattern-color))_0,hsl(var(--square-pattern-color))_1px,transparent_1px,transparent_30px),repeating-linear-gradient(90deg,hsl(var(--square-pattern-color))_0,hsl(var(--square-pattern-color))_1px,transparent_1px,transparent_30px)]"></div>
+      </div>
+
+      <div className="w-full max-w-md z-10">
+        <h1 className="text-3xl font-bold text-center mb-8 text-foreground">Welcome to JudgiAI</h1>
         <div className="p-6 rounded-lg shadow-lg bg-card">
           <Auth
             supabaseClient={supabase}

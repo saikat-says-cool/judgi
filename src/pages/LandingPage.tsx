@@ -20,8 +20,13 @@ const LandingPage = () => {
   }, [isLoading, session, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 sm:p-8">
-      <div className="text-center max-w-4xl mx-auto py-16">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 sm:p-8 relative overflow-hidden">
+      {/* Subtle background squares */}
+      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none">
+        <div className="w-full h-full bg-[size:30px_30px] bg-[repeating-linear-gradient(0deg,hsl(var(--square-pattern-color))_0,hsl(var(--square-pattern-color))_1px,transparent_1px,transparent_30px),repeating-linear-gradient(90deg,hsl(var(--square-pattern-color))_0,hsl(var(--square-pattern-color))_1px,transparent_1px,transparent_30px)]"></div>
+      </div>
+
+      <div className="text-center max-w-4xl mx-auto py-16 z-10">
         <Badge variant="secondary" className="mb-4 text-sm px-3 py-1">
           🚀 Elevate Your Legal Practice
         </Badge>
@@ -40,7 +45,7 @@ const LandingPage = () => {
         </Button>
       </div>
 
-      <section className="w-full max-w-6xl mx-auto py-16">
+      <section className="w-full max-w-6xl mx-auto py-16 z-10">
         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">Unlock Your Legal Potential</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Card className="p-6 text-center bg-card shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -75,7 +80,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section className="w-full max-w-6xl mx-auto py-16 bg-muted/20 rounded-lg shadow-inner">
+      <section className="w-full max-w-6xl mx-auto py-16 bg-muted/20 rounded-lg shadow-inner z-10">
         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">Why Choose JudgiAI?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
           <div className="flex items-start space-x-4">
@@ -123,7 +128,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <div className="text-center max-w-4xl mx-auto py-16">
+      <div className="text-center max-w-4xl mx-auto py-16 z-10">
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">Ready to Transform Your Legal Workflow?</h2>
         <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto">
           Join the future of legal practice. Sign up today and experience the power of AI at your fingertips.

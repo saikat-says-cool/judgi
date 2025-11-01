@@ -136,6 +136,7 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
       ]);
 
       let fullAIResponseContent = '';
+      let lastChatResponseLength = 0; // Track length of chat content
       try {
         for await (const chunk of getLongCatCompletion(updatedChatHistory.map(msg => ({ role: msg.role, content: msg.content })), {
           researchMode: researchMode, // Pass the selected research mode
@@ -145,10 +146,14 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
         })) {
           if (chunk) {
             fullAIResponseContent += chunk;
-            setIsAITyping(true); // Set to true as soon as first chunk arrives
-
-            // Parse the current accumulated content to get the chat part, stripping document tags
+            
             const { chatResponse: currentChatResponse } = parseAIResponse(fullAIResponseContent);
+
+            // Only set isAITyping to true if the chat response actually has content or is growing
+            if (currentChatResponse.length > lastChatResponseLength) {
+              setIsAITyping(true);
+            }
+            lastChatResponseLength = currentChatResponse.length;
 
             onAIChatHistoryChange((prevHistory) =>
               prevHistory.map((msg) =>

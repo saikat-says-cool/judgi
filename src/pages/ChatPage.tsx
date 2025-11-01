@@ -306,10 +306,10 @@ const ChatPage = () => {
     setIsTranscribingAudio(false); // Transcription complete
   };
 
-  const handleRecordingCancel = () => {
+  const handleRecordingCancel = useCallback(() => { // Made useCallback
     setIsRecording(false);
     setIsTranscribingAudio(false); // Transcription cancelled
-  };
+  }, []); // Empty dependency array as it doesn't depend on props/state
 
   const handleStartRecording = () => {
     setIsRecording(true);
@@ -339,7 +339,7 @@ const ChatPage = () => {
           isRecording={isRecording}
           setIsRecording={setIsRecording}
           onTranscriptionComplete={handleTranscriptionComplete}
-          onRecordingCancel={onRecordingCancel}
+          onRecordingCancel={handleRecordingCancel} // Corrected to handleRecordingCancel
           isTranscribingAudio={isTranscribingAudio} // Pass to NewChatWelcome
           handleStartRecording={handleStartRecording} // Pass to NewChatWelcome
         />

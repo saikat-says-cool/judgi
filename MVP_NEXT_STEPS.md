@@ -40,9 +40,9 @@ Beyond the remaining MVP features, several areas can be optimized or improved fo
 *   **Current Status**: The system fetches the user's country from their profile for contextual AI responses, but there is no user interface for users to view or update their profile information (like first name, last name, avatar URL, or country).
 *   [x] **Action Needed**: Create a dedicated profile settings page or component where users can manage their profile details.
 
-### 2.2 Additional Authentication Providers
+### 2.2 Additional Authentication Providers (DONE)
 *   **Current Status**: The login page uses Supabase Auth UI, but currently only supports email/password. The MVP spec mentioned "email / Google".
-*   **Action Needed**: Configure the Supabase Auth UI to include Google (or other desired OAuth providers) for easier sign-up and login.
+*   [x] **Action Needed**: Configure the Supabase Auth UI to include Google (or other desired OAuth providers) for easier sign-up and login.
 
 ### 2.3 Performance for Large Documents
 *   **Current Status**: The `RichTextEditor` handles content as HTML. For very large legal documents, the performance of the editor and the state management for `writingContent` might become a concern.

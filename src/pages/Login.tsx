@@ -25,7 +25,7 @@ const Login = () => {
         <div className="p-6 rounded-lg shadow-lg bg-card">
           <Auth
             supabaseClient={supabase}
-            providers={[]}
+            providers={['google']} // Added Google provider
             appearance={{
               theme: ThemeSupa,
             }}

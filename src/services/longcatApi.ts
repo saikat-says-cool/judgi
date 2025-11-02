@@ -108,7 +108,8 @@ export const getLongCatCompletion = async function* (
       }
 
       let researchResults = '';
-      const lastUserMessage = messages.findLast(msg => msg.role === 'user')?.content || '';
+      // Use .at(-1) as a more widely supported alternative to findLast for getting the last element
+      const lastUserMessage = messages.at(-1)?.role === 'user' ? messages.at(-1)?.content || '' : '';
 
       // Determine research depth based on researchMode
       let legalDocsCount = 0;
@@ -162,7 +163,8 @@ export const getLongCatCompletion = async function* (
       }
 
       const messagesForAI: LongCatMessage[] = [{ role: "system", content: systemPrompt }];
-      messagesForAI.push(...messages);
+      // Map ChatMessage to LongCatMessage to ensure type compatibility
+      messagesForAI.push(...messages.map(msg => ({ role: msg.role, content: msg.content })));
 
       // Note: LongCat Flash models are optimized for handling large context windows,
       // so the increased research results should be well within their capabilities.

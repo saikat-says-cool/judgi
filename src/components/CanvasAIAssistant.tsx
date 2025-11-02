@@ -99,10 +99,18 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     setDetailedLoadingMessage(null);
 
     const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
-    onAIChatHistoryChange((prevHistory) => [
-      ...prevHistory.filter(msg => msg.id !== streamingAIMessageId),
-      { id: streamingAIMessageId, role: 'assistant', content: '', isStreaming: true, created_at: new Date().toISOString() },
-    ]);
+    const streamingPlaceholderMessage: ChatMessage = { // Explicitly type the object
+      id: streamingAIMessageId,
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+      created_at: new Date().toISOString(),
+    };
+    const messagesWithStreamingPlaceholder = [
+      ...aiChatHistory.filter(msg => msg.id !== streamingAIMessageId),
+      streamingPlaceholderMessage,
+    ];
+    onAIChatHistoryChange(messagesWithStreamingPlaceholder);
 
     let fullAIResponseContent = '';
     let lastChatResponseLength = 0;
@@ -124,22 +132,20 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
           }
           lastChatResponseLength = currentChatResponse.length;
 
-          onAIChatHistoryChange((prevHistory) =>
-            prevHistory.map((msg) =>
-              msg.id === streamingAIMessageId ? { ...msg, content: currentChatResponse } : msg
-            )
+          const updatedMessagesAfterChunk = aiChatHistory.map((msg) =>
+            msg.id === streamingAIMessageId ? { ...msg, content: currentChatResponse } : msg
           );
+          onAIChatHistoryChange(updatedMessagesAfterChunk);
           await new Promise(resolve => setTimeout(resolve, 10));
         }
       }
 
       const { chatResponse, documentUpdate } = parseAIResponse(fullAIResponseContent);
 
-      onAIChatHistoryChange((prevHistory) =>
-        prevHistory.map((msg) =>
-          msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
-        )
+      const finalMessagesAfterStream = aiChatHistory.map((msg) =>
+        msg.id === streamingAIMessageId ? { ...msg, content: chatResponse, isStreaming: false } : msg
       );
+      onAIChatHistoryChange(finalMessagesAfterStream);
 
       if (documentUpdate) {
         onAIDocumentUpdate(documentUpdate);
@@ -148,7 +154,8 @@ const CanvasAIAssistant: React.FC<CanvasAIAssistantProps> = ({
     } catch (error) {
       console.error("Error getting AI response:", error);
       showError("Failed to get AI response. Please check your API key and network connection.");
-      onAIChatHistoryChange((prevHistory) => prevHistory.filter(msg => msg.id !== streamingAIMessageId));
+      const messagesAfterError = aiChatHistory.filter(msg => msg.id !== streamingAIMessageId);
+      onAIChatHistoryChange(messagesAfterError);
     } finally {
       setLoadingAIResponse(false);
       setIsAITyping(false);

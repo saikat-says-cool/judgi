@@ -221,7 +221,9 @@ const ChatPage = () => {
         }
       }
 
-      const messagesForAI = [...messages.filter(msg => !msg.isStreaming), { role: 'user', content: userMessageContent }];
+      // Map ChatMessage to LongCatMessage to ensure type compatibility
+      const messagesForAI = messages.filter(msg => !msg.isStreaming).map(msg => ({ role: msg.role, content: msg.content }));
+      messagesForAI.push({ role: 'user', content: userMessageContent });
 
       const streamingAIMessageId = Date.now().toString() + '-ai-streaming';
       setMessages((prevMessages) => [

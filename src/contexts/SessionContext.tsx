@@ -30,10 +30,9 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
           navigate('/app');
         } else if (event === 'SIGNED_OUT') {
           navigate('/login');
-        } else if (event === 'AUTH_API_ERROR') {
-          showError("Authentication error. Please try again.");
-          console.error("Supabase Auth API Error:", currentSession);
-        }
+        } 
+        // Removed else if (event === 'AUTH_API_ERROR') as it's not a valid event type for onAuthStateChange
+        // Auth API errors are typically handled by the Auth UI component or caught in specific API calls.
       }
     );
 

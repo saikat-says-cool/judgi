@@ -10,7 +10,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { Button } from '@/components/ui/button';
 import {
-  Bold, Italic, UnderlineIcon, Strikethrough, Code, List, ListOrdered, Quote, AlignLeft, AlignCenter, AlignRight, AlignJustify, Undo, Redo, Type, Heading1, Heading2, Heading3, HighlightIcon
+  Bold, Italic, UnderlineIcon, Strikethrough, Code, List, ListOrdered, Quote, AlignLeft, AlignCenter, AlignRight, AlignJustify, Undo, Redo, Type, Heading1, Heading2, Heading3, HighlighterIcon // Corrected import
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -18,7 +18,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-// Removed Select imports
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
@@ -27,11 +26,7 @@ interface RichTextEditorProps {
   readOnly?: boolean;
 }
 
-// Removed fonts array
-
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChange, readOnly = false }) => {
-  // Removed activeFontFamily state
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -57,10 +52,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
     content: content,
     onUpdate: ({ editor }) => {
       onContentChange(editor.getHTML());
-      // Removed setActiveFontFamily update
     },
     onSelectionUpdate: ({ editor }) => {
-      // Removed setActiveFontFamily update
+      // No font family state to update
     },
     editable: !readOnly,
     editorProps: {
@@ -72,18 +66,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content, false); // false to prevent triggering onUpdate
+      // setContent by default does not emit an update event when called programmatically
+      editor.commands.setContent(content); 
     }
   }, [content, editor]);
 
   useEffect(() => {
     if (editor) {
       editor.setOptions({ editable: !readOnly });
-      // Removed initial font family setting
     }
   }, [readOnly, editor]);
-
-  // Removed setFontFamily useCallback
 
   if (!editor) {
     return null;
@@ -189,8 +181,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChang
           >
             <Quote className="h-4 w-4" />
           </Button>
-
-          {/* Removed Font Family Select */}
 
           <Button
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
